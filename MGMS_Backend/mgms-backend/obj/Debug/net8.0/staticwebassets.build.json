@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "5pOX8miLj9yqwK8tdqNLPVbb/N6G0zZePs7IaBRkJpI=",
+  "Source": "mgms-backend",
+  "BasePath": "_content/mgms-backend",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

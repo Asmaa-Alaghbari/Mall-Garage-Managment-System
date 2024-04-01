@@ -1,0 +1,6 @@
+@mgms_backend_HostAddress = http://localhost:5296
+
+GET {{mgms_backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
