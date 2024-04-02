@@ -1,7 +1,7 @@
 namespace MGMSBackend.DTO
 {
-    // Represent the user entity in the database
-    public class UserDto
+    // Represent the user entity in the database for registration
+    public class RegisterDto
     {
         public int UserId { get; set; } // Primary key
         public required string FirstName { get; set; } = string.Empty;

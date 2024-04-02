@@ -1,42 +1,77 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import './AuthForms.css';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "./AuthForms.css";
 
 // Handle user authentication
 export default function Login() {
-  const [username, setUsername] = useState(''); // username, email or phone number
-  const [password, setPassword] = useState(''); // password
+  const [loginData, setLoginData] = useState({ username: "", password: "" }); // Login data (username and password) 
+  const [isLoading, setIsLoading] = useState(false); // Loading state for form submission requests
+  const [errorMessage, setErrorMessage] = useState(""); // Error state for form submission errors
+  const navigate = useNavigate(); // Redirect the user to the home page after successful login
 
-  // Handle form submission
+  // Handle form submission (POST request) to the API server (backend)
   const handleSubmit = async (e) => {
     e.preventDefault();
-   
+
+    setIsLoading(true); // Start loading
+    setErrorMessage(""); // Reset previous errors
+
+    const requestOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(loginData),
+      credentials: "include", // Include cookies for authentication
+    };
+
+    const apiURL = process.env.NODE_ENV === "development"
+      ? "http://localhost:5296/api/auth/Login"
+      : "http://localhost:7286/api/auth/Login";
+
+    try {
+      const response = await fetch(apiURL, requestOptions);
+      if (!response.ok) {
+        const errorData = await response.json();
+        setErrorMessage(errorData.message || "Login failed!");
+      } else {
+        const responseData = await response.json();
+        const token = responseData.token; // Assuming the token is in the response
+        localStorage.setItem("token", token); // Store token securely
+        navigate("/home"); // Redirect to home page on successful login
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrorMessage("User not found! Please check your username/email or password!");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="auth-form-container">
       <h1>Login</h1>
+      {errorMessage && <div className="error-message">{errorMessage}</div>}
       <form onSubmit={handleSubmit}>
         <input
           type="text"
-          placeholder="Username, Email or Phone"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Username or Email"
+          value={loginData.username}
+          onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
           required
         />
         <input
           type="password"
           placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={loginData.password}
+          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
           required
         />
-        <button type="submit">Login</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Logging in..." : "Login"}
+        </button>
       </form>
       <p>
         Don't have an account? <Link to="/signup">Sign Up</Link>
       </p>
     </div>
   );
-
 }

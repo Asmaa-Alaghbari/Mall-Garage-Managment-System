@@ -1,11 +1,13 @@
-using Microsoft.AspNetCore.Mvc; 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims; 
+using System.Security.Claims;
 using System.Text;
 
-using MGMSBackend.Models; 
+using MGMSBackend.Models;
 using MGMSBackend.DTO;
+using MGMSBackend.Data;
 
 namespace MGMSBackend.Controllers
 {
@@ -15,52 +17,102 @@ namespace MGMSBackend.Controllers
     {
         public static User user = new User(); // Create a new user object to store the user data
         public IConfiguration _configuration; // Configuration object to access app settings
+        private readonly ApplicationDbContext _context; // Database context to interact with the database
 
-        public AuthController(IConfiguration configuration) 
-        { 
-            _configuration = configuration; 
+        public AuthController(IConfiguration configuration, ApplicationDbContext context)
+        {
+            _configuration = configuration;
+            _context = context;
         }
 
         // POST: api/auth/Register 
         [HttpPost("Register")] // Route to the Register endpoint 
-        public ActionResult<User> Register(UserDto request)
+        public async Task<ActionResult<User>> Register(RegisterDto request)
         {
-            // Hash the password using BCrypt.Net library 
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password); 
+            // Check if the user with the given username/email/phone already exists in the database
+            var userExists = await _context.Users.AnyAsync(
+                u => u.Email == request.Email ||
+                u.Username == request.Username ||
+                u.Phone == request.Phone
+                );
 
-            user.FirstName = request.FirstName; // Set the user first name
-            user.LastName = request.LastName; // Set the user last name
-            user.Username = request.Username; // Set the user username
-            user.Email = request.Email; // Set the user email
-            user.Password = passwordHash; // Set the user password
-            user.Phone = request.Phone; // Set the user phone number
-            user.Role = "User"; // Set the user role to User as default 
-            user.DateCreated = DateTime.Now; // Set the user creation date to the current date
+            try
+            {
+                if (userExists)
+                {
+                    return BadRequest("User already exists!");
+                }
 
-            return Ok(user); // Return the user object with the created user data 
+                // Hash the password using BCrypt.Net library 
+                string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+                // Create a new user object and set the user data from the request
+                var newUser = new User
+                {
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Username = request.Username,
+                    Email = request.Email,
+                    Password = passwordHash,
+                    Phone = request.Phone,
+                    Role = "User", // Assuming default role as User
+                    DateCreated = DateTime.UtcNow // Set the current date and time
+                };
+
+                // Add the new user to the Users table in the database
+                await _context.Users.AddAsync(newUser);
+                await _context.SaveChangesAsync();
+
+                // Create a JWT token with the user data
+                string token = CreateToken(newUser);
+
+                return Ok(new { message = "Registration successful!" });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details
+                Console.WriteLine(ex.ToString());
+                // Return a generic error message or a detailed one based on your security policies
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
         // POST: api/auth/Login
         [HttpPost("Login")] // Route to the Login endpoint
-        public ActionResult<User> Login(UserDto request)
+        public async Task<ActionResult> Login(LoginDto request)
         {
-            if (user.Username == request.Username) // Check if the username exists
+            // Check if the username or email is provided in the request
+            if (string.IsNullOrEmpty(request.Username))
             {
-                if (BCrypt.Net.BCrypt.Verify(request.Password, user.Password)) // Verify the password
-                {
-                    string token = CreateToken(user); // Create a JWT token with user data
+                return BadRequest("Username or Email is required.");
+            }
+            
+            // Check if the password is provided in the request
+            if (string.IsNullOrEmpty(request.Password))
+            {
+                return BadRequest("Password is required.");
+            }
 
-                    return Ok(token); ; // Return the JWT token 
-                }
-                else
-                {
-                    return BadRequest("Invalid password"); // Return an error message for invalid password
-                }
-            }
-            else
+            // Find the user with the given username or email in the database
+            var user = await _context.Users.FirstOrDefaultAsync(
+                u => u.Username == request.Username 
+                || u.Email == request.Username);
+
+            // Check if the user exists in the database
+            if (user == null)
             {
-                return BadRequest("User not found"); // Return an error message for user not found
+                return BadRequest("User not found.");
             }
+
+            // Verify the password using BCrypt.Net library
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+            {
+                return BadRequest("Invalid password.");
+            }
+
+            // Create a JWT token with the user data and return it
+            string token = CreateToken(user);
+            return Ok(new { token });
         }
 
         // Create a JWT token with user data 
