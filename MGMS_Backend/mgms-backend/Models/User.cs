@@ -6,12 +6,15 @@ namespace MGMSBackend.Models
     // Represent the user entity in the database
     public class User
     {
-        public int UserId { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public string Role { get; set; }
-        public DateTime DateCreated { get; set; }
+        public int UserId { get; set; } // Primary key
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty; 
+        public string Username { get; set; } // Unique username
+        public string Email { get; set; } = string.Empty; // Unique email address
+        public string Password { get; set; } = string.Empty;  // Hashed password
+        public string Phone { get; set; } = string.Empty; // Phone number
+        public string Role { get; set; } // Role of the user (Admin, User) 
+        public DateTime DateCreated { get; set; } // Date the user account was created
 
         // Navigation properties for related entities
         public Profile Profile { get; set; }

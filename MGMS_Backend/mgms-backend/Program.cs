@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore; // For DbContext and UseNpgsql method 
-using Npgsql.EntityFrameworkCore.PostgreSQL; // For UseNpgsql method
 using MGMSBackend.Data;
-using MGMSBackend.Models;
 
 namespace mgms_backend
 {
@@ -17,6 +15,18 @@ namespace mgms_backend
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            // Add CORS policy to allow requests from the front-end application 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: "CorsPolicy",
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:3000") // Front-end application address
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials(); // Allow credentials like cookies, authorization headers, etc.
+                    });
+            });
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -32,8 +42,11 @@ namespace mgms_backend
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
 
+            app.UseCors("CorsPolicy"); // Enable CORS
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
