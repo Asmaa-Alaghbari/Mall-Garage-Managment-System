@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore; // For DbContext and UseNpgsql method 
-using MGMSBackend.Data;
+using mgms_backend.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.OpenApi.Models;
 
 namespace mgms_backend
 {
@@ -42,11 +46,11 @@ namespace mgms_backend
                 app.UseSwaggerUI();
             }
 
-            // app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
             app.UseCors("CorsPolicy"); // Enable CORS
 
-            app.UseAuthentication();
+            app.UseAuthentication(); // Enable authentication
             app.UseAuthorization();
 
             app.MapControllers();

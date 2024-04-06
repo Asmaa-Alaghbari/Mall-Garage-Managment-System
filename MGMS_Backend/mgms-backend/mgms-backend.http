@@ -1,6 +1,15 @@
+@mgms-backend_HostAddress = https://localhost:7286
 @mgms_backend_HostAddress = http://localhost:5296
 
-GET {{mgms_backend_HostAddress}}/
-Accept: application/json
+GET {{mgms-backend_HostAddress}}/api/auth/GetAll
+
+###
+
+POST {{mgms-backend_HostAddress}}/api/auth/Login
+Content-Type: application/json
+
+{
+  //LoginDto
+}
 
 ###

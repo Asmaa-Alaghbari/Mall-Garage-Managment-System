@@ -1,10 +1,11 @@
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
-namespace MGMSBackend.Models
+namespace mgms_backend.Models
 {
     // Represent the service entity in the database
     public class Service
     {
+        [Key] // Data annotation for the primary key
         public int ServiceId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }

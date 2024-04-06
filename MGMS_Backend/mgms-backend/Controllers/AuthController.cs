@@ -5,18 +5,19 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-using MGMSBackend.Models;
-using MGMSBackend.DTO;
-using MGMSBackend.Data;
+using mgms_backend.Models;
+using mgms_backend.DTO;
+using mgms_backend.Data;
+using Microsoft.AspNetCore.Authorization;
 
-namespace MGMSBackend.Controllers
+namespace mgms_backend.Controllers
 {
     [Route("api/[controller]")] // Route to the controller endpoint 
     [ApiController] // Attribute for Web API controller
+    [Authorize] // Secure the controller with JWT authentication
     public class AuthController : ControllerBase
     {
-        public static User user = new User(); // Create a new user object to store the user data
-        public IConfiguration _configuration; // Configuration object to access app settings
+        private readonly IConfiguration _configuration; // Configuration object to access app settings
         private readonly ApplicationDbContext _context; // Database context to interact with the database
 
         public AuthController(IConfiguration configuration, ApplicationDbContext context)
@@ -25,8 +26,36 @@ namespace MGMSBackend.Controllers
             _context = context;
         }
 
+        // GET: api/auth/GetAll
+        [HttpGet("GetAll")] // Route to the GetAll endpoint
+        [Authorize (Roles = "Admin")]
+        public async Task<IActionResult> GetAll()
+        {
+            // Get all the users from the Users table in the database
+            var users = await _context.Users.ToListAsync();
+            return Ok(users); // Return the list of users as a response
+        }
+
+        // GET: api/auth/GetById
+        [HttpGet("GetById")] // Route to the GetById endpoint
+        [Authorize (Roles = "Admin")]
+        public async Task<IActionResult> GetUserById(int UserId)
+        {
+            // Find the user with the given id in the database
+            var user = await _context.Users.FindAsync(UserId);
+
+            // Check if the user exists
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }   
+
+            return Ok(user); // Return the user object as a response
+        }
+
         // POST: api/auth/Register 
         [HttpPost("Register")] // Route to the Register endpoint 
+        [AllowAnonymous] // Allow unauthenticated access to the endpoint
         public async Task<ActionResult<User>> Register(RegisterDto request)
         {
             // Check if the user with the given username/email/phone already exists in the database
@@ -79,6 +108,7 @@ namespace MGMSBackend.Controllers
 
         // POST: api/auth/Login
         [HttpPost("Login")] // Route to the Login endpoint
+        [AllowAnonymous] // Allow unauthenticated access to the endpoint
         public async Task<ActionResult> Login(LoginDto request)
         {
             // Check if the username or email is provided in the request
@@ -86,7 +116,7 @@ namespace MGMSBackend.Controllers
             {
                 return BadRequest("Username or Email is required.");
             }
-            
+
             // Check if the password is provided in the request
             if (string.IsNullOrEmpty(request.Password))
             {
@@ -95,7 +125,7 @@ namespace MGMSBackend.Controllers
 
             // Find the user with the given username or email in the database
             var user = await _context.Users.FirstOrDefaultAsync(
-                u => u.Username == request.Username 
+                u => u.Username == request.Username
                 || u.Email == request.Username);
 
             // Check if the user exists in the database
@@ -115,14 +145,78 @@ namespace MGMSBackend.Controllers
             return Ok(new { token });
         }
 
+        // PUT: api/auth/Update
+        [HttpPut("Update")] // Route to the Update endpoint
+        [Authorize] // The user should only be able to update their own profile
+        public async Task<ActionResult<User>> UpdateUser(RegisterDto request)
+        {
+            // Find the user with the given id in the database
+            var user = await _context.Users.FindAsync(request.UserId);
+
+            // Check if the user exists
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Check if the username/email/phone is being updated to a value that already exists for another user
+            var userExists = await _context.Users.AnyAsync(u =>
+                (request.Email != user.Email && u.Email == request.Email) ||
+                (request.Username != user.Username && u.Username == request.Username) ||
+                (request.Phone != user.Phone && u.Phone == request.Phone));
+
+            if (userExists)
+            {
+                return BadRequest("A user with the given username, email, or phone already exists.");
+            }
+
+            // Check if the information is unchanged
+            if (request.Email == user.Email && request.Username == user.Username && request.Phone == user.Phone)
+            {
+                return BadRequest("No new information was provided for the update.");
+            }
+
+            // Update the user data with the new values from the request
+            user.FirstName = request.FirstName;
+            user.LastName = request.LastName;
+            user.Username = request.Username;
+            user.Email = request.Email;
+            user.Phone = request.Phone;
+
+            // Save the changes to the database
+            await _context.SaveChangesAsync();
+
+            return Ok(user); // Return the updated user object as a response
+        }
+
+        // DELETE: api/auth/Delete
+        [HttpDelete("Delete")] // Route to the Delete endpoint
+        [Authorize (Roles = "Admin")] // Allow only Admin role to access the endpoint
+        public async Task<ActionResult<User>> DeleteUser(int UserId)
+        {
+            // Find the user with the given id in the database
+            var user = await _context.Users.FindAsync(UserId);
+
+            // Check if the user exists
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Remove the user from the Users table in the database
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(user); // Return the deleted user object as a response
+        }
+
         // Create a JWT token with user data 
         private string CreateToken(User user)
         {
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, "Admin"),
-                new Claim(ClaimTypes.Role, "User"),
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
             // Create a symmetric security key using the app settings token (Secret key for token generation) 
@@ -139,19 +233,8 @@ namespace MGMSBackend.Controllers
                     signingCredentials: creds
                 );
 
-            // Write the token as a string and return it 
-            try
-            {
-                var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-                return jwt; // jwt.io can be used to decode the token and view the claims
-            }
-            catch (Exception ex)
-            {
-                // Log the exception or return an error response
-                Console.WriteLine(ex.Message);
-                return null; // Or handle the error appropriately
-            }
+            // Return the JWT token as a string 
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
     }
 }

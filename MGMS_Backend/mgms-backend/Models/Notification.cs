@@ -1,11 +1,14 @@
-using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MGMSBackend.Models
+namespace mgms_backend.Models
 {
     // Represent the notification entity in the database
     public class Notification
     {
+        [Key] // Data annotation for the primary key
         public int NotificationId { get; set; }
+        [ForeignKey("User")] // Data annotation for the foreign key
         public int UserId { get; set; }
         public string Message { get; set; }
         public DateTime DateTime { get; set; }

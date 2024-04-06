@@ -1,12 +1,16 @@
-using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MGMSBackend.Models
+namespace mgms_backend.Models
 {
     // Represent the reservation entity in the database
     public class Reservation
     {
+        [Key] // Data annotation for the primary key
         public int ReservationId { get; set; }
+        [ForeignKey("User")] // Data annotation for the foreign key
         public int UserId { get; set; }
+        [ForeignKey("ParkingSpot")] // Data annotation for the foreign key
         public int ParkingSpotId { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }

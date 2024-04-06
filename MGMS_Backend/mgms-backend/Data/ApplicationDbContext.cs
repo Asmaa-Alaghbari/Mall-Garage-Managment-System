@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
-using MGMSBackend.Models;
+using Microsoft.EntityFrameworkCore; // For DbContext (ORM)
+using mgms_backend.Models;
 
-namespace MGMSBackend.Data
+namespace mgms_backend.Data
 {
     // Interact with the database using the entity models and the database context
     public class ApplicationDbContext : DbContext

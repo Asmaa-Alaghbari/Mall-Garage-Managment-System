@@ -1,18 +1,24 @@
-using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
-namespace MGMSBackend.Models
+namespace mgms_backend.Models
 {
     // Represent the user entity in the database
     public class User
     {
+        [Key] // Data annotation for the primary key
         public int UserId { get; set; } // Primary key
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty; 
+        [Required]
+        public string FirstName { get; set; } = default!;
+        [Required]
+        public string LastName { get; set; } = default!;
+        [Required]
         public string Username { get; set; } // Unique username
-        public string Email { get; set; } = string.Empty; // Unique email address
-        public string Password { get; set; } = string.Empty;  // Hashed password
-        public string Phone { get; set; } = string.Empty; // Phone number
+        [Required]
+        public string Email { get; set; } = default!; // Unique email address
+        [Required]
+        public string Password { get; set; } = default!;  // Hashed password
+        [Required]
+        public string Phone { get; set; } = default!; // Phone number
         public string Role { get; set; } // Role of the user (Admin, User) 
         public DateTime DateCreated { get; set; } // Date the user account was created
 
