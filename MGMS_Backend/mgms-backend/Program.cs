@@ -1,9 +1,6 @@
 using Microsoft.EntityFrameworkCore; // For DbContext and UseNpgsql method 
 using mgms_backend.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.OpenApi.Models;
+using mgms_backend.Repositories;
 
 namespace mgms_backend
 {
@@ -18,6 +15,9 @@ namespace mgms_backend
             // Add DbContext and configure it to use PostgreSQL
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // Register the repository service 
+            builder.Services.AddScoped<IUserRepository, UserRepository>(); 
 
             // Add CORS policy to allow requests from the front-end application 
             builder.Services.AddCors(options =>

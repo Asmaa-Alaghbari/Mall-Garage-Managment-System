@@ -1,14 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
 using mgms_backend.Models;
 using mgms_backend.DTO;
-using mgms_backend.Data;
-using Microsoft.AspNetCore.Authorization;
+using mgms_backend.Repositories;
 
 namespace mgms_backend.Controllers
 {
@@ -17,13 +16,14 @@ namespace mgms_backend.Controllers
     [Authorize] // Secure the controller with JWT authentication
     public class AuthController : ControllerBase
     {
-        private readonly IConfiguration _configuration; // Configuration object to access app settings
-        private readonly ApplicationDbContext _context; // Database context to interact with the database
+        // Dependency injection for the UserRepository and IConfiguration services
+        private readonly IUserRepository _userRepository; // Repository for user-related operations 
+        private readonly IConfiguration _configuration; // Configuration settings for the application 
 
-        public AuthController(IConfiguration configuration, ApplicationDbContext context)
+        public AuthController(IUserRepository userRepository, IConfiguration configuration)
         {
+            _userRepository = userRepository;
             _configuration = configuration;
-            _context = context;
         }
 
         // GET: api/auth/GetAll
@@ -32,7 +32,7 @@ namespace mgms_backend.Controllers
         public async Task<IActionResult> GetAll()
         {
             // Get all the users from the Users table in the database
-            var users = await _context.Users.ToListAsync();
+            var users = await _userRepository.GetAllUsersAsync();
             return Ok(users); // Return the list of users as a response
         }
 
@@ -42,14 +42,14 @@ namespace mgms_backend.Controllers
         public async Task<IActionResult> GetUserById(int UserId)
         {
             // Find the user with the given id in the database
-            var user = await _context.Users.FindAsync(UserId);
+            var user = await _userRepository.GetUserByIdAsync(UserId);
 
             // Check if the user exists
             if (user == null)
             {
                 return NotFound("User not found.");
             }   
-
+            
             return Ok(user); // Return the user object as a response
         }
 
@@ -59,17 +59,20 @@ namespace mgms_backend.Controllers
         public async Task<ActionResult<User>> Register(RegisterDto request)
         {
             // Check if the user with the given username/email/phone already exists in the database
-            var userExists = await _context.Users.AnyAsync(
-                u => u.Email == request.Email ||
-                u.Username == request.Username ||
-                u.Phone == request.Phone
-                );
+            var userExists = await _userRepository.UserExistsAsync(
+                request.Username, request.Email, request.Phone);
 
             try
             {
                 if (userExists)
                 {
-                    return BadRequest("User already exists!");
+                    return BadRequest("A user with the given username, email, or phone already exists.");
+                }
+
+                // Ensure the role is either "User" or "Admin"
+                if (request.Role != "User" && request.Role != "Admin")
+                {
+                    return BadRequest("Invalid role. Only 'User' or 'Admin' roles are allowed.");
                 }
 
                 // Hash the password using BCrypt.Net library 
@@ -84,13 +87,13 @@ namespace mgms_backend.Controllers
                     Email = request.Email,
                     Password = passwordHash,
                     Phone = request.Phone,
-                    Role = "User", // Assuming default role as User
+                    Role = request.Role, // Set the role of the user (User or Admin)
                     DateCreated = DateTime.UtcNow // Set the current date and time
                 };
 
                 // Add the new user to the Users table in the database
-                await _context.Users.AddAsync(newUser);
-                await _context.SaveChangesAsync();
+                await _userRepository.AddUserAsync(newUser);
+                await _userRepository.SaveChangesAsync();
 
                 // Create a JWT token with the user data
                 string token = CreateToken(newUser);
@@ -124,10 +127,8 @@ namespace mgms_backend.Controllers
             }
 
             // Find the user with the given username or email in the database
-            var user = await _context.Users.FirstOrDefaultAsync(
-                u => u.Username == request.Username
-                || u.Email == request.Username);
-
+            var user = await _userRepository.GetUserByUsernameOrEmailAsync(request.Username);
+            
             // Check if the user exists in the database
             if (user == null)
             {
@@ -151,7 +152,7 @@ namespace mgms_backend.Controllers
         public async Task<ActionResult<User>> UpdateUser(RegisterDto request)
         {
             // Find the user with the given id in the database
-            var user = await _context.Users.FindAsync(request.UserId);
+            var user = await _userRepository.GetUserByIdAsync(request.UserId);
 
             // Check if the user exists
             if (user == null)
@@ -159,19 +160,24 @@ namespace mgms_backend.Controllers
                 return NotFound("User not found.");
             }
 
+            // This check ensures that only admins can change roles, or users can update their own data without changing roles
+            if (!User.IsInRole("Admin") && request.Role != user.Role)
+            {
+                return BadRequest("Changing roles is not allowed.");
+            }
+
             // Check if the username/email/phone is being updated to a value that already exists for another user
-            var userExists = await _context.Users.AnyAsync(u =>
-                (request.Email != user.Email && u.Email == request.Email) ||
-                (request.Username != user.Username && u.Username == request.Username) ||
-                (request.Phone != user.Phone && u.Phone == request.Phone));
+            var userExists = await _userRepository.UserExistsAsync(
+                               request.Username, request.Email, request.Phone, user.UserId);
 
             if (userExists)
             {
                 return BadRequest("A user with the given username, email, or phone already exists.");
             }
 
-            // Check if the information is unchanged
-            if (request.Email == user.Email && request.Username == user.Username && request.Phone == user.Phone)
+            // Check if the information is unchanged (including Role)
+            if (request.Email == user.Email && request.Username == user.Username &&
+                request.Phone == user.Phone && request.Role == user.Role)
             {
                 return BadRequest("No new information was provided for the update.");
             }
@@ -182,9 +188,10 @@ namespace mgms_backend.Controllers
             user.Username = request.Username;
             user.Email = request.Email;
             user.Phone = request.Phone;
+            user.Role = request.Role;
 
             // Save the changes to the database
-            await _context.SaveChangesAsync();
+            await _userRepository.UpdateUserAsync(user);
 
             return Ok(user); // Return the updated user object as a response
         }
@@ -195,7 +202,7 @@ namespace mgms_backend.Controllers
         public async Task<ActionResult<User>> DeleteUser(int UserId)
         {
             // Find the user with the given id in the database
-            var user = await _context.Users.FindAsync(UserId);
+            var user = await _userRepository.GetUserByIdAsync(UserId);
 
             // Check if the user exists
             if (user == null)
@@ -204,8 +211,8 @@ namespace mgms_backend.Controllers
             }
 
             // Remove the user from the Users table in the database
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            await _userRepository.DeleteUserAsync(UserId);
+            await _userRepository.SaveChangesAsync();
 
             return Ok(user); // Return the deleted user object as a response
         }
