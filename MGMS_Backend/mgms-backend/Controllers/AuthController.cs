@@ -11,7 +11,7 @@ using mgms_backend.Repositories;
 
 namespace mgms_backend.Controllers
 {
-    [Route("api/[controller]")] // Route to the controller endpoint 
+    [Route("api/[controller]/[action]")] // Route to the controller endpoint 
     [ApiController] // Attribute for Web API controller
     [Authorize] // Secure the controller with JWT authentication
     public class AuthController : ControllerBase
@@ -28,7 +28,7 @@ namespace mgms_backend.Controllers
 
         // GET: api/auth/GetAll
         [HttpGet("GetAll")] // Route to the GetAll endpoint
-        [Authorize (Roles = "Admin")]
+        [Authorize (Roles = "ADMIN")]
         public async Task<IActionResult> GetAll()
         {
             // Get all the users from the Users table in the database
@@ -38,7 +38,7 @@ namespace mgms_backend.Controllers
 
         // GET: api/auth/GetById
         [HttpGet("GetById")] // Route to the GetById endpoint
-        [Authorize (Roles = "Admin")]
+        [Authorize (Roles = "ADMIN")]
         public async Task<IActionResult> GetUserById(int UserId)
         {
             // Find the user with the given id in the database
@@ -69,10 +69,13 @@ namespace mgms_backend.Controllers
                     return BadRequest("A user with the given username, email, or phone already exists.");
                 }
 
+                // Convert the role to lowercase to make the role check case-insensitive
+                string role = string.IsNullOrWhiteSpace(request.Role) ? "user" : request.Role.ToUpper();
+
                 // Ensure the role is either "User" or "Admin"
-                if (request.Role != "User" && request.Role != "Admin")
+                if (role != "USER" && role != "ADMIN")
                 {
-                    return BadRequest("Invalid role. Only 'User' or 'Admin' roles are allowed.");
+                    role = "USER"; // Set the default role to "User" if an invalid role is provided
                 }
 
                 // Hash the password using BCrypt.Net library 
@@ -87,7 +90,7 @@ namespace mgms_backend.Controllers
                     Email = request.Email,
                     Password = passwordHash,
                     Phone = request.Phone,
-                    Role = request.Role, // Set the role of the user (User or Admin)
+                    Role = role, // Set the role of the user (USER or ADMIN)
                     DateCreated = DateTime.UtcNow // Set the current date and time
                 };
 
@@ -143,7 +146,7 @@ namespace mgms_backend.Controllers
 
             // Create a JWT token with the user data and return it
             string token = CreateToken(user);
-            return Ok(new { token });
+            return Ok(new {message = "Login successful!", token}); // Return the token as a response
         }
 
         // PUT: api/auth/Update
@@ -161,7 +164,7 @@ namespace mgms_backend.Controllers
             }
 
             // This check ensures that only admins can change roles, or users can update their own data without changing roles
-            if (!User.IsInRole("Admin") && request.Role != user.Role)
+            if (!User.IsInRole("ADMIN") && request.Role != user.Role)
             {
                 return BadRequest("Changing roles is not allowed.");
             }
@@ -193,12 +196,12 @@ namespace mgms_backend.Controllers
             // Save the changes to the database
             await _userRepository.UpdateUserAsync(user);
 
-            return Ok(user); // Return the updated user object as a response
+            return Ok(new {message = "User updated successfully!", user}); // Return the updated user object as a response 
         }
 
         // DELETE: api/auth/Delete
         [HttpDelete("Delete")] // Route to the Delete endpoint
-        [Authorize (Roles = "Admin")] // Allow only Admin role to access the endpoint
+        [Authorize (Roles = "ADMIN")] // Allow only Admin role to access the endpoint
         public async Task<ActionResult<User>> DeleteUser(int UserId)
         {
             // Find the user with the given id in the database
@@ -214,12 +217,12 @@ namespace mgms_backend.Controllers
             await _userRepository.DeleteUserAsync(UserId);
             await _userRepository.SaveChangesAsync();
 
-            return Ok(user); // Return the deleted user object as a response
+            return Ok(new { message = $"User with ID {UserId} deleted successfully!" }); // Return a success message
         }
 
         // Create a JWT token with user data 
         private string CreateToken(User user)
-        {
+        { 
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),

@@ -1,15 +1,42 @@
 @mgms-backend_HostAddress = https://localhost:7286
 @mgms_backend_HostAddress = http://localhost:5296
 
-GET {{mgms-backend_HostAddress}}/api/auth/GetAll
+
+DELETE {{mgms-backend_HostAddress}}/api/auth/DeleteUser/Delete?UserId=0
 
 ###
 
-POST {{mgms-backend_HostAddress}}/api/auth/Login
+GET {{mgms-backend_HostAddress}}/api/auth/GetAll/GetAll
+
+###
+
+GET {{mgms-backend_HostAddress}}/api/auth/GetUserById/GetById?UserId=0
+
+###
+
+POST {{mgms-backend_HostAddress}}/api/auth/Login/Login
 Content-Type: application/json
 
 {
   //LoginDto
+}
+
+###
+
+POST {{mgms-backend_HostAddress}}/api/auth/Register/Register
+Content-Type: application/json
+
+{
+  //RegisterDto
+}
+
+###
+
+PUT {{mgms-backend_HostAddress}}/api/auth/UpdateUser/Update
+Content-Type: application/json
+
+{
+  //RegisterDto
 }
 
 ###
