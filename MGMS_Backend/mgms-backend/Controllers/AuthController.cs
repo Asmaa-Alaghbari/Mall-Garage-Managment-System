@@ -47,7 +47,7 @@ namespace mgms_backend.Controllers
             // Check if the user exists
             if (user == null)
             {
-                return NotFound("User not found.");
+                return NotFound("User not found."); // 404 
             }   
             
             return Ok(user); // Return the user object as a response
@@ -66,7 +66,7 @@ namespace mgms_backend.Controllers
             {
                 if (userExists)
                 {
-                    return BadRequest("A user with the given username, email, or phone already exists.");
+                    return Conflict("A user with the given username, email, or phone already exists."); // 409
                 }
 
                 // Convert the role to lowercase to make the role check case-insensitive
@@ -117,16 +117,17 @@ namespace mgms_backend.Controllers
         [AllowAnonymous] // Allow unauthenticated access to the endpoint
         public async Task<ActionResult> Login(LoginDto request)
         {
+            Console.WriteLine("Login request received");
             // Check if the username or email is provided in the request
             if (string.IsNullOrEmpty(request.Username))
             {
-                return BadRequest("Username or Email is required.");
+                return BadRequest("Username or Email is required."); // 400
             }
 
             // Check if the password is provided in the request
             if (string.IsNullOrEmpty(request.Password))
             {
-                return BadRequest("Password is required.");
+                return BadRequest("Password is required."); // 400
             }
 
             // Find the user with the given username or email in the database
@@ -135,20 +136,20 @@ namespace mgms_backend.Controllers
             // Check if the user exists in the database
             if (user == null)
             {
-                return BadRequest("User not found.");
+                return NotFound("User not found."); // 404
             }
 
             // Verify the password using BCrypt.Net library
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
             {
-                return BadRequest("Invalid password.");
+                return Unauthorized("Invalid password."); // 401
             }
 
             // Create a JWT token with the user data and return it
             string token = CreateToken(user);
             return Ok(new {message = "Login successful!", token}); // Return the token as a response
         }
-
+        
         // PUT: api/auth/Update
         [HttpPut("Update")] // Route to the Update endpoint
         [Authorize] // The user should only be able to update their own profile
@@ -166,7 +167,7 @@ namespace mgms_backend.Controllers
             // This check ensures that only admins can change roles, or users can update their own data without changing roles
             if (!User.IsInRole("ADMIN") && request.Role != user.Role)
             {
-                return BadRequest("Changing roles is not allowed.");
+                return StatusCode(403, "Only admins can change roles!"); // 403
             }
 
             // Check if the username/email/phone is being updated to a value that already exists for another user
@@ -175,14 +176,19 @@ namespace mgms_backend.Controllers
 
             if (userExists)
             {
-                return BadRequest("A user with the given username, email, or phone already exists.");
+                return Conflict("A user with the given username, email, or phone already exists.");
             }
 
             // Check if the information is unchanged (including Role)
-            if (request.Email == user.Email && request.Username == user.Username &&
-                request.Phone == user.Phone && request.Role == user.Role)
+            if (request.FirstName == user.FirstName &&
+                request.LastName == user.LastName &&
+                request.Username == user.Username &&
+                request.Email == user.Email &&
+                BCrypt.Net.BCrypt.Verify(request.Password, user.Password) &&
+                request.Phone == user.Phone &&
+                request.Role == user.Role )
             {
-                return BadRequest("No new information was provided for the update.");
+                return StatusCode(304, "No new information was provided for the update!");
             }
 
             // Update the user data with the new values from the request
@@ -190,6 +196,7 @@ namespace mgms_backend.Controllers
             user.LastName = request.LastName;
             user.Username = request.Username;
             user.Email = request.Email;
+            user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
             user.Phone = request.Phone;
             user.Role = request.Role;
 
