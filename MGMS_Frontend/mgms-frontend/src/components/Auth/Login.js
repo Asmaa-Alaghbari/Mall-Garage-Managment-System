@@ -24,7 +24,7 @@ export default function Login({ setIsLoggedIn }) {
       credentials: "include", // Include cookies for authentication
     };
 
-    const apiURL = "http://localhost:5296/api/auth/Login/Login"; // API URL for user login
+    const apiURL = "http://localhost:5296/api/auth/Login"; // API URL for user login
 
     try {
       const response = await fetch(apiURL, requestOptions);

@@ -24,7 +24,7 @@ export default function Profile() {
       const token = localStorage.getItem("token");
       try {
         const response = await fetch(
-          "http://localhost:5296/api/auth/GetUser/GetUser",
+          "http://localhost:5296/api/auth/GetUser",
           {
             method: "GET",
             headers: {
@@ -63,7 +63,7 @@ export default function Profile() {
     const token = localStorage.getItem("token");
     try {
       const response = await fetch(
-        "http://localhost:5296/api/auth/UpdateUser/Update",
+        "http://localhost:5296/api/auth/Update",
         {
           method: "PUT",
           headers: {

@@ -9,8 +9,8 @@ namespace mgms_backend.Models
         public int ParkingSpotId { get; set; }
         public string Number { get; set; }
         public string Section { get; set; }
-        public bool IsOccupied { get; set; }
         public string Size { get; set; }
+        public bool IsOccupied { get; set; } = false; // Default value
 
         // Navigation properties for related entities
         public ICollection<Reservation> Reservations { get; set; }

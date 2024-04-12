@@ -11,7 +11,7 @@ using mgms_backend.Repositories;
 
 namespace mgms_backend.Controllers
 {
-    [Route("api/[controller]/[action]")] // Route to the controller endpoint 
+    [Route("api/[controller]")] // Route to the controller endpoint 
     [ApiController] // Attribute for Web API controller
     [Authorize] // Secure the controller with JWT authentication
     public class AuthController : ControllerBase
@@ -196,10 +196,10 @@ namespace mgms_backend.Controllers
         // PUT: api/auth/Update
         [HttpPut("Update")] // Route to the Update endpoint
         [Authorize] // The user should only be able to update their own profile
-        public async Task<ActionResult<User>> UpdateUser(RegisterDto request)
+        public async Task<ActionResult> UpdateUser(int userId, RegisterDto request) 
         {
             // Find the user with the given id in the database
-            var user = await _userRepository.GetUserByIdAsync(request.UserId);
+            var user = await _userRepository.GetUserByIdAsync(userId);
 
             // Check if the user exists
             if (user == null)

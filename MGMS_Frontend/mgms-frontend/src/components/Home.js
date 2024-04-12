@@ -1,35 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import './Home.css';
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import "./Home.css";
 
 export default function Home() {
   const [user, setUser] = useState(null);
   const [recentReservations, setRecentReservations] = useState([]);
-  const [parkingSpotSummary, setParkingSpotSummary] = useState({});
   const location = useLocation();
+  const [parkingSpotSummary, setParkingSpotSummary] = useState({
+    available: 0,
+    occupied: 0,
+    total: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Fetch user data, recent reservations, and parking spot summary
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) {
-      setUser(storedUser);
-    } else if (location.state?.loggedIn) {
-      // Handle successful login redirect scenario
-      const newUser = JSON.parse(localStorage.getItem("user"));
-      setUser(newUser);
-    }
+    setIsLoading(true);
+    // Fetch the parking spot summary (available, occupied, total)
+    fetch("http://localhost:5296/api/parkingspots/GetParkingSpotSummary", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch parking spots summary");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setParkingSpotSummary(data);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching parking spot summary:", error);
+        setError(error.toString());
+        setIsLoading(false);
+      });
 
     // Fetch recent reservations (assuming an API endpoint)
-    fetch('/api/reservations/recent')
-      .then(response => response.json())
-      .then(data => setRecentReservations(data))
-      .catch(error => console.error('Error fetching recent reservations:', error));
-
-    // Fetch parking spot summary (assuming an API endpoint)
-    fetch('/api/parking-spots/summary')
-      .then(response => response.json())
-      .then(data => setParkingSpotSummary(data))
-      .catch(error => console.error('Error fetching parking spot summary:', error));
+    fetch("/api/reservations/recent")
+      .then((response) => response.json())
+      .then((data) => setRecentReservations(data))
+      .catch((error) =>
+        console.error("Error fetching recent reservations:", error)
+      );
   }, [location]);
 
   return (
@@ -54,7 +71,7 @@ export default function Home() {
           <h2 className="card-header">My Reservations</h2>
           <ul className="card-body">
             {recentReservations.length > 0 ? (
-              recentReservations.map(reservation => (
+              recentReservations.map((reservation) => (
                 <li key={reservation.id}>
                   <Link to={`/reservations/${reservation.id}`}>
                     {reservation.parkingSpot} - {reservation.date}
@@ -72,20 +89,18 @@ export default function Home() {
         <section className="card">
           <h2 className="card-header">Parking Spots</h2>
           <ul className="card-body">
-            <li>
-              Available: {parkingSpotSummary.available || 0}
-            </li>
-            <li>
-              Occupied: {parkingSpotSummary.occupied || 0}
-            </li>
-            <li>
-              Total: {parkingSpotSummary.total || 0}
-            </li>
+            {error && <li className="error">Error: {error}</li>}
+            {isLoading ? (
+              <li>Loading parking spots summary...</li>
+            ) : (
+              <>
+                <li>Available: {parkingSpotSummary.available || 0}</li>
+                <li>Occupied: {parkingSpotSummary.occupied || 0}</li>
+                <li>Total: {parkingSpotSummary.total || 0}</li>
+              </>
+            )}
             <li>
               <Link to="/parking-spots">View All Parking Spots</Link>
-            </li>
-            <li>
-              <Link to="/parking-spots/create">Add a New Parking Spot</Link>
             </li>
           </ul>
         </section>

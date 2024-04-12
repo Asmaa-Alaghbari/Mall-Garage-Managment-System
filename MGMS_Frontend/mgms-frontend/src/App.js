@@ -11,7 +11,7 @@ import Home from "./components/Home";
 import Navbar from "./components/Navbar";
 import Profile from "./components/Profile";
 import Reservations from "./components/Reservations";
-import ParkingSpots from "./components/ParkingSpots";
+import ParkingSpots from "./components/ParkingSpot/ParkingSpots";
 import Logout from "./components/Auth/Logout";
 
 import "./App.css";

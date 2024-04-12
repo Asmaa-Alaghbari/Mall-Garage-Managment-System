@@ -52,7 +52,7 @@ export default function SignUp() {
 
     try {
       // Make a POST request to the API server (backend)
-      const apiURL = "http://localhost:5296/api/auth/Register/Register"; // API URL for user registration
+      const apiURL = "http://localhost:5296/api/auth/Register"; // API URL for user registration
 
       const response = await fetch(apiURL, requestOptions);
 
