@@ -67,10 +67,11 @@ namespace mgms_backend.Repositories
         }
 
         // Get a user by username or email from the database
-        public async Task<User> GetUserByUsernameOrEmailAsync(string username)
+        public async Task<User> GetUserByUsernameOrEmailAsync(string usernameOrEmail)
         {
-            return await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == username || u.Email == username);
+            return await _context.Users.FirstOrDefaultAsync(
+                u => u.Username.Equals(usernameOrEmail) || 
+                    u.Email.Equals(usernameOrEmail));
         }
     }
 }

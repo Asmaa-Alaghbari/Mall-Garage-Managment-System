@@ -53,6 +53,49 @@ namespace mgms_backend.Controllers
             return Ok(user); // Return the user object as a response
         }
 
+        // GET: api/auth/GetUser
+        [HttpGet("GetUser")] // Route to the GetUser endpoint
+        [Authorize] // The user should only be able to access their own profile
+        public async Task<IActionResult> GetUser()
+        {
+            // Extract the username from the JWT token
+            var username = User.Identity?.Name; // Ccontains the username from the token
+
+            // Check if the username is null or empty (should not happen with JWT authentication) 
+            if (string.IsNullOrEmpty(username))
+            {
+                return Unauthorized("Invalid token data."); // 401
+            }
+
+            try
+            {
+                // Fetch the user details from the database
+                var user = await _userRepository.GetUserByUsernameOrEmailAsync(username);
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+
+                // Return the user data as a response (excluding sensitive fields like password)
+                return Ok(new
+                {
+                    user.UserId,
+                    user.FirstName,
+                    user.LastName,
+                    user.Username,
+                    user.Email,
+                    user.Phone,
+                    user.Role
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine(ex.ToString());
+                return StatusCode(500, "An error occurred while retrieving user data.");
+            }
+        }
+
         // POST: api/auth/Register 
         [HttpPost("Register")] // Route to the Register endpoint 
         [AllowAnonymous] // Allow unauthenticated access to the endpoint

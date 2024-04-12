@@ -1,6 +1,6 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import './Navbar.css'; 
+import React from "react";
+import { Link } from "react-router-dom";
+import "./Navbar.css";
 
 // Navigation bar component
 export default function Navbar() {
@@ -12,10 +12,29 @@ export default function Navbar() {
         </Link>
         <ul className="nav-menu">
           <li className="nav-item">
-            <Link to="/home" className="nav-links">Home</Link>
+            <Link to="/home" className="nav-links active">
+              Home
+            </Link>
           </li>
           <li className="nav-item">
-            <Link to="/login" className="nav-links">Log out</Link>
+            <Link to="/reservations" className="nav-links">
+              Reservations
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/parking-spots" className="nav-links">
+              Parking Spots
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/profile" className="nav-links">
+              Profile
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/logout" className="nav-links">
+              Logout
+            </Link>
           </li>
         </ul>
       </div>

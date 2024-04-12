@@ -52,10 +52,7 @@ export default function SignUp() {
 
     try {
       // Make a POST request to the API server (backend)
-      const apiURL =
-        process.env.NODE_ENV === "development"
-          ? "http://localhost:5296/api/auth/Register"
-          : "http://localhost:7286/api/auth/Register";
+      const apiURL = "http://localhost:5296/api/auth/Register/Register"; // API URL for user registration
 
       const response = await fetch(apiURL, requestOptions);
 

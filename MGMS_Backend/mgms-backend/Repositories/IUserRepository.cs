@@ -12,6 +12,6 @@ namespace mgms_backend.Repositories
         Task DeleteUserAsync(int userId); // Delete a user from the database
         Task SaveChangesAsync(); // Save changes to the database
         Task<bool> UserExistsAsync(string username, string email, string phone, int? excludeUserId = null); // Check if a user exists in the database
-        Task<User> GetUserByUsernameOrEmailAsync(string username); // Get a user by username or email from the database
+        Task<User> GetUserByUsernameOrEmailAsync(string usernameOrEmail); // Get a user by username or email from the database
     }
 }
