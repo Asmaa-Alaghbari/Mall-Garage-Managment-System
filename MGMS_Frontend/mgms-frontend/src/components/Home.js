@@ -82,7 +82,7 @@ export default function Home() {
               <li>No recent reservations found.</li>
             )}
             <li>
-              <Link to="/reservations/create">Make a New Reservation</Link>
+              <Link to="/reservations">View All Reservations</Link>
             </li>
           </ul>
         </section>

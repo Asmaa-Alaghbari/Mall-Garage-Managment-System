@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using mgms_backend.Data;
 using mgms_backend.Repositories;
+using mgms_backend.Models;
 
 namespace mgms_backend
 {
@@ -23,6 +24,7 @@ namespace mgms_backend
             // Register the repository service 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IParkingSpotRepository, ParkingSpotRepository>();
+            builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 
             // Add CORS (Cross-Origin Resource Sharing) policy to allow requests from the front-end application 
             builder.Services.AddCors(options =>

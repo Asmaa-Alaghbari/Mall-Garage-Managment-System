@@ -10,7 +10,7 @@ import SignUp from "./components/Auth/SignUp";
 import Home from "./components/Home";
 import Navbar from "./components/Navbar";
 import Profile from "./components/Profile";
-import Reservations from "./components/Reservations";
+import Reservations from "./components/Reservation/Reservations";
 import ParkingSpots from "./components/ParkingSpot/ParkingSpots";
 import Logout from "./components/Auth/Logout";
 
