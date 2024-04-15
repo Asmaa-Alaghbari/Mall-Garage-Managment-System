@@ -11,33 +11,23 @@ export default function Navbar() {
           MGMS
         </Link>
         <ul className="nav-menu">
-          <li className="nav-item">
-            <Link to="/home" className="nav-links active">
-              Home
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link to="/reservations" className="nav-links">
-              Reservations
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link to="/parking-spots" className="nav-links">
-              Parking Spots
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link to="/profile" className="nav-links">
-              Profile
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link to="/logout" className="nav-links">
-              Logout
-            </Link>
-          </li>
+          <NavItem to="/home" label="Home" />
+          <NavItem to="/reservations" label="Reservations" />
+          <NavItem to="/parking-spots" label="Parking Spots" />
+          <NavItem to="/payments" label="Payments" />
+          <NavItem to="/profile" label="Profile" />
+          <NavItem to="/logout" label="Logout" />
         </ul>
       </div>
     </nav>
   );
 }
+
+// Navigation item component
+const NavItem = ({ to, label }) => (
+  <li className="nav-item">
+    <Link to={to} className="nav-links">
+      {label}
+    </Link>
+  </li>
+);

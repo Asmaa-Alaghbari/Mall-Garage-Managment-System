@@ -15,6 +15,7 @@ import ParkingSpots from "./components/ParkingSpot/ParkingSpots";
 import Logout from "./components/Auth/Logout";
 
 import "./App.css";
+import Payment from "./components/Payment/Payment";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Login state for the user
@@ -56,6 +57,10 @@ export default function App() {
           <Route
             path="/reservations"
             element={isLoggedIn ? <Reservations /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/payments"
+            element={isLoggedIn ? <Payment /> : <Navigate to="/login" />}
           />
           <Route
             path="/logout"

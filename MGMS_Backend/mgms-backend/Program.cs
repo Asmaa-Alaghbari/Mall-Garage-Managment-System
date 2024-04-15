@@ -25,6 +25,7 @@ namespace mgms_backend
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IParkingSpotRepository, ParkingSpotRepository>();
             builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
             // Add CORS (Cross-Origin Resource Sharing) policy to allow requests from the front-end application 
             builder.Services.AddCors(options =>

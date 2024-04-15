@@ -12,7 +12,11 @@ namespace mgms_backend.Models
         public int ReservationId { get; set; }
         [ForeignKey("User")] // Data annotation for the foreign key
         public int UserId { get; set; }
+        [Required] 
+        [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero!")]
         public decimal Amount { get; set; }
+        [MaxLength(50)] // Data annotation for the maximum length of the string
+        [Required]
         public string PaymentMethod { get; set; }
         public DateTime DateTime { get; set; }
 
