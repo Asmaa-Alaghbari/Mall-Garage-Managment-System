@@ -87,8 +87,9 @@ namespace mgms_backend.Controllers
             }
 
             var addedParkingSpot = await _parkingSpotRepository.AddParkingSpotAsync(newParkingSpot);
-            return CreatedAtAction(nameof(GetParkingSpotById), 
+            var createdParkingSpot =  CreatedAtAction(nameof(GetParkingSpotById), 
                 new { parkingSpotId = addedParkingSpot.ParkingSpotId }, addedParkingSpot);
+            return Ok(new { message = "Spot added successfully!", createdParkingSpot });
         }
 
         // PUT: api/UpdateParkingSpot

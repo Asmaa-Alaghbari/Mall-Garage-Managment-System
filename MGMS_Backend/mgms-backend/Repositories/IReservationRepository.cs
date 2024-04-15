@@ -10,5 +10,7 @@ namespace mgms_backend.Repositories
         Task UpdateReservationAsync(Reservation reservation); // Update a reservation
         Task DeleteReservationAsync(int reservationId); // Delete a reservation
         Task<bool> IsParkingSpotAvailableAsync(int parkingSpotId, DateTime startTime, DateTime endTime); // Check if a parking spot is available
+        Task<bool> CheckForOverlappingReservations(int userId, int parkingSpotId, DateTime startTime, DateTime endTime); // Check for overlapping reservations
+        Task SaveChangesAsync(); // Save changes
     }
 }

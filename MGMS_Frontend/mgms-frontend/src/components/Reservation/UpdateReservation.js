@@ -15,24 +15,41 @@ export default function UpdateReservation({
   });
 
   useEffect(() => {
-    setReservation({
-      reservationId: reservationData.reservationId,
-      userId: reservationData.userId,
-      parkingSpotId: reservationData.parkingSpotId,
-      startTime: reservationData.startTime,
-      endTime: reservationData.endTime,
-      status: reservationData.status,
-    });
+    // Preprocess the reservation data to format the date and time
+    const preprocessReservationData = {
+      ...reservationData,
+      startTime: formatDateTime(reservationData.startTime),
+      endTime: formatDateTime(reservationData.endTime),
+    };
+
+    // Set the reservation state with the preprocessed data
+    setReservation(preprocessReservationData);
   }, [reservationData]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Format the date and time to display in the input field for editing
+  const formatDateTime = (dateTime) => {
+    const date = new Date(dateTime);
+    const formattedDate = date.toISOString().slice(0, 16); // Cut off seconds and milliseconds
+
+    return formattedDate;
+  };
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target; // Get the name and value of the input field
+    let formattedValue = value; // Initialize the formatted value with the input value
+
+    // Check if the field is a date field (startTime or endTime) and convert it to UTC
+    if (name === "startTime" || name === "endTime") {
+      formattedValue = formatDateTime(value);
+    }
+
+    // Update the reservation state
     setReservation((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: formattedValue,
     }));
   };
 
@@ -63,7 +80,8 @@ export default function UpdateReservation({
         onUpdated(data);
       })
       .catch((error) => {
-        setMessage(error.message);
+        console.error("Error updating reservation:", error);
+        setMessage(error.message || "Failed to update reservation");
       })
       .finally(() => {
         setIsLoading(false);
@@ -75,25 +93,23 @@ export default function UpdateReservation({
     <div>
       <h2>Update Reservation</h2>
       <form onSubmit={handleSubmit}>
-        <label>
-          Reservation ID (Read-only):
-          <input
-            type="text"
-            name="reservationId"
-            value={reservation.reservationId}
-            readOnly
-          />
-        </label>
-        <label>
-          User ID:
-          <input
-            type="text"
-            name="userId"
-            value={reservation.userId}
-            onChange={handleChange}
-            required
-          />
-        </label>
+        Reservation ID (Read-only):
+        <input
+          type="text"
+          name="reservationId"
+          value={reservation.reservationId}
+          readOnly
+          hidden
+        />
+        <input
+          type="text"
+          name="userId"
+          value={reservation.userId}
+          onChange={handleChange}
+          required
+          readOnly
+          hidden
+        />
         <label>
           Parking Spot ID:
           <input

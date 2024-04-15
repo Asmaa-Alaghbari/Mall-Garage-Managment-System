@@ -114,8 +114,8 @@ export default function Reservations() {
               {reservation.status}
               <button
                 onClick={() => {
-                  setSelectedReservation(reservation);
-                  setShowUpdateForm(true);
+                  setSelectedReservation(reservation); // Set the selected reservation for update
+                  setShowUpdateForm(true); // Show the update form
                 }}
               >
                 Update
@@ -133,3 +133,4 @@ export default function Reservations() {
     </div>
   );
 }
+

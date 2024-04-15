@@ -58,5 +58,19 @@ namespace mgms_backend.Repositories
                 .Where(r => r.ParkingSpotId == parkingSpotId)
                 .AllAsync(r => r.EndTime <= startTime || r.StartTime >= endTime);
         }
+
+        // Check for overlapping reservations
+        public Task<bool> CheckForOverlappingReservations(int userId, int parkingSpotId, DateTime startTime, DateTime endTime)
+        {
+            return _context.Reservations
+                .Where(r => r.UserId == userId && r.ParkingSpotId == parkingSpotId)
+                .AllAsync(r => r.EndTime <= startTime || r.StartTime >= endTime);
+        }
+
+        // Save changes 
+        public Task SaveChangesAsync()
+        {
+            return _context.SaveChangesAsync();
+        }
     }
 }

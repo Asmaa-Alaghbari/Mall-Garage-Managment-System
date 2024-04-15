@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-export default function AddReservation({ user, onAddSuccess, onClose }) {
+export default function AddReservation({ onAddSuccess, onClose }) {
   // Initialize the reservation state with user ID pre-populated if user data is available
   const [reservation, setReservation] = useState({
-    userId: user ? user.id : "", // Pre-populate the user ID if user data is available
+    userId: "", // Pre-populate the user ID if user data is available
     parkingSpotId: "",
     startTime: "",
     endTime: "",
@@ -11,19 +11,80 @@ export default function AddReservation({ user, onAddSuccess, onClose }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [error, setError] = useState(null);
 
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      setIsLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No token found");
+        }
+
+        // Fetch the user data from the backend using the token for authentication
+        const response = await fetch("http://localhost:5296/api/auth/GetUser", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // Check if the response is successful
+        if (!response.ok) {
+          throw new Error("Failed to fetch user");
+        }
+
+        // Parse the response body as JSON
+        const userData = await response.json();
+        console.log("Fetched user data:", userData); // Log the fetched user data
+
+        // Check if the UserId field exists in the userData
+        if (userData.userId) {
+          setReservation((prev) => ({
+            ...prev,
+            userId: userData.userId, // Populate userId with the fetched ID
+          }));
+        } else {
+          console.error("UserId not found in user data");
+        }
+      } catch (err) {
+        console.error("Fetch user error:", err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  // Update the reservation state
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setReservation((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    // Check if the field is a date field (startTime or endTime) and convert it to UTC
+    if (name === "startTime" || name === "endTime") {
+      const date = new Date(value);
+      const utcDate = new Date(date.toUTCString().slice(0, -4)); // Remove the 'GMT' from the end
+
+      // Update the reservation state with the UTC date
+      setReservation((prev) => ({
+        ...prev,
+        [name]: utcDate.toISOString(), // Convert UTC date back to string
+      }));
+    } else {
+      // Update the reservation state with the new value
+      setReservation((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
-    fetch("http://localhost:5296/api/reservations/CreateReservation", {
+    fetch("http://localhost:5296/api/reservations/AddReservation", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -60,17 +121,15 @@ export default function AddReservation({ user, onAddSuccess, onClose }) {
     <div>
       <h2>Add Reservation</h2>
       <form onSubmit={handleSubmit}>
-        <label>
-          User ID (Read-only):
-          <input
-            type="text"
-            name="userId"
-            value={reservation.userId}
-            onChange={handleChange}
-            required
-            readOnly // User ID is read-only since it's automatically set
-          />
-        </label>
+        <input
+          type="text"
+          name="userId"
+          value={reservation.userId}
+          onChange={handleChange}
+          required
+          readOnly // User ID is read-only since it's automatically set
+          hidden // Hide the user ID field from the form
+        />
         <label>
           Parking Spot ID:
           <input

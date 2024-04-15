@@ -13,10 +13,18 @@ namespace mgms_backend.Controllers
     public class ReservationsController : ControllerBase
     {
         private readonly IReservationRepository _reservationRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IParkingSpotRepository _parkingSpotRepository;
 
-        public ReservationsController(IReservationRepository reservationRepository)
+        public ReservationsController(
+            IReservationRepository reservationRepository,
+            IUserRepository userRepository,
+            IParkingSpotRepository parkingSpotRepository
+            )
         {
             _reservationRepository = reservationRepository;
+            _userRepository = userRepository;
+            _parkingSpotRepository = parkingSpotRepository;
         }
 
         // GET: api/GetAllReservations
@@ -43,18 +51,42 @@ namespace mgms_backend.Controllers
             return Ok(reservation);
         }
 
-        // POST: api/CreateReservation
-        [HttpPost("CreateReservation")]
+        // POST: api/AddReservation
+        [HttpPost("AddReservation")]
         [Authorize]
-        public async Task<ActionResult> CreateReservation([FromBody] ReservationDTO createReservationDto)
+        public async Task<ActionResult> AddReservation([FromBody] ReservationDTO createReservationDto)
         {
+            // Convert DateTime to UTC if necessary to avoid timezone issues when storing in the database
+            createReservationDto.StartTime = createReservationDto.StartTime.ToUniversalTime();
+            createReservationDto.EndTime = createReservationDto.EndTime.ToUniversalTime();
+
+            // Check if UserId and ParkingSpotId are provided and valid
+            if (createReservationDto.UserId <= 0 || createReservationDto.ParkingSpotId <= 0)
+            {
+                return StatusCode(422, "UserId and ParkingSpotId must be provided!");
+            }
+
+            // Check for the existence of the user
+            var user = await _userRepository.GetUserByIdAsync(createReservationDto.UserId);
+            if (user == null)
+            {
+                return NotFound($"User with ID {createReservationDto.UserId} not found.");
+            }
+
+            // Check for the existence of the parking spot
+            var parkingSpot = await _parkingSpotRepository.GetParkingSpotByIdAsync(createReservationDto.ParkingSpotId);
+            if (parkingSpot == null)
+            {
+                return NotFound($"Parking spot with ID {createReservationDto.ParkingSpotId} not found!");
+            }
+
             var newReservation = new Reservation
             {
                 UserId = createReservationDto.UserId,
                 ParkingSpotId = createReservationDto.ParkingSpotId,
                 StartTime = createReservationDto.StartTime,
                 EndTime = createReservationDto.EndTime,
-                Status = createReservationDto.Status 
+                Status = createReservationDto.Status
             };
 
             // Check if the reservation is valid (e.g. start time is before end time) before adding it
@@ -64,39 +96,16 @@ namespace mgms_backend.Controllers
             }
 
             // Check if the parking spot is available for the given time range before adding the reservation
-            var isParkingSpotAvailable = await _reservationRepository.IsParkingSpotAvailableAsync(
-                newReservation.ParkingSpotId, newReservation.StartTime, newReservation.EndTime);
-            if (!isParkingSpotAvailable)
+            bool isSpotAvailable = await _reservationRepository.IsParkingSpotAvailableAsync(newReservation.ParkingSpotId, newReservation.StartTime, newReservation.EndTime);
+            if (!isSpotAvailable)
             {
-                return StatusCode(409, "Parking spot is not available for the given time range");
+                return Conflict("Parking spot is not available for the given time range.");
             }
 
-            // Check if the user has another reservation that overlaps with the new reservation
-            var userReservations = await _reservationRepository.GetAllReservationsAsync();
-            var overlappingReservation = userReservations.FirstOrDefault(r =>
-                r.UserId == newReservation.UserId &&
-                r.ParkingSpotId == newReservation.ParkingSpotId &&
-                r.EndTime > newReservation.StartTime &&
-                r.StartTime < newReservation.EndTime);
+            await _reservationRepository.AddReservationAsync(newReservation);
+            await _reservationRepository.SaveChangesAsync();
 
-            // If there is an overlapping reservation, return a 409 Conflict status code
-            if (overlappingReservation != null)
-            {
-                return StatusCode(409,
-                    "User already has a reservation for this parking spot that overlaps with the new reservation");
-            }
-
-            try
-            {
-                await _reservationRepository.AddReservationAsync(newReservation);
-                return CreatedAtAction(nameof(GetReservationById), 
-                    new { id = newReservation.ReservationId }, newReservation);
-            }
-            catch (DbUpdateException ex)
-            {
-                // Log the exception, handle or rethrow
-                return StatusCode(500, "An error occurred while saving the reservation. Please try again!");
-            }
+            return Ok(new { message = "Reservation added successfully!" });
         }
 
         // PUT: api/UpdateReservation
@@ -104,6 +113,10 @@ namespace mgms_backend.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateReservation(int reservationId, [FromBody] UpdateReservationDTO updateReservationDto)
         {
+            // Convert DateTime to UTC if necessary to avoid timezone issues when storing in the database
+            updateReservationDto.StartTime = updateReservationDto.StartTime.ToUniversalTime();
+            updateReservationDto.EndTime = updateReservationDto.EndTime.ToUniversalTime();
+
             var reservation = await _reservationRepository.GetReservationByIdAsync(reservationId);
             if (reservation == null)
             {
@@ -116,16 +129,18 @@ namespace mgms_backend.Controllers
                 return StatusCode(422, "Start time must be before end time");
             }
 
-            // Check if the parking spot is available for the given time range before updating the reservation
-            // if the parking spot is different from the original reservation
-            if (updateReservationDto.ParkingSpotId != reservation.ParkingSpotId)
+            // Check if the parking spot is available for the given time range before updating the reservation (excluding the current reservation)
+            bool isSpotAvailable = await _reservationRepository.IsParkingSpotAvailableAsync(
+                reservation.ParkingSpotId, updateReservationDto.StartTime, updateReservationDto.EndTime);
+            if (!isSpotAvailable)
             {
-                var isParkingSpotAvailable = await _reservationRepository.IsParkingSpotAvailableAsync(
-                                       updateReservationDto.ParkingSpotId, updateReservationDto.StartTime, updateReservationDto.EndTime);
-                if (!isParkingSpotAvailable)
-                {
-                    return StatusCode(409, "Parking spot is not available for the given time range");
-                }
+                return Conflict("Parking spot is not available for the given time range.");
+            }
+
+            // Check if the status is valid 
+            if (updateReservationDto.Status != "Active" && updateReservationDto.Status != "Cancelled")
+            {
+                return StatusCode(422, "Status must be either 'Active' or 'Cancelled'");
             }
 
             // Update the reservation with the new values
@@ -135,7 +150,7 @@ namespace mgms_backend.Controllers
 
             await _reservationRepository.UpdateReservationAsync(reservation);
             return Ok(new { message = "Reservation updated successfully!", reservation });
-        }        
+        }
 
         // DELETE: api/DeleteReservation
         [HttpDelete("DeleteReservation")]

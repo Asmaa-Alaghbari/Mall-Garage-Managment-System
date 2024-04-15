@@ -39,14 +39,6 @@ export default function Home() {
         setError(error.toString());
         setIsLoading(false);
       });
-
-    // Fetch recent reservations (assuming an API endpoint)
-    fetch("/api/reservations/recent")
-      .then((response) => response.json())
-      .then((data) => setRecentReservations(data))
-      .catch((error) =>
-        console.error("Error fetching recent reservations:", error)
-      );
   }, [location]);
 
   return (

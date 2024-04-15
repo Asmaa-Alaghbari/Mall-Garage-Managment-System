@@ -8,13 +8,13 @@ export default function Profile() {
     lastName: "",
     username: "",
     email: "",
-    password: "",
     phone: "",
     address: "", // Optional
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+  const [password, setPassword] = useState("");
 
   // Fetch the user's profile data when the component mounts (on initial render)
   useEffect(() => {
@@ -23,22 +23,19 @@ export default function Profile() {
       setIsLoading(true);
       const token = localStorage.getItem("token");
       try {
-        const response = await fetch(
-          "http://localhost:5296/api/auth/GetUser",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch("http://localhost:5296/api/auth/GetUser", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!response.ok) {
           throw new Error("Could not fetch profile data.");
         }
-        const data = await response.json(); // Assuming the backend returns the user's profile in JSON format
+        const userData = await response.json(); // Assuming the backend returns the user's profile in JSON format
         setProfileData({
-          ...data, // Assuming the backend returns the user's profile in the correct format
+          ...userData, // Spread userData directly
         });
       } catch (error) {
         console.error("Profile fetch error:", error);
@@ -62,17 +59,14 @@ export default function Profile() {
     setIsLoading(true);
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch(
-        "http://localhost:5296/api/auth/Update",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(profileData),
-        }
-      );
+      const response = await fetch("http://localhost:5296/api/auth/Update", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ...profileData, password }),
+      });
       if (!response.ok) {
         throw new Error("Could not update profile.");
       }
@@ -123,8 +117,8 @@ export default function Profile() {
           type="password"
           name="password"
           placeholder="Password"
-          value={profileData.password}
-          onChange={handleChange}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
         <input
           type="tel"
