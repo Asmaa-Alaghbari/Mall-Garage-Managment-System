@@ -57,6 +57,9 @@ export default function Home() {
             <li>
               <Link to="/settings">Manage Settings</Link>
             </li>
+            <li>
+              <Link to="/feedbacks">Provide Feedback</Link>
+            </li>
           </ul>
         </section>
         <section className="card">

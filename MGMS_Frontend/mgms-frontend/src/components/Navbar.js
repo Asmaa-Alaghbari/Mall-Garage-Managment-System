@@ -16,6 +16,7 @@ export default function Navbar() {
           <NavItem to="/parking-spots" label="Parking Spots" />
           <NavItem to="/payments" label="Payments" />
           <NavItem to="/profile" label="Profile" />
+          <NavItem to="feedbacks" label="Feedback" />
           <NavItem to="/logout" label="Logout" />
         </ul>
       </div>

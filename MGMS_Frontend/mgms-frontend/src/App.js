@@ -16,6 +16,7 @@ import Logout from "./components/Auth/Logout";
 
 import "./App.css";
 import Payment from "./components/Payment/Payment";
+import Feedback from "./components/Feedback/Feedback";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Login state for the user
@@ -61,6 +62,10 @@ export default function App() {
           <Route
             path="/payments"
             element={isLoggedIn ? <Payment /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/feedbacks"
+            element={isLoggedIn ? <Feedback /> : <Navigate to="/login" />}
           />
           <Route
             path="/logout"

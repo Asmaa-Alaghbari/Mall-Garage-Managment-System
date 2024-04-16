@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using mgms_backend.Data;
 using mgms_backend.Repositories;
-using mgms_backend.Models;
 
 namespace mgms_backend
 {
@@ -22,10 +21,11 @@ namespace mgms_backend
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // Register the repository service 
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
-            builder.Services.AddScoped<IParkingSpotRepository, ParkingSpotRepository>();
-            builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
-            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>(); // User repository 
+            builder.Services.AddScoped<IParkingSpotRepository, ParkingSpotRepository>(); // Parking spot repository
+            builder.Services.AddScoped<IReservationRepository, ReservationRepository>(); // Reservation repository
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>(); // Payment repository
+            builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>(); // Feedback repository
 
             // Add CORS (Cross-Origin Resource Sharing) policy to allow requests from the front-end application 
             builder.Services.AddCors(options =>
