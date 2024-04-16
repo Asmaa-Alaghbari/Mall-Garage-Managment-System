@@ -43,6 +43,19 @@ namespace mgms_backend.Controllers
             return Ok(feedback);
         }
 
+        // GET: api/Feedbacks/GetFeedbackByUserId
+        [HttpGet("GetFeedbackByUserId")]
+        [Authorize(Roles = "ADMIN, USER")]
+        public async Task<ActionResult<IEnumerable<Feedback>>> GetFeedbackByUserId(int userId)
+        {
+            var feedbacks = await _feedbackIdRepository.GetFeedbackByUserIdAsync(userId);
+            if (feedbacks == null || !feedbacks.Any())
+            {
+                return NotFound("Feedbacks not found for the user!");
+            }
+            return Ok(feedbacks);
+        }
+
         // POST: api/Feedbacks/AddFeedback
         [HttpPost("AddFeedback")]
         [Authorize(Roles = "USER")]
@@ -79,7 +92,7 @@ namespace mgms_backend.Controllers
 
             return Ok(new { message = "Feedback added successfully!" });
         }
-        
+
         // DELETE: api/Feedbacks/DeleteFeedback
         [HttpDelete("DeleteFeedback")]
         [Authorize(Roles = "ADMIN")]

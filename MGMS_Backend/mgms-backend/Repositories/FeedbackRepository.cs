@@ -47,5 +47,11 @@ namespace mgms_backend.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        // Get feedback by user id
+        public async Task<IEnumerable<Feedback>> GetFeedbackByUserIdAsync(int userId)
+        {
+            return await _context.Feedbacks.Where(f => f.UserId == userId).ToListAsync();
+        }
     }
 }

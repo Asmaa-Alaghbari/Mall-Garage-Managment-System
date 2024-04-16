@@ -28,7 +28,7 @@ namespace mgms_backend.Controllers
 
         // GET: api/auth/GetAll
         [HttpGet("GetAll")] // Route to the GetAll endpoint
-        [Authorize (Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> GetAll()
         {
             // Get all the users from the Users table in the database
@@ -38,7 +38,7 @@ namespace mgms_backend.Controllers
 
         // GET: api/auth/GetById
         [HttpGet("GetById")] // Route to the GetById endpoint
-        [Authorize (Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> GetUserById(int UserId)
         {
             // Find the user with the given id in the database
@@ -48,8 +48,8 @@ namespace mgms_backend.Controllers
             if (user == null)
             {
                 return NotFound("User not found."); // 404 
-            }   
-            
+            }
+
             return Ok(user); // Return the user object as a response
         }
 
@@ -175,7 +175,7 @@ namespace mgms_backend.Controllers
 
             // Find the user with the given username or email in the database
             var user = await _userRepository.GetUserByUsernameOrEmailAsync(request.Username);
-            
+
             // Check if the user exists in the database
             if (user == null)
             {
@@ -190,13 +190,19 @@ namespace mgms_backend.Controllers
 
             // Create a JWT token with the user data and return it
             string token = CreateToken(user);
-            return Ok(new {message = "Login successful!", token}); // Return the token as a response
+            return Ok(new
+            {
+                message = "Login successful!",
+                token,
+                userId = user.UserId,
+                role = user.Role
+            });
         }
-        
+
         // PUT: api/auth/Update
         [HttpPut("Update")] // Route to the Update endpoint
         [Authorize] // The user should only be able to update their own profile
-        public async Task<ActionResult> UpdateUser(int userId, RegisterDto request) 
+        public async Task<ActionResult> UpdateUser(int userId, RegisterDto request)
         {
             // Find the user with the given id in the database
             var user = await _userRepository.GetUserByIdAsync(userId);
@@ -229,7 +235,7 @@ namespace mgms_backend.Controllers
                 request.Email == user.Email &&
                 BCrypt.Net.BCrypt.Verify(request.Password, user.Password) &&
                 request.Phone == user.Phone &&
-                request.Role == user.Role )
+                request.Role == user.Role)
             {
                 return StatusCode(304, "No new information was provided for the update!");
             }
@@ -246,12 +252,12 @@ namespace mgms_backend.Controllers
             // Save the changes to the database
             await _userRepository.UpdateUserAsync(user);
 
-            return Ok(new {message = "User updated successfully!", user}); // Return the updated user object as a response 
+            return Ok(new { message = "User updated successfully!", user }); // Return the updated user object as a response 
         }
 
         // DELETE: api/auth/Delete
         [HttpDelete("Delete")] // Route to the Delete endpoint
-        [Authorize (Roles = "ADMIN")] // Allow only Admin role to access the endpoint
+        [Authorize(Roles = "ADMIN")] // Allow only Admin role to access the endpoint
         public async Task<ActionResult<User>> DeleteUser(int UserId)
         {
             // Find the user with the given id in the database
@@ -272,7 +278,7 @@ namespace mgms_backend.Controllers
 
         // Create a JWT token with user data 
         private string CreateToken(User user)
-        { 
+        {
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),

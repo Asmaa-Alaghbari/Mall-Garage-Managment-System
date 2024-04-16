@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore; // For DbContext and UseNpgsql method 
-using Microsoft.OpenApi.Models; 
+using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;

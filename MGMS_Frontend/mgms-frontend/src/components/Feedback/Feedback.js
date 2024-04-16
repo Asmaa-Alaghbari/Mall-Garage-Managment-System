@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import AddFeedback from "./AddFeedback";
 
 import "./Feedback.css";
@@ -8,11 +9,36 @@ export default function Feedback() {
   const [showAddForm, setShowAddForm] = useState(false); // Show/hide the add form
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation(); // Get the current location to trigger useEffect
+  const navigate = useNavigate(); // Redirect the user to the login page if needed
 
   useEffect(() => {
+    setIsLoading(true);
+
+    const userId = localStorage.getItem("userId");
+    console.log("Using userId:", userId); // Debugging statement
+
+    // Check if userId is available
+    if (!userId) {
+      setError("User ID is missing or invalid. Please log in again.");
+      setIsLoading(false);
+      // Optional: Redirect to login or show a re-login prompt
+      navigate("/login");
+      return;
+    }
+
+    // Define the URL based on the user role (ADMIN or USER)
+    const url =
+      localStorage.getItem("role") === "ADMIN"
+        ? "http://localhost:5296/api/feedbacks/GetAllFeedbacks"
+        : `http://localhost:5296/api/feedbacks/GetFeedbackByUserId?userId=${userId}`;
+
     // Fetch feedbacks from the server
-    fetch("http://localhost:5296/api/feedbacks/GetAllFeedbacks", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    fetch(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
     })
       .then((response) => {
         if (!response.ok) {
@@ -29,7 +55,7 @@ export default function Feedback() {
         setError(error.message);
         setIsLoading(false);
       });
-  }, []); // Fetch feedbacks once when the component mounts
+  }, [location]); // Fetch feedbacks once when the component mounts
 
   const handleAddSuccess = (newFeedback) => {
     setFeedbacks([...feedbacks, newFeedback]); // Add the new feedback to the list
@@ -55,9 +81,7 @@ export default function Feedback() {
           }
           // If delete was successful, filter out the deleted feedback
           setFeedbacks(
-            feedbacks.filter(
-              (feedback) => feedback.feedbackId !== feedbackId
-            )
+            feedbacks.filter((feedback) => feedback.feedbackId !== feedbackId)
           );
           alert("Feedback deleted successfully!");
         })

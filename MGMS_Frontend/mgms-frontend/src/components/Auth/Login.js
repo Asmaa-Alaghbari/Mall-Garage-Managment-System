@@ -33,8 +33,14 @@ export default function Login({ setIsLoggedIn }) {
         setErrorMessage(errorData.message || "Login failed!");
       } else {
         const responseData = await response.json();
-        const token = responseData.token; // Assuming the token is in the response
+        const { token, userId, role } = responseData; // Extract token and userId from the response
         localStorage.setItem("token", token); // Store token securely
+        localStorage.setItem("userId", userId); // Store userId
+        localStorage.setItem("role", role); // Store user role, if it's part of the response
+
+        console.log("Stored userId:", localStorage.getItem("userId")); // Debugging statement
+        console.log("Stored role:", localStorage.getItem("role")); // Debugging statement
+
         setIsLoggedIn(true); // Update the state to indicate the user is logged in
         navigate("/home"); // Redirect to home page on successful login
       }
