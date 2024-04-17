@@ -46,25 +46,55 @@ namespace mgms_backend.Controllers
         // GET: api/Feedbacks/GetFeedbackByUserId
         [HttpGet("GetFeedbackByUserId")]
         [Authorize(Roles = "ADMIN, USER")]
-        public async Task<ActionResult<IEnumerable<Feedback>>> GetFeedbackByUserId(int userId)
+        public async Task<ActionResult<IEnumerable<Feedback>>> GetFeedbackByUserId([FromQuery] int userId)
         {
+            // Check if UserId is provided
+            if (userId <= 0)
+            {
+                return BadRequest("UserId must be provided!");
+            }
+
+            // Validate existence of the User
+            var userExists = await _userRepository.GetUserByIdAsync(userId);
+            if (userExists == null)
+            {
+                return NotFound($"User with ID {userId} not found!");
+            }
+
+            // Return an empty list result when no feedbacks are found
             var feedbacks = await _feedbackIdRepository.GetFeedbackByUserIdAsync(userId);
             if (feedbacks == null || !feedbacks.Any())
             {
-                return NotFound("Feedbacks not found for the user!");
+                var emptyFeedbackList = new List<Feedback>();
+                return Ok(new { message = "Feedbacks not found for the user!", emptyFeedbackList }); // Return an empty list
             }
-            return Ok(feedbacks);
+
+            var feedbackDTOs = feedbacks.Select(f => new FeedbackDTO
+            {
+                FeedbackId = f.FeedbackId,
+                UserId = f.UserId,
+                Message = f.Message,
+                Rating = f.Rating,
+                FeedbackType = f.FeedbackType,
+                IsAnonymous = f.IsAnonymous,
+                DateTime = f.DateTime
+            }).ToList();
+
+            return Ok(feedbackDTOs);
         }
 
         // POST: api/Feedbacks/AddFeedback
         [HttpPost("AddFeedback")]
-        [Authorize(Roles = "USER")]
+        [Authorize]
         public async Task<ActionResult> AddFeedback(FeedbackDTO feedbackDTO)
         {
             var feedback = new Feedback
             {
                 UserId = feedbackDTO.UserId,
                 Message = feedbackDTO.Message,
+                Rating = feedbackDTO.Rating,
+                FeedbackType = feedbackDTO.FeedbackType,
+                IsAnonymous = feedbackDTO.IsAnonymous,
                 DateTime = DateTime.UtcNow
             };
 

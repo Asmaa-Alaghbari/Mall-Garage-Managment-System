@@ -39,8 +39,8 @@
   margin-bottom: 10px;
 }
 
-card-body {
-  padding: 0;
+.card-body {
+  padding: 5%;
 }
 
 .card-body li {

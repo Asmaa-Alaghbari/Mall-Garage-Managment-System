@@ -12,11 +12,10 @@ import Navbar from "./components/Navbar";
 import Profile from "./components/Profile";
 import Reservations from "./components/Reservation/Reservations";
 import ParkingSpots from "./components/ParkingSpot/ParkingSpots";
-import Logout from "./components/Auth/Logout";
-
-import "./App.css";
 import Payment from "./components/Payment/Payment";
 import Feedback from "./components/Feedback/Feedback";
+
+import "./App.css";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Login state for the user
@@ -30,7 +29,7 @@ export default function App() {
   return (
     <div className="App">
       <Router>
-        {isLoggedIn && <Navbar />}
+        {isLoggedIn && <Navbar setIsLoggedIn={setIsLoggedIn} />}
         <Routes>
           <Route
             path="/"
@@ -40,7 +39,13 @@ export default function App() {
           />
           <Route
             path="/login"
-            element={<Login setIsLoggedIn={setIsLoggedIn} />}
+            element={
+              isLoggedIn ? (
+                <Navigate to="/home" />
+              ) : (
+                <Login setIsLoggedIn={setIsLoggedIn} />
+              )
+            }
           />
           <Route path="/signup" element={<SignUp />} />
           <Route
@@ -66,16 +71,6 @@ export default function App() {
           <Route
             path="/feedbacks"
             element={isLoggedIn ? <Feedback /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/logout"
-            element={
-              isLoggedIn ? (
-                <Logout setIsLoggedIn={setIsLoggedIn} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
           />
           <Route path="*" element={<h1>Not Found</h1>} />
         </Routes>

@@ -31,8 +31,10 @@
 }
 
 .nav-item {
+  cursor: pointer;
   margin-left: 20px;
 }
+
 
 .nav-links {
   color: white;
@@ -42,7 +44,8 @@
 }
 
 .nav-links:hover,
-.nav-links.active {
+.nav-links.active,
+.nav-item:hover {
   background-color: #365899;
   border-radius: 4px;
 }

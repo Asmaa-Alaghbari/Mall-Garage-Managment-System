@@ -1,11 +1,12 @@
 /* Styling the Login and Register forms in the application */
 
-body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    font-family: 'Arial', sans-serif;
-  }
+.auth-form-container body,
+.auth-form-container html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Arial', sans-serif;
+}
   
   .auth-form-container {
     display: flex;

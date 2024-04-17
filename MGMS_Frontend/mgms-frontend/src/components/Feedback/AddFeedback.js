@@ -1,22 +1,28 @@
 import React, { useState, useEffect } from "react";
+import "./Feedback.css";
 
 export default function AddFeedback({ onAddSuccess, onClose }) {
   const [feedback, setFeedback] = useState({
     userId: "",
-    msg: "",
+    rating: 5, // default value
+    feedbackType: "General", // default value
+    isAnonymous: false, // default value
+    feedbackMessage: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState(null);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target; // Destructure the event target
+
     setFeedback((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value, // Update the feedback state based on the input type
     }));
   };
 
+  // F`etch the current user data from the backend
   useEffect(() => {
     const fetchCurrentUser = async () => {
       setIsLoading(true);
@@ -65,13 +71,25 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (!feedback.feedbackMessage.trim()) {
+      setError("Message field cannot be empty.");
+      return;
+    }
+
+    // Map feedbackMessage to Message
+    const updatedFeedback = {
+      ...feedback,
+      Message: feedback.feedbackMessage,
+    };
+
     fetch("http://localhost:5296/api/feedbacks/AddFeedback", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      body: JSON.stringify(feedback),
+      body: JSON.stringify(updatedFeedback),
     })
       .then((response) => {
         if (!response.ok) {
@@ -88,9 +106,21 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
       })
       .catch((error) => {
         console.error("Error:", error);
-        setMessage(error.message);
+        if (error.errors && error.errors.Message) {
+          setMessage(`Message: ${error.errors.Message.join(", ")}`);
+        } else {
+          setMessage(error.message);
+        }
         setIsLoading(false);
       });
+  };
+
+  // Update the rating value in the feedback state
+  const handleRatingChange = (ratingValue) => {
+    setFeedback((prev) => ({
+      ...prev,
+      rating: ratingValue,
+    }));
   };
 
   return (
@@ -108,16 +138,81 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
             hidden
           />
         </div>
-        <div>
+        <div ClassName="rating-cosntainer">
           <label>
-            Message:
-            <textarea
-              name="message"
-              value={feedback.msg}
-              onChange={handleChange}
-              required
-            />
+            Rating:
+            {[...Array(5)].map((star, i) => {
+              const ratingValue = i + 1;
+              return (
+                <label key={i}>
+                  <input
+                    type="radio"
+                    name="rating"
+                    value={ratingValue}
+                    checked={ratingValue === feedback.rating}
+                    onChange={() => handleRatingChange(ratingValue)}
+                    style={{ display: "none" }}
+                  />
+                  <i
+                    className={`star-icon ${
+                      ratingValue <= feedback.rating
+                        ? "fas fa-star"
+                        : "far fa-star"
+                    }`}
+                  ></i>
+                </label>
+              );
+            })}
           </label>
+        </div>
+        <div className="feedback-radio-container">
+          <label>
+            Feedback Type:
+            <span className="radio-container">
+              General
+              <input
+                type="radio"
+                name="feedbackType"
+                value="General"
+                onChange={handleChange}
+                checked={feedback.feedbackType === "General"}
+              />
+              Bug
+              <input
+                type="radio"
+                name="feedbackType"
+                value="Bug"
+                onChange={handleChange}
+                checked={feedback.feedbackType === "Bug"}
+              />
+              Feature
+              <input
+                type="radio"
+                name="feedbackType"
+                value="Feature"
+                onChange={handleChange}
+                checked={feedback.feedbackType === "Feature"}
+              />
+            </span>
+          </label>
+        </div>
+        <div>
+          <label className="msg-textarea">Message:</label>
+          <textarea
+            name="feedbackMessage"
+            value={feedback.feedbackMessage}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="checkbox-container">
+          <input
+            type="checkbox"
+            name="isAnonymous"
+            id="isAnonymous"
+            checked={feedback.isAnonymous}
+            onChange={handleChange}
+          />
+          <label htmlFor="isAnonymous">anonymous sender</label>
         </div>
         <div>
           <button type="submit" disabled={isLoading}>
@@ -128,7 +223,17 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
           </button>
         </div>
       </form>
-      {message && <p className="message-success">{message}</p>}
+      {message && (
+        <p
+          className={
+            message.includes("successfully")
+              ? "message-success"
+              : "message-error"
+          }
+        >
+          {message}
+        </p>
+      )}
     </div>
   );
 }

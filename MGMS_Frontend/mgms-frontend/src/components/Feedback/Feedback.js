@@ -22,8 +22,7 @@ export default function Feedback() {
     if (!userId) {
       setError("User ID is missing or invalid. Please log in again.");
       setIsLoading(false);
-      // Optional: Redirect to login or show a re-login prompt
-      navigate("/login");
+      navigate("/login"); // Redirect to login or show a re-login prompt
       return;
     }
 
@@ -47,7 +46,15 @@ export default function Feedback() {
         return response.json();
       })
       .then((data) => {
-        setFeedbacks(data);
+        console.log("Received data:", data); // Debugging statement
+
+        if (Array.isArray(data)) {
+          setFeedbacks(data);
+        } else if (data.emptyFeedbackList) {
+          setFeedbacks(data.emptyFeedbackList);
+        } else {
+          throw new Error("Invalid data format");
+        }
         setIsLoading(false);
       })
       .catch((error) => {
@@ -106,17 +113,38 @@ export default function Feedback() {
       )}
       {!showAddForm && (
         <>
-          {feedbacks.map((feedback) => (
-            <div key={feedback.feedbackId} className="feedback-item">
-              <p>User ID: {feedback.userId}</p>
-              <p>Message: {feedback.message}</p>
-              <p>Date Time: {new Date(feedback.dateTime).toLocaleString()}</p>
-              <button onClick={() => handleDelete(feedback.feedbackId)}>
-                Delete
+          {feedbacks && feedbacks.length === 0 ? (
+            <div className="no-feedbacks">
+              <p>No feedbacks found for this user, do you want to add one?</p>
+              <button onClick={() => setShowAddForm(true)}>
+                Add New Feedback
               </button>
             </div>
-          ))}
-          <button onClick={() => setShowAddForm(true)}>Add New Feedback</button>
+          ) : (
+            <>
+              {feedbacks.map((feedback) => (
+                <div key={feedback.feedbackId} className="feedback-item">
+                  {localStorage.getItem("role") === "ADMIN" && (
+                    <p>User ID: {feedback.userId}</p>
+                  )}
+                  <p>Rating: {feedback.rating}</p>
+                  <p>Type: {feedback.feedbackType}</p>
+                  <p>Message: {feedback.message}</p>
+                  <p>
+                    Date Time: {new Date(feedback.dateTime).toLocaleString()}
+                  </p>
+                  {localStorage.getItem("role") === "ADMIN" && (
+                    <button onClick={() => handleDelete(feedback.feedbackId)}>
+                      Delete
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button onClick={() => setShowAddForm(true)}>
+                Add New Feedback
+              </button>
+            </>
+          )}
         </>
       )}
     </div>

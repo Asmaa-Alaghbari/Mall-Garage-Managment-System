@@ -1,61 +1,106 @@
 .feedback-container {
-    max-width: 800px;
-    margin: auto;
-    padding: 20px;
-    background-color: #f9f9f9;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .feedback-container h1 {
-    color: #333;
-    text-align: center;
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-  
-  .feedback-container .feedback-item {
-    background-color: #f4f4f4;
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 5px;
-  }
-  
-  .feedback-container button {
-    margin-left: 10px;
-    padding: 5px 10px;
-    cursor: pointer;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .feedback-container button:hover {
-    background-color: #0056b3;
-  }
-  
-  .feedback-container form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .feedback-container input,
-  .feedback-container textarea {
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    width: 100%;
-  }
-  
-  .feedback-container label {
-    font-weight: bold;
-  }
-  
-  .message-success {
-    color: blue;
-    text-align: center;
-    margin-top: 20px;
-  }
-  
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.feedback-container h1 {
+  color: #333;
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.feedback-container .feedback-item {
+  background-color: #f4f4f4;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.feedback-container button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.feedback-container button:hover {
+  background-color: #0056b3;
+}
+
+.feedback-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feedback-container input,
+.feedback-container textarea {
+  font-weight: normal;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.msg-textarea {
+  text-align: left;
+  display: block;
+  width: 100%;
+}
+
+.feedback-container textarea {
+  width: 100%;
+}
+
+.feedback-container label {
+  font-weight: bold;
+}
+
+.star-icon {
+  color: gold;
+  margin-left: 10px;
+}
+
+.feedback-radio-container span {
+  font-weight: normal;
+}
+
+.radio-container {
+  margin-left: 10px;
+
+}
+
+.radio-container input {
+  margin: 10px 15px 20px 5px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 4px;
+}
+
+.checkbox-container label {
+  white-space: nowrap;
+  font-weight: normal;
+}
+
+.message-success {
+  color: blue;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.message-error {
+  color: red;
+  text-align: center;
+  margin-top: 20px;
+}
