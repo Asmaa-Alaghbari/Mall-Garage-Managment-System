@@ -28,7 +28,6 @@ export default function Navbar({ setIsLoggedIn }) {
           MGMS
         </Link>
         <ul className="nav-menu">
-          <NavItem to="/home" label="Home" />
           <NavItem to="/reservations" label="Reservations" />
           <NavItem to="/parking-spots" label="Parking Spots" />
           <NavItem to="/payments" label="Payments" />

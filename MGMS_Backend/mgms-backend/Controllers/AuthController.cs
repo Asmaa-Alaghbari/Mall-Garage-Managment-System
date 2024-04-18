@@ -101,9 +101,19 @@ namespace mgms_backend.Controllers
         [AllowAnonymous] // Allow unauthenticated access to the endpoint
         public async Task<ActionResult<User>> Register(RegisterDto request)
         {
+            // Trim the username and email to remove leading and trailing whitespace
+            var cleanedUsername = request.Username?.Trim();
+            var cleanedEmail = request.Email?.Trim();
+
+            // Check if the cleaned username or email contains spaces
+            if (cleanedUsername?.Contains(" ") == true || cleanedEmail?.Contains(" ") == true)
+            {
+                return StatusCode(422, "Username or Email should not contain spaces.");
+            }
+
             // Check if the user with the given username/email/phone already exists in the database
             var userExists = await _userRepository.UserExistsAsync(
-                request.Username, request.Email, request.Phone);
+                cleanedUsername, cleanedEmail, request.Phone);
 
             try
             {
@@ -129,8 +139,8 @@ namespace mgms_backend.Controllers
                 {
                     FirstName = request.FirstName,
                     LastName = request.LastName,
-                    Username = request.Username,
-                    Email = request.Email,
+                    Username = cleanedUsername,
+                    Email = cleanedEmail,
                     Password = passwordHash,
                     Phone = request.Phone,
                     Role = role, // Set the role of the user (USER or ADMIN)
@@ -173,8 +183,11 @@ namespace mgms_backend.Controllers
                 return BadRequest("Password is required."); // 400
             }
 
+            // Trim any leading or trailing whitespace from the username
+            var cleanedUsername = request.Username.Trim();
+
             // Find the user with the given username or email in the database
-            var user = await _userRepository.GetUserByUsernameOrEmailAsync(request.Username);
+            var user = await _userRepository.GetUserByUsernameOrEmailAsync(cleanedUsername);
 
             // Check if the user exists in the database
             if (user == null)
