@@ -67,6 +67,44 @@
     width: auto;
 }
 
+.payment-table {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.payment-table th,
+.payment-table td {
+    text-align: center;
+    padding: 8px;
+}
+
+.payment-table th {
+    background-color: #f2f2f2;
+}
+
+.search-filter input[type="datetime-local"] {
+    margin-left: 10px;
+    padding: 5px;
+}
+
+
+.pagination {
+    margin-top: 20px;
+}
+
+.pagination button {
+    margin-right: 5px;
+}
+
+button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.highlight {
+    background-color: yellow;
+  }
+
 .message-success {
     color: blue;
     text-align: center;

@@ -93,6 +93,61 @@
   font-weight: normal;
 }
 
+.feedback-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.feedback-table th,
+.feedback-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.search-sort {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.search-sort input,
+.search-sort select {
+  flex: 1;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.search-sort input[type="text"],
+.search-sort input[type="number"],
+.search-sort input[type="date"] {
+  margin-right: 10px;
+}
+
+.search-sort select {
+  margin-right: 10px;
+}
+
+.pagination {
+  margin-top: 20px;
+}
+
+.pagination button {
+  margin-right: 5px;
+}
+
+button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+
+.highlight {
+  background-color: yellow;
+}
+
 .message-success {
   color: blue;
   text-align: center;

@@ -67,6 +67,56 @@
   width: auto;
 }
 
+.reservation-table {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.reservation-table th,
+.reservation-table td {
+  text-align: center;
+  padding: 8px;
+}
+
+.reservation-table th {
+  background-color: #f2f2f2;
+}
+
+.search-filter input[type="datetime-local"] {
+  margin-left: 10px;
+  padding: 5px;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pagination button {
+  padding: 5px 10px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.pagination button:hover {
+  background-color: #0056b3;
+}
+
+.pagination button.active {
+  background-color: #0056b3;
+  font-weight: bold;
+}
+
+.highlight {
+  background-color: yellow;
+}
+
 .message-success {
   color: blue;
   text-align: center;

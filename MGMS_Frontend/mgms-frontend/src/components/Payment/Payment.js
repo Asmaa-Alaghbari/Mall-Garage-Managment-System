@@ -8,6 +8,12 @@ export default function Payment() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1); // Current page number
+  const [itemsPerPage] = useState(10); // Number of items to display per page
+  const [searchTerm, setSearchTerm] = useState(""); // search term
+  const [sortType, setSortType] = useState("paymentId"); // Sort by payment ID by default
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState("all"); // payment method filter
+  const [dateFilter, setDateFilter] = useState(""); // date filter
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,6 +23,7 @@ export default function Payment() {
     }
   }, [showAddForm, showUpdateForm]);
 
+  // Fetch payments from the API and update the state
   const fetchPayments = () => {
     setIsLoading(true);
     fetch("http://localhost:5296/api/Payments/GetAllPayments", {
@@ -79,6 +86,71 @@ export default function Payment() {
     }
   };
 
+  // Display date and time in a more readable format
+  const formatDateTime = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleString("en-US");
+  };
+
+  // Filter payments based on search term, status, and date
+  const filteredPayments = payments.filter((payment) => {
+    return (
+      (payment.amount.toString().includes(searchTerm) ||
+        payment.paymentMethod
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        payment.paymentId.toString().includes(searchTerm) ||
+        payment.dateTime.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (paymentMethodFilter === "all" ||
+        payment.paymentMethod.toLowerCase() ===
+          paymentMethodFilter.toLowerCase()) &&
+      (dateFilter ? payment.dateTime.includes(dateFilter) : true)
+    );
+  });
+
+  // Sort payments
+  let sortedPayments = [...filteredPayments];
+
+  if (sortType === "dateTime") {
+    sortedPayments = sortedPayments.sort(
+      (a, b) => new Date(a.dateTime) - new Date(b.dateTime)
+    );
+  } else if (sortType === "amount") {
+    sortedPayments = sortedPayments.sort((a, b) => a.amount - b.amount);
+  } else if (sortType === "paymentMethod") {
+    sortedPayments = sortedPayments.sort((a, b) =>
+      a.paymentMethod.localeCompare(b.paymentMethod)
+    );
+  }
+
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const paginatedPayments = sortedPayments.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(sortedPayments.length / itemsPerPage);
+
+  // Highlight the search term in the text
+  const highlightText = (text, highlight) => {
+    if (typeof text !== "string") {
+      return text; // Return text as is if it's not a string
+    }
+
+    // Split the text into parts and highlight the search term
+    const parts = text.split(new RegExp(`(${highlight})`, "gi"));
+    return parts.map((part, index) =>
+      part.toLowerCase() === highlight.toLowerCase() ? (
+        <span key={index} className="highlight">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
+
   if (isLoading) return <div>Loading payments...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -91,6 +163,7 @@ export default function Payment() {
           onClose={() => setShowAddForm(false)}
         />
       )}
+
       {showUpdateForm && selectedPayment && (
         <UpdatePayment
           paymentData={selectedPayment}
@@ -100,23 +173,104 @@ export default function Payment() {
       )}
       {!showAddForm && !showUpdateForm && (
         <>
-          {payments.map((payment) => (
-            <li key={payment.paymentId}>
-              Payment ID: {payment.paymentId}, Amount: {payment.amount}, Method:{" "}
-              {payment.paymentMethod}, Date: {payment.dateTime}
-              <button
-                onClick={() => {
-                  setSelectedPayment(payment);
-                  setShowUpdateForm(true);
-                }}
-              >
-                Update
-              </button>
-              <button onClick={() => handleDelete(payment.paymentId)}>
-                Delete
-              </button>
-            </li>
-          ))}
+          {/* Filters */}
+          <div className="search-filter">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {/* Filter by payment method */}
+            <select
+              value={paymentMethodFilter}
+              onChange={(e) => setPaymentMethodFilter(e.target.value)}
+            >
+              <option value="all">All Methods</option>
+              <option value="credit card">Credit Card</option>
+              <option value="paypal">Paypal</option>
+              <option value="cash">Cash</option>
+            </select>
+            {/* Filter by date */}
+            <input
+              type="date"
+              placeholder="Filter by date..."
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            />
+
+            {/* Sort by amount, payment method, or date */}
+            <select
+              value={sortType}
+              onChange={(e) => setSortType(e.target.value)}
+            >
+              <option value="">Sort by...</option>
+              <option value="amount">Amount</option>
+              <option value="paymentMethod">Payment Method</option>
+              <option value="dateTime">Date</option>
+            </select>
+          </div>
+
+          {/* Payment table */}
+          <table className="payment-table">
+            <thead>
+              <tr>
+                <th>Payment ID</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedPayments.map((payment) => (
+                <tr key={payment.paymentId}>
+                  <td>
+                    {highlightText(payment.paymentId.toString(), searchTerm)}
+                  </td>
+                  <td>
+                    {highlightText(payment.amount.toString(), searchTerm)}
+                  </td>
+                  <td>{highlightText(payment.paymentMethod, searchTerm)}</td>
+                  <td>
+                    {highlightText(
+                      formatDateTime(payment.dateTime),
+                      searchTerm
+                    )}
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => {
+                        setSelectedPayment(payment);
+                        setShowUpdateForm(true);
+                      }}
+                    >
+                      Update
+                    </button>
+                    <button onClick={() => handleDelete(payment.paymentId)}>
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Pagination */}
+          <div className="pagination">
+            {totalPages > 1 &&
+              Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={currentPage === page ? "active" : ""}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+          </div>
           <button onClick={() => setShowAddForm(true)}>Add New Payment</button>
         </>
       )}
