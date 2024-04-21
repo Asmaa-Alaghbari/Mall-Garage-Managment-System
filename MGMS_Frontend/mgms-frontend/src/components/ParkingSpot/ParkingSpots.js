@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatDateTime, highlightText, paginate } from "../../Utils";
 import AddParkingSpot from "./AddParkingSpot";
 import UpdateParkingSpot from "./UpdateParkingSpot";
 import "./ParkingSpots.css";
@@ -163,37 +164,13 @@ export default function ParkingSpots() {
     sortedParkingSpots = sortedParkingSpots.sort(sortFunctions[sortType]);
   }
 
-  const totalPages = Math.ceil(
-    filteredAndSortedParkingSpots.length / itemsPerPage
-  );
-
-  // Slice the parkingSpots array based on currentPage and itemsPerPage
-  const paginate = (array, page_number, page_size) => {
-    const startIndex = (page_number - 1) * page_size;
-    const endIndex = startIndex + page_size;
-    return array.slice(startIndex, endIndex);
-  };
-
-  // Paginated parking spots based on currentPage and itemsPerPage
+  // Paginate the sorted parking spots
   const paginatedParkingSpots = paginate(
     sortedParkingSpots,
     currentPage,
     itemsPerPage
   );
-
-  // Highlight the search term in the text
-  const highlightText = (text, highlight) => {
-    const parts = text.split(new RegExp(`(${highlight})`, "gi"));
-    return parts.map((part, index) =>
-      part.toLowerCase() === highlight.toLowerCase() ? (
-        <span key={index} className="highlight">
-          {part}
-        </span>
-      ) : (
-        part
-      )
-    );
-  };
+  const totalPages = Math.ceil(filteredParkingSpots.length / itemsPerPage);
 
   if (isLoading) return <div>Loading parking spots...</div>;
   if (error) return <div>Error: {error}</div>;

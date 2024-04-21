@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatDateTime, highlightText, paginate } from "../../Utils";
 import AddReservation from "./AddReservation";
 import UpdateReservation from "./UpdateReservation";
 import "./Reservations.css";
@@ -92,12 +93,6 @@ export default function Reservations() {
     }
   };
 
-  // Display date and time in a more readable format
-  const formatDateTime = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleString("en-US");
-  };
-
   // Filter reservations based on search term and status
   const filteredReservations = reservations.filter((reservation) => {
     // Check if the date and time match the filter
@@ -135,32 +130,12 @@ export default function Reservations() {
   }
 
   // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const paginatedReservations = sortedReservations.slice(
-    indexOfFirstItem,
-    indexOfLastItem
+  const paginatedReservations = paginate(
+    sortedReservations,
+    currentPage,
+    itemsPerPage
   );
-  const totalPages = Math.ceil(sortedReservations.length / itemsPerPage);
-
-  // Highlight the search term in the text
-  const highlightText = (text, highlight) => {
-    if (typeof text !== "string" || typeof highlight !== "string") {
-      return text; // Return text as is if it's not a string
-    }
-
-    // Split the text into parts and highlight the search term
-    const parts = text.split(new RegExp(`(${highlight})`, "gi"));
-    return parts.map((part, index) =>
-      part.toLowerCase() === highlight.toLowerCase() ? (
-        <span key={index} className="highlight">
-          {part}
-        </span>
-      ) : (
-        part
-      )
-    );
-  };
+  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
 
   if (isLoading) return <div>Loading reservations...</div>;
   if (error) return <div>Error: {error}</div>;

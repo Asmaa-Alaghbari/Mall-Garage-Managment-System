@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { formatDateTime, highlightText, paginate } from "../../Utils";
 import AddFeedback from "./AddFeedback";
 
 import "./Feedback.css";
@@ -8,7 +9,7 @@ export default function Feedback() {
   const [feedbacks, setFeedbacks] = useState([]); // Store feedbacks from the API
   const [showAddForm, setShowAddForm] = useState(false); // Show/hide the add form
   const [currentPage, setCurrentPage] = useState(1); // Pagination: current page
-  const [itemsPerPage] = useState(10); // Pagination: items per page
+  const [itemsPerPage] = useState(5); // Pagination: items per page
   const [searchTerm, setSearchTerm] = useState(""); // Search
   const [filterBy, setFilterBy] = useState("all"); // Filter
   const [filterByRating, setFilterByRating] = useState(""); // Filter by rating
@@ -106,12 +107,6 @@ export default function Feedback() {
     }
   };
 
-  // Display date and time in a more readable format
-  const formatDateTime = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleString("en-US");
-  };
-
   // Filtering feedbacks based on search term and filter
   const filteredFeedbacks = feedbacks.filter((feedback) => {
     const searchTermLower = searchTerm.toLowerCase();
@@ -157,36 +152,13 @@ export default function Feedback() {
   });
 
   // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const paginatedFeedbacks = sortedFeedbacks.slice(
-    indexOfFirstItem,
-    indexOfLastItem
+
+  const paginatedFeedbacks = paginate(
+    sortedFeedbacks,
+    currentPage,
+    itemsPerPage
   );
-  const totalPages = Math.ceil(sortedFeedbacks.length / itemsPerPage);
-
-  // Highlight the search term in the text
-  const highlightText = (text, highlight) => {
-    if (typeof text !== "string" || typeof highlight !== "string") {
-      return text; // Return text as is if it's not a string
-    }
-
-    // Escape special characters in the highlight term for regex
-    const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-    // Split the text into parts and highlight the search term
-    const parts = text.split(new RegExp(`(${escapedHighlight})`, "gi"));
-    return parts.map((part, index) => (
-      <span
-        key={index}
-        className={
-          part.toLowerCase() === highlight.toLowerCase() ? "highlight" : ""
-        }
-      >
-        {part}
-      </span>
-    ));
-  };
+  const totalPages = Math.ceil(filteredFeedbacks.length / itemsPerPage);
 
   if (isLoading) return <div>Loading feedbacks...</div>;
   if (error) return <div>Error: {error}</div>;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatDateTime, highlightText, paginate } from "../../Utils";
 import AddPayment from "./AddPayment";
 import UpdatePayment from "./UpdatePayment";
 import "./Payment.css";
@@ -86,12 +87,6 @@ export default function Payment() {
     }
   };
 
-  // Display date and time in a more readable format
-  const formatDateTime = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleString("en-US");
-  };
-
   // Filter payments based on search term, status, and date
   const filteredPayments = payments.filter((payment) => {
     return (
@@ -124,32 +119,8 @@ export default function Payment() {
   }
 
   // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const paginatedPayments = sortedPayments.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(sortedPayments.length / itemsPerPage);
-
-  // Highlight the search term in the text
-  const highlightText = (text, highlight) => {
-    if (typeof text !== "string") {
-      return text; // Return text as is if it's not a string
-    }
-
-    // Split the text into parts and highlight the search term
-    const parts = text.split(new RegExp(`(${highlight})`, "gi"));
-    return parts.map((part, index) =>
-      part.toLowerCase() === highlight.toLowerCase() ? (
-        <span key={index} className="highlight">
-          {part}
-        </span>
-      ) : (
-        part
-      )
-    );
-  };
+  const paginatedPayments = paginate(sortedPayments, currentPage, itemsPerPage);
+  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
 
   if (isLoading) return <div>Loading payments...</div>;
   if (error) return <div>Error: {error}</div>;
