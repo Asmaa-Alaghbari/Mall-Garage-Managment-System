@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { formatDateTime, highlightText, paginate } from "../../Utils";
 import AddPayment from "./AddPayment";
-import UpdatePayment from "./UpdatePayment";
-import "./Payment.css";
+import "../style.css";
 
 export default function Payment() {
   const [payments, setPayments] = useState([]);
@@ -52,6 +51,21 @@ export default function Payment() {
     setShowAddForm(false);
   };
 
+  // Update payment by ID
+  const handleUpdate = (paymentId) => {
+    const paymentToUpdate = payments.find(
+      (payment) => payment.paymentId === paymentId
+    );
+
+    if (paymentToUpdate) {
+      setSelectedPayment(paymentToUpdate);
+      setShowUpdateForm(true);
+    } else {
+      console.error("Payment not found for update:", paymentId);
+    }
+  };
+
+  // Update payment in the state
   const handleUpdateSuccess = (updatedPayment) => {
     const updatedPayments = payments.map((payment) =>
       payment.paymentId === updatedPayment.paymentId ? updatedPayment : payment
@@ -90,16 +104,16 @@ export default function Payment() {
   // Filter payments based on search term, status, and date
   const filteredPayments = payments.filter((payment) => {
     return (
-      (payment.amount.toString().includes(searchTerm) ||
+      (payment.amount?.toString()?.includes(searchTerm) ||
         payment.paymentMethod
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        payment.paymentId.toString().includes(searchTerm) ||
-        payment.dateTime.toLowerCase().includes(searchTerm.toLowerCase())) &&
+          ?.toLowerCase()
+          ?.includes(searchTerm.toLowerCase()) ||
+        payment.paymentId?.toString()?.includes(searchTerm) ||
+        payment.dateTime?.toLowerCase()?.includes(searchTerm.toLowerCase())) &&
       (paymentMethodFilter === "all" ||
-        payment.paymentMethod.toLowerCase() ===
+        payment.paymentMethod?.toLowerCase() ===
           paymentMethodFilter.toLowerCase()) &&
-      (dateFilter ? payment.dateTime.includes(dateFilter) : true)
+      (dateFilter ? payment.dateTime?.includes(dateFilter) : true)
     );
   });
 
@@ -116,6 +130,13 @@ export default function Payment() {
     sortedPayments = sortedPayments.sort((a, b) =>
       a.paymentMethod.localeCompare(b.paymentMethod)
     );
+  } else if (sortType === "paymentId") {
+    sortedPayments = sortedPayments.sort((a, b) => a.paymentId - b.paymentId);
+  } else if (sortType === "reservationId") {
+    // Add this block
+    sortedPayments = sortedPayments.sort(
+      (a, b) => a.reservationId - b.reservationId
+    );
   }
 
   // Pagination
@@ -126,7 +147,7 @@ export default function Payment() {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="payment-container">
+    <div className="container">
       <h1>Payments</h1>
       {showAddForm && (
         <AddPayment
@@ -136,9 +157,10 @@ export default function Payment() {
       )}
 
       {showUpdateForm && selectedPayment && (
-        <UpdatePayment
+        <AddPayment
           paymentData={selectedPayment}
-          onUpdated={handleUpdateSuccess}
+          paymentId={selectedPayment.paymentId} // Pass the paymentId
+          onAddSuccess={handleUpdateSuccess}
           onClose={() => setShowUpdateForm(false)}
         />
       )}
@@ -152,6 +174,7 @@ export default function Payment() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+
             {/* Filter by payment method */}
             <select
               value={paymentMethodFilter}
@@ -159,9 +182,11 @@ export default function Payment() {
             >
               <option value="all">All Methods</option>
               <option value="credit card">Credit Card</option>
+              <option value="debit card">Debit Card</option>
               <option value="paypal">Paypal</option>
               <option value="cash">Cash</option>
             </select>
+
             {/* Filter by date */}
             <input
               type="date"
@@ -170,12 +195,13 @@ export default function Payment() {
               onChange={(e) => setDateFilter(e.target.value)}
             />
 
-            {/* Sort by amount, payment method, or date */}
+            {/* Sort */}
             <select
               value={sortType}
               onChange={(e) => setSortType(e.target.value)}
             >
-              <option value="">Sort by...</option>
+              <option value="paymentId">Payment ID</option>
+              <option value="reservationId">Reservation ID</option>
               <option value="amount">Amount</option>
               <option value="paymentMethod">Payment Method</option>
               <option value="dateTime">Date</option>
@@ -187,6 +213,7 @@ export default function Payment() {
             <thead>
               <tr>
                 <th>Payment ID</th>
+                <th>Reservation ID</th>
                 <th>Amount</th>
                 <th>Payment Method</th>
                 <th>Date</th>
@@ -197,27 +224,38 @@ export default function Payment() {
               {paginatedPayments.map((payment) => (
                 <tr key={payment.paymentId}>
                   <td>
-                    {highlightText(payment.paymentId.toString(), searchTerm)}
-                  </td>
-                  <td>
-                    {highlightText(payment.amount.toString(), searchTerm)}
-                  </td>
-                  <td>{highlightText(payment.paymentMethod, searchTerm)}</td>
-                  <td>
                     {highlightText(
-                      formatDateTime(payment.dateTime),
+                      payment.paymentId?.toString() || "N/A",
                       searchTerm
                     )}
                   </td>
                   <td>
-                    <button
-                      onClick={() => {
-                        setSelectedPayment(payment);
-                        setShowUpdateForm(true);
-                      }}
-                    >
+                    {highlightText(
+                      payment.reservationId?.toString() || "N/A",
+                      searchTerm
+                    )}{" "}
+                    {/* Add this line */}
+                  </td>
+                  <td>
+                    {highlightText(
+                      payment.amount?.toString() || "N/A",
+                      searchTerm
+                    )}
+                  </td>
+                  <td>
+                    {highlightText(payment.paymentMethod || "N/A", searchTerm)}
+                  </td>
+                  <td>
+                    {highlightText(
+                      formatDateTime(payment.dateTime) || "N/A",
+                      searchTerm
+                    )}
+                  </td>
+                  <td>
+                    <button onClick={() => handleUpdate(payment.paymentId)}>
                       Update
                     </button>
+
                     <button onClick={() => handleDelete(payment.paymentId)}>
                       Delete
                     </button>

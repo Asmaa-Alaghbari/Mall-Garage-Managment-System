@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import "./Feedback.css";
 
 export default function AddFeedback({ onAddSuccess, onClose }) {
   const [feedback, setFeedback] = useState({
@@ -11,7 +10,7 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target; // Destructure the event target
@@ -124,7 +123,7 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
   };
 
   return (
-    <div>
+    <div className="container">
       <h2>Add Feedback</h2>
       <form onSubmit={handleSubmit}>
         <div>
@@ -177,26 +176,26 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
                 onChange={handleChange}
                 checked={feedback.feedbackType === "General"}
               />
-              Bug
+              Bug Report
               <input
                 type="radio"
                 name="feedbackType"
-                value="Bug"
+                value="Bug Report"
                 onChange={handleChange}
-                checked={feedback.feedbackType === "Bug"}
+                checked={feedback.feedbackType === "Bug Report"}
               />
-              Feature
+              Feature Request
               <input
                 type="radio"
                 name="feedbackType"
-                value="Feature"
+                value="Feature Request"
                 onChange={handleChange}
-                checked={feedback.feedbackType === "Feature"}
+                checked={feedback.feedbackType === "Feature Request"}
               />
             </span>
           </label>
         </div>
-        <div>
+        <div className="msg-container">
           <label className="msg-textarea">Message:</label>
           <textarea
             name="feedbackMessage"

@@ -129,18 +129,37 @@ namespace mgms_backend.Controllers
                 return StatusCode(422, "Start time must be before end time");
             }
 
-            // Check if the parking spot is available for the given time range before updating the reservation (excluding the current reservation)
-            bool isSpotAvailable = await _reservationRepository.IsParkingSpotAvailableAsync(
-                reservation.ParkingSpotId, updateReservationDto.StartTime, updateReservationDto.EndTime);
-            if (!isSpotAvailable)
+            // Check if the start time and end time are in the future
+            if (updateReservationDto.StartTime < DateTime.UtcNow || updateReservationDto.EndTime < DateTime.UtcNow)
             {
-                return Conflict("Parking spot is not available for the given time range.");
+                return StatusCode(422, "Start time and End time must be in the future");
             }
 
-            // Check if the status is valid 
-            if (updateReservationDto.Status != "Active" && updateReservationDto.Status != "Cancelled")
+            // Check if StartTime, EndTime, or Status has changed
+            bool datesChanged = reservation.StartTime != updateReservationDto.StartTime ||
+                                reservation.EndTime != updateReservationDto.EndTime;
+
+            // Check if the status has changed
+            bool statusChanged = reservation.Status != updateReservationDto.Status;
+
+
+            // If time is not changed, set it back to the original values
+            if (!datesChanged)
             {
-                return StatusCode(422, "Status must be either 'Active' or 'Cancelled'");
+                updateReservationDto.StartTime = reservation.StartTime;
+                updateReservationDto.EndTime = reservation.EndTime;
+            }
+
+            if (datesChanged || statusChanged)
+            {
+                // Check if the parking spot is available for the given time range
+                bool isSpotAvailable = await _reservationRepository.IsParkingSpotAvailableAsync(
+                    reservation.ParkingSpotId, updateReservationDto.StartTime, updateReservationDto.EndTime);
+
+                if (!isSpotAvailable)
+                {
+                    return Conflict("Parking spot is not available for the given time range.");
+                }
             }
 
             // Update the reservation with the new values

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 
-export default function AddReservation({ onAddSuccess, onClose }) {
+export default function AddReservation({
+  onAddSuccess, // Callback function to handle successful reservation addition
+  onUpdateSuccess, // Callback function to handle successful reservation update
+  onClose, // Callback function to handle form close
+  isUpdate = false, // Flag to determine if the form is for updating a reservation
+  reservationData = null, // Reservation data to pre-populate the form for update
+}) {
   // Initialize the reservation state with user ID pre-populated if user data is available
   const [reservation, setReservation] = useState({
     userId: "", // Pre-populate the user ID if user data is available
@@ -9,9 +15,10 @@ export default function AddReservation({ onAddSuccess, onClose }) {
     endTime: "",
     status: "Pending", // Default status is "Pending" for new reservations
   });
+  const [userRole, setUserRole] = useState(""); // State to hold user role
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -47,6 +54,9 @@ export default function AddReservation({ onAddSuccess, onClose }) {
         } else {
           console.error("UserId not found in user data");
         }
+
+        // Set user role
+        setUserRole(userData.role); // Assuming the role is stored in userData.role
       } catch (err) {
         console.error("Fetch user error:", err);
         setError(err.message);
@@ -58,19 +68,52 @@ export default function AddReservation({ onAddSuccess, onClose }) {
     fetchCurrentUser();
   }, []);
 
+  useEffect(() => {
+    console.log("Reservation data:", reservationData); // Log the reservation data
+
+    if (isUpdate && reservationData) {
+      // Map the properties from reservationData to the reservation state
+      const updatedReservation = {
+        ...reservation,
+        ...reservationData,
+        startTime: reservationData.startTime
+          ? new Date(reservationData.startTime).toISOString().slice(0, 16)
+          : "", // Format startTime
+        endTime: reservationData.endTime
+          ? new Date(reservationData.endTime).toISOString().slice(0, 16)
+          : "", // Format endTime
+      };
+
+      setReservation(updatedReservation);
+    }
+  }, [isUpdate, reservation, reservationData]);
+
   // Update the reservation state
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     // Check if the field is a date field (startTime or endTime) and convert it to UTC
     if (name === "startTime" || name === "endTime") {
-      const date = new Date(value);
-      const utcDate = new Date(date.toUTCString().slice(0, -4)); // Remove the 'GMT' from the end
+      // Convert the local date and time to ISO string
+      const localDate = new Date(value);
+      const utcDate = new Date(
+        Date.UTC(
+          localDate.getFullYear(),
+          localDate.getMonth(),
+          localDate.getDate(),
+          localDate.getHours(),
+          localDate.getMinutes()
+        )
+      );
+
+      // Format the UTC date to match datetime-local format: YYYY-MM-DDTHH:mm
+      const formattedDate = utcDate.toISOString().slice(0, 16);
+      console.log("Formatted date:", formattedDate); // Log the formatted date
 
       // Update the reservation state with the UTC date
       setReservation((prev) => ({
         ...prev,
-        [name]: utcDate.toISOString(), // Convert UTC date back to string
+        [name]: formattedDate, // Convert UTC date back to string
       }));
     } else {
       // Update the reservation state with the new value
@@ -84,8 +127,13 @@ export default function AddReservation({ onAddSuccess, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
-    fetch("http://localhost:5296/api/reservations/AddReservation", {
-      method: "POST",
+
+    const apiUrl = isUpdate
+      ? `http://localhost:5296/api/reservations/UpdateReservation?reservationId=${reservationData.reservationId}`
+      : "http://localhost:5296/api/reservations/AddReservation";
+
+    fetch(apiUrl, {
+      method: isUpdate ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -93,23 +141,36 @@ export default function AddReservation({ onAddSuccess, onClose }) {
       body: JSON.stringify(reservation),
     })
       .then((response) => {
-        const contentType = response.headers.get("content-type");
         if (!response.ok) {
+          const contentType = response.headers.get("content-type");
           if (contentType && contentType.indexOf("application/json") !== -1) {
             return response.json().then((data) => {
               throw new Error(data.message || "Failed to create reservation");
             });
           } else {
-            throw new Error("Unexpected response from server");
+            return response.text().then((text) => {
+              console.error("Server Error Response:", text);
+              if (text === "Parking spot doesn't exist.") {
+                throw new Error("Parking spot doesn't exist.");
+              } else {
+                throw new Error("Unexpected response from server");
+              }
+            });
           }
         }
         return response.json();
       })
       .then((data) => {
-        setMessage("Reservation added successfully!");
-        onAddSuccess(data);
+        if (isUpdate) {
+          onUpdateSuccess(data);
+          setMessage("Reservation updated successfully!");
+        } else {
+          onAddSuccess(data);
+          setMessage("Reservation added successfully!");
+        }
       })
       .catch((error) => {
+        console.error("Error:", error.message);
         setMessage(error.message);
       })
       .finally(() => {
@@ -118,8 +179,8 @@ export default function AddReservation({ onAddSuccess, onClose }) {
   };
 
   return (
-    <div>
-      <h2>Add Reservation</h2>
+    <div className="container">
+      <h2>{isUpdate ? "Update Reservation" : "Add Reservation"}</h2>
       <form onSubmit={handleSubmit}>
         <input
           type="text"
@@ -160,22 +221,36 @@ export default function AddReservation({ onAddSuccess, onClose }) {
             required
           />
         </label>
-        <label>
-          Status:
-          <input
-            type="text"
-            name="status"
-            value={reservation.status}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Adding..." : "Add Reservation"}
-        </button>
-        <button type="button" onClick={onClose}>
-          Close
-        </button>
+        {userRole === "ADMIN" && (
+          <label>
+            Status:
+            <select
+              type="text"
+              name="status"
+              value={reservation.status}
+              onChange={handleChange}
+              required
+            >
+              <option value="Active">Active</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </label>
+        )}
+        <div className="button-container">
+          <button type="submit" disabled={isLoading}>
+            {isLoading
+              ? "Updating..."
+              : isUpdate
+              ? "Update Reservation"
+              : "Add Reservation"}
+          </button>
+          <button type="button" onClick={onClose}>
+            Close
+          </button>
+        </div>
       </form>
       {message && (
         <p

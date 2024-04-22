@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { formatDateTime, highlightText, paginate } from "../../Utils";
 import AddReservation from "./AddReservation";
-import UpdateReservation from "./UpdateReservation";
-import "./Reservations.css";
+import "../style.css";
 
 export default function Reservations() {
   const [reservations, setReservations] = useState([]);
@@ -101,15 +100,20 @@ export default function Reservations() {
         reservation.endTime.includes(dateFilter)
       : true;
 
-    return (
-      // Check if the reservation ID, start time, or end time includes the search term
-      (reservation.reservationId.toString().includes(searchTerm) ||
-        reservation.startTime.includes(searchTerm) ||
-        reservation.endTime.includes(searchTerm)) &&
-      (statusFilter === "all" ||
-        reservation.status.toLowerCase() === statusFilter.toLowerCase()) &&
-      isDateMatch
-    );
+    // Check if the reservationId, start time, or end time includes the search term
+    const isSearchMatch =
+      (reservation.reservationId &&
+        reservation.reservationId.toString().includes(searchTerm)) ||
+      (reservation.startTime && reservation.startTime.includes(searchTerm)) ||
+      (reservation.endTime && reservation.endTime.includes(searchTerm)) ||
+      (reservation.status && reservation.status.includes(searchTerm));
+
+    // Check if the status matches the filter or filter is set to 'all'
+    const isStatusMatch =
+      statusFilter === "all" ||
+      reservation.status.toLowerCase() === statusFilter.toLowerCase();
+
+    return isSearchMatch && isStatusMatch && isDateMatch;
   });
 
   // Sort reservations
@@ -141,24 +145,34 @@ export default function Reservations() {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="reservations-container">
+    <div className="container">
       <h1>Reservations</h1>
       {showAddForm && (
         <AddReservation
           onAddSuccess={handleAddSuccess}
-          onClose={() => setShowAddForm(false)}
+          onUpdateSuccess={handleUpdateSuccess}
+          onClose={() => {
+            setShowAddForm(false);
+            setSelectedReservation(null);
+          }}
+          isUpdate={false}
         />
       )}
       {showUpdateForm && selectedReservation && (
-        <UpdateReservation
+        <AddReservation
+          onAddSuccess={handleAddSuccess}
+          onUpdateSuccess={handleUpdateSuccess}
+          onClose={() => {
+            setShowUpdateForm(false);
+            setSelectedReservation(null);
+          }}
+          isUpdate={true}
           reservationData={selectedReservation}
-          onUpdated={handleUpdateSuccess}
-          onClose={() => setShowUpdateForm(false)}
         />
       )}
       {!showAddForm && !showUpdateForm && (
         <>
-          {/* Filters */}
+          {/* Search */}
           <div className="search-filter">
             <input
               type="text"
@@ -166,6 +180,7 @@ export default function Reservations() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+
             {/* Filter by status */}
             <select
               value={statusFilter}
@@ -173,9 +188,12 @@ export default function Reservations() {
             >
               <option value="all">All Statuses</option>
               <option value="active">Active</option>
-              <option value="completed">Completed</option>
+              <option value="approved">Approved</option>
               <option value="cancelled">Cancelled</option>
+              <option value="completed">Completed</option>
+              <option value="pending">Pending</option>
             </select>
+
             {/* Filter by date */}
             <input
               type="date"

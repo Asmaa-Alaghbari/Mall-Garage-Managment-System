@@ -69,14 +69,14 @@ namespace mgms_backend.Controllers
         // POST: api/AddParkingSpot
         [HttpPost("AddParkingSpot")]
         [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> CreateParkingSpot([FromBody] PostParkingSpotDTO parkingSpotDto)
+        public async Task<IActionResult> CreateParkingSpot([FromBody] ParkingSpotDTO parkingSpotDto)
         {
             var newParkingSpot = new ParkingSpot
             {
                 Number = parkingSpotDto.Number,
                 Section = parkingSpotDto.Section,
-                IsOccupied = parkingSpotDto.IsOccupied,
-                Size = parkingSpotDto.Size
+                Size = parkingSpotDto.Size,
+                IsOccupied = parkingSpotDto.IsOccupied
             };
 
             // Check if another spot has the same number and is not the current spot
@@ -87,7 +87,7 @@ namespace mgms_backend.Controllers
             }
 
             var addedParkingSpot = await _parkingSpotRepository.AddParkingSpotAsync(newParkingSpot);
-            var createdParkingSpot =  CreatedAtAction(nameof(GetParkingSpotById), 
+            var createdParkingSpot = CreatedAtAction(nameof(GetParkingSpotById),
                 new { parkingSpotId = addedParkingSpot.ParkingSpotId }, addedParkingSpot);
             return Ok(new { message = "Spot added successfully!", createdParkingSpot });
         }
@@ -95,7 +95,7 @@ namespace mgms_backend.Controllers
         // PUT: api/UpdateParkingSpot
         [HttpPut("UpdateParkingSpot")]
         [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> UpdateParkingSpot(int parkingSpotId, [FromBody] PostParkingSpotDTO parkingSpotDto)
+        public async Task<IActionResult> UpdateParkingSpot(int parkingSpotId, [FromBody] ParkingSpotDTO parkingSpotDto)
         {
             var parkingSpotToUpdate = await _parkingSpotRepository.GetParkingSpotByIdAsync(parkingSpotId);
             if (parkingSpotToUpdate == null)
@@ -136,7 +136,7 @@ namespace mgms_backend.Controllers
             // Delete the parking spot from the database
             await _parkingSpotRepository.DeleteParkingSpotAsync(parkingSpotId);
 
-            return Ok(new { message = $"Spot with ID {parkingSpotId} deleted successfully!" }); 
+            return Ok(new { message = $"Spot with ID {parkingSpotId} deleted successfully!" });
         }
     }
 }

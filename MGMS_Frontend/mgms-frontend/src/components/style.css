@@ -1,0 +1,182 @@
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.container h1 {
+    color: #333;
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.container ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.container li {
+    background-color: #f4f4f4;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.container button {
+    margin-top: 10px;
+    margin-left: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.container button:hover {
+    background-color: #0056b3;
+}
+
+.container form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.container input,
+.container select,
+.container textarea {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 25%;
+    margin-left: 10px;
+    font-weight: normal;
+    text-align: center;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.container label {
+    font-weight: bold;
+}
+
+.container input[type="checkbox"],
+.container input[type="radio"] {
+    width: auto;
+}
+
+.container table {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.container table th,
+.container table td {
+    text-align: center;
+    padding: 8px;
+}
+
+.container table th {
+    background-color: #f2f2f2;
+}
+
+.container .checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 auto;
+}
+
+.search-filter {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.search-filter input,
+.search-filter select {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    width: 200px;
+}
+
+.feedback-radio-container span {
+    font-weight: normal;
+    margin-left: 10px;
+}
+
+.radio-container input {
+    margin: 5px 15px 5px 5px;
+}
+
+.msg-textarea {
+    text-align: left;
+    display: block;
+    width: 90%;
+    margin: 0 auto;
+}
+
+.msg-container textarea {
+    margin-top: 10px;
+    width: 90%;
+    height: 100px;
+}
+
+.pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.pagination button {
+    padding: 5px 10px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 15px;
+}
+
+.pagination button:hover {
+    background-color: #0056b3;
+}
+
+.pagination button.active {
+    background-color: #0056b3;
+    font-weight: bold;
+}
+
+.star-icon {
+    color: gold;
+    margin: 0 5px;
+}
+
+.highlight {
+    background-color: yellow;
+}
+
+.message-success {
+    color: blue;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.message-error {
+    color: red;
+    text-align: center;
+    margin-top: 20px;
+}

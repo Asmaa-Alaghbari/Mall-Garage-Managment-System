@@ -11,10 +11,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("417b5a96-8d26-48a1-80c1-34d85caa1d68")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("mgms-backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+00d92bc4ff9c25d698264754a8c5b18d073b8417")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b3a0343b0e39b2ce18bcd0109ec9e06ec4139090")]
 [assembly: System.Reflection.AssemblyProductAttribute("mgms-backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("mgms-backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

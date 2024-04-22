@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
 
-export default function AddParkingSpot({ onAddSuccess, onClose }) {
-  const [parkingSpot, setParkingSpot] = useState({
-    number: "",
-    section: "",
-    isOccupied: false, // Default value for checkbox
-    size: "",
-  });
+export default function AddParkingSpot({
+  onAddSuccess,
+  onClose,
+  parkingSpotData,
+}) {
+  const [parkingSpot, setParkingSpot] = useState(
+    parkingSpotData || {
+      number: "",
+      section: "",
+      isOccupied: false, // Default value is not occupied
+      size: "", // Small, Medium, Large
+    }
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -26,13 +32,39 @@ export default function AddParkingSpot({ onAddSuccess, onClose }) {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+
+    // Set size based on selected section
+    if (name === "section") {
+      let size = "";
+      switch (value) {
+        case "Compact Cars":
+        case "Motorcycles":
+          size = "Small";
+          break;
+        case "Standard Cars":
+          size = "Medium";
+          break;
+        case "Large Vehicles":
+        case "Disabled Parking":
+          size = "Large";
+          break;
+        default:
+          break;
+      }
+      setParkingSpot((prev) => ({ ...prev, size }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
-    fetch("http://localhost:5296/api/parkingspots/AddParkingSpot", {
-      method: "POST",
+
+    const apiUrl = parkingSpotData
+      ? `http://localhost:5296/api/parkingspots/UpdateParkingSpot?parkingSpotId=${parkingSpotData.parkingSpotId}`
+      : "http://localhost:5296/api/parkingspots/AddParkingSpot";
+
+    fetch(apiUrl, {
+      method: parkingSpotData ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -53,7 +85,9 @@ export default function AddParkingSpot({ onAddSuccess, onClose }) {
         return response.json();
       })
       .then((data) => {
-        setMessage("Parking spot added successfully!");
+        setMessage(
+          `Parking spot ${parkingSpotData ? "updated" : "added"} successfully!`
+        );
         onAddSuccess(data); // Update the list of parking spots
         setIsLoading(false);
       })
@@ -65,8 +99,8 @@ export default function AddParkingSpot({ onAddSuccess, onClose }) {
   };
 
   return (
-    <div>
-      <h2>Add Parking Spot</h2>
+    <div className="container">
+      <h2>{parkingSpotData ? "Update Parking Spot" : "Add Parking Spot"}</h2>
       <form onSubmit={handleSubmit}>
         <div>
           <label>
@@ -83,25 +117,50 @@ export default function AddParkingSpot({ onAddSuccess, onClose }) {
         <div>
           <label>
             Section:
-            <input
-              type="text"
+            <select
               name="section"
-              value={parkingSpot.section}
+              value={parkingSpot.status}
               onChange={handleChange}
               required
-            />
+            >
+              <option value="">Select Section</option>
+              <option value="Compact Cars">Compact Cars</option>
+              <option value="Standard Cars">Standard Cars</option>
+              <option value="Large Vehicles">Large Vehicles</option>
+              <option value="Motorcycles">Motorcycles</option>
+              <option value="Disabled Parking">Disabled Parking</option>
+            </select>
           </label>
         </div>
         <div>
           <label>
             Size:
             <input
-              type="text"
+              type="radio"
               name="size"
-              value={parkingSpot.size}
+              value="Small"
+              checked={parkingSpot.size === "Small"}
               onChange={handleChange}
-              required
+              disabled
             />
+            Small
+            <input
+              type="radio"
+              name="size"
+              value="Medium"
+              checked={parkingSpot.size === "Medium"}
+              onChange={handleChange}
+              disabled
+            />
+            Medium
+            <input
+              type="radio"
+              name="size"
+              value="Large"
+              checked={parkingSpot.size === "Large"}
+              onChange={handleChange}
+            />
+            Large
           </label>
         </div>
         <div>
@@ -117,7 +176,7 @@ export default function AddParkingSpot({ onAddSuccess, onClose }) {
         </div>
         <div>
           <button type="submit" disabled={isLoading}>
-            {isLoading ? "Adding..." : "Add"}
+            {parkingSpotData ? "Update" : "Add"}
           </button>
           <button type="button" onClick={onClose}>
             Close

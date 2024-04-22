@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { formatDateTime, highlightText, paginate } from "../../Utils";
+import { highlightText, paginate } from "../../Utils";
 import AddParkingSpot from "./AddParkingSpot";
-import UpdateParkingSpot from "./UpdateParkingSpot";
-import "./ParkingSpots.css";
+import "../style.css";
 
 export default function ParkingSpots() {
   const [parkingSpots, setParkingSpots] = useState([]); // Store parking spots from the API
@@ -14,6 +13,7 @@ export default function ParkingSpots() {
   const [searchTerm, setSearchTerm] = useState(""); // Search term for filtering
   const [statusFilter, setStatusFilter] = useState("all"); // Filter by status
   const [sizeFilter, setSizeFilter] = useState("all"); // Filter by size
+  const [sectionFilter, setSectionFilter] = useState("all"); // Filter by type
   const [sortType, setSortType] = useState("parkingSpotId"); // Sort by parking spot ID by default
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -124,10 +124,14 @@ export default function ParkingSpots() {
     setSizeFilter(e.target.value);
   };
 
+  const handleSectionChange = (e) => {
+    setSectionFilter(e.target.value);
+  };
+
   // Filter parking spots based on search term (case-insensitive)
   const filteredParkingSpots = parkingSpots.filter((spot) => {
     return (
-      spot.parkingSpotId.toString().includes(searchTerm) ||
+      (spot.parkingSpotId ?? "").toString().includes(searchTerm) ||
       spot.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       spot.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (spot.isOccupied ? "Occupied" : "Available")
@@ -137,7 +141,7 @@ export default function ParkingSpots() {
     );
   });
 
-  // Filter parking spots based on status and size
+  // Filter parking spots based on status, size, and section
   const filteredAndSortedParkingSpots = filteredParkingSpots
     .filter((spot) => {
       if (statusFilter === "all") return true;
@@ -146,12 +150,17 @@ export default function ParkingSpots() {
     .filter((spot) => {
       if (sizeFilter === "all") return true;
       return spot.size === sizeFilter;
+    })
+    .filter((spot) => {
+      if (sectionFilter === "all") return true;
+      return spot.section === sectionFilter;
     });
 
   // Sort the parking spots based on the sort type
   let sortedParkingSpots = [...filteredAndSortedParkingSpots];
 
   const sortFunctions = {
+    parkingSpotId: (a, b) => a.parkingSpotId - b.parkingSpotId,
     number: (a, b) => a.number - b.number,
     section: (a, b) => a.section.localeCompare(b.section),
     status: (a, b) =>
@@ -176,7 +185,7 @@ export default function ParkingSpots() {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="parking-spots-container">
+    <div className="container">
       <h1>Parking Spots</h1>
 
       {/* Add and Update forms */}
@@ -189,10 +198,10 @@ export default function ParkingSpots() {
 
       {/* Show the update form if a spot is selected */}
       {showUpdateForm && selectedSpot && (
-        <UpdateParkingSpot
-          parkingSpotData={selectedSpot} // Pass the selected spot to the update form
-          onUpdated={handleUpdateSuccess} // Handle the update success
-          onClose={() => setShowUpdateForm(false)} // Close the update form
+        <AddParkingSpot
+          parkingSpotData={selectedSpot} // Pass the selected spot data
+          onAddSuccess={handleUpdateSuccess} // Use handleUpdateSuccess for updates
+          onClose={() => setShowUpdateForm(false)} // Close the form
         />
       )}
       {!showAddForm && !showUpdateForm && (
@@ -205,19 +214,32 @@ export default function ParkingSpots() {
               value={searchTerm}
               onChange={handleSearchChange}
             />
+
+            {/* Filter by status  */}
             <select value={statusFilter} onChange={handleStatusChange}>
               <option value="all">All Status</option>
               <option value="occupied">Occupied</option>
               <option value="available">Available</option>
             </select>
-            <select value={sizeFilter} onChange={handleSizeChange}>
-              <option value="all">All Sizes</option>
+
+            {/* Filter by section */}
+            <select value={sectionFilter} onChange={handleSectionChange}>
+              <option value="all">All Section</option>
               <option value="Compact Cars">Compact Cars</option>
               <option value="Standard Cars">Standard Cars</option>
               <option value="Large Vehicles">Large Vehicles</option>
               <option value="Motorcycles">Motorcycles</option>
               <option value="Disabled Parking">Disabled Parking</option>
             </select>
+
+            {/* Filter by size */}
+            <select value={sizeFilter} onChange={handleSizeChange}>
+              <option value="all">All Sizes</option>
+              <option value="Small">Small</option>
+              <option value="Medium">Medium</option>
+              <option value="Large">Large</option>
+            </select>
+
             {/*  Sort by number, section, status, size */}
             <select
               value={sortType}
@@ -247,17 +269,21 @@ export default function ParkingSpots() {
               {paginatedParkingSpots.map((spot) => (
                 <tr key={spot.parkingSpotId}>
                   <td>
-                    {highlightText(spot.parkingSpotId.toString(), searchTerm)}
+                    {highlightText(
+                      (spot.parkingSpotId ?? "").toString(),
+                      searchTerm
+                    )}
                   </td>
-                  <td>{highlightText(spot.number, searchTerm)}</td>
-                  <td>{highlightText(spot.section, searchTerm)}</td>
+                  <td>{highlightText(spot.number ?? "", searchTerm)}</td>
+                  <td>{highlightText(spot.section ?? "", searchTerm)}</td>
                   <td>
                     {highlightText(
                       spot.isOccupied ? "Occupied" : "Available",
                       searchTerm
                     )}
                   </td>
-                  <td>{highlightText(spot.size, searchTerm)}</td>
+                  <td>{highlightText(spot.size ?? "", searchTerm)}</td>
+
                   <td>
                     <button
                       onClick={() => {

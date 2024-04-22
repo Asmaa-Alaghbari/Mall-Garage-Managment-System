@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { formatDateTime, highlightText, paginate } from "../../Utils";
 import AddFeedback from "./AddFeedback";
-
-import "./Feedback.css";
+import "../style.css";
 
 export default function Feedback() {
   const [feedbacks, setFeedbacks] = useState([]); // Store feedbacks from the API
@@ -70,7 +69,7 @@ export default function Feedback() {
         setError(error.message);
         setIsLoading(false);
       });
-  }, [location]); // Fetch feedbacks once when the component mounts
+  }, [location, navigate]); // Fetch feedbacks once when the component mounts
 
   const handleAddSuccess = (newFeedback) => {
     setFeedbacks([...feedbacks, newFeedback]); // Add the new feedback to the list
@@ -107,13 +106,14 @@ export default function Feedback() {
     }
   };
 
-  // Filtering feedbacks based on search term and filter
   const filteredFeedbacks = feedbacks.filter((feedback) => {
     const searchTermLower = searchTerm.toLowerCase();
     const filterByLower = filterBy.toLowerCase();
-    const feedbackTypeLower = feedback.feedbackType.toLowerCase();
-    const messageLower = feedback.message.toLowerCase();
-    const userId = feedback.userId.toString();
+    const feedbackTypeLower = feedback.feedbackType
+      ? feedback.feedbackType.toLowerCase()
+      : "";
+    const messageLower = feedback.message ? feedback.message.toLowerCase() : "";
+    const userId = feedback.userId ? feedback.userId.toString() : "";
 
     const ratingMatch =
       filterByRating === "" || feedback.rating.toString() === filterByRating;
@@ -152,7 +152,6 @@ export default function Feedback() {
   });
 
   // Pagination
-
   const paginatedFeedbacks = paginate(
     sortedFeedbacks,
     currentPage,
@@ -164,7 +163,7 @@ export default function Feedback() {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="feedback-container">
+    <div className="container">
       <h1>Feedbacks</h1>
       {showAddForm && (
         <AddFeedback
@@ -259,21 +258,34 @@ export default function Feedback() {
                       {localStorage.getItem("role") === "ADMIN" && (
                         <td>
                           {highlightText(
-                            feedback.userId.toString(),
+                            feedback.userId ? feedback.userId.toString() : "",
                             searchTerm
                           )}
                         </td>
                       )}
                       <td>
-                        {highlightText(feedback.rating.toString(), searchTerm)}
+                        {highlightText(
+                          feedback.rating ? feedback.rating.toString() : "",
+                          searchTerm
+                        )}
                       </td>
-                      <td>
-                        {highlightText(feedback.feedbackType, searchTerm)}
-                      </td>
-                      <td>{highlightText(feedback.message, searchTerm)}</td>
                       <td>
                         {highlightText(
-                          formatDateTime(feedback.dateTime),
+                          feedback.feedbackType ? feedback.feedbackType : "",
+                          searchTerm
+                        )}
+                      </td>
+                      <td>
+                        {highlightText(
+                          feedback.message ? feedback.message : "",
+                          searchTerm
+                        )}
+                      </td>
+                      <td>
+                        {highlightText(
+                          feedback.dateTime
+                            ? formatDateTime(feedback.dateTime)
+                            : "",
                           searchTerm
                         )}
                       </td>

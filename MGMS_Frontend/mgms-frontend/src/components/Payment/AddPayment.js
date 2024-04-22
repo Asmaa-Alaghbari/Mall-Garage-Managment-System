@@ -1,19 +1,28 @@
 import React, { useState, useEffect } from "react";
 
-export default function AddPayment({ onAddSuccess, onClose }) {
-  const [payment, setPayment] = useState({
-    reservationId: "",
-    userId: "",
-    amount: "",
-    paymentMethod: "",
-  });
+export default function AddPayment({
+  onAddSuccess,
+  onClose,
+  paymentData,
+  paymentId,
+}) {
+  const [payment, setPayment] = useState(
+    paymentData || {
+      paymentId: "",
+      reservationId: "",
+      userId: "",
+      amount: "",
+      paymentMethod: "",
+    }
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
       setIsLoading(true);
+
       try {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -45,6 +54,14 @@ export default function AddPayment({ onAddSuccess, onClose }) {
         } else {
           console.error("UserId not found in user data");
         }
+
+        // Set the paymentId when updating a payment
+        if (paymentId) {
+          setPayment((prev) => ({
+            ...prev,
+            paymentId: paymentId, // Set the paymentId
+          }));
+        }
       } catch (err) {
         console.error("Fetch user error:", err);
         setError(err.message);
@@ -54,7 +71,7 @@ export default function AddPayment({ onAddSuccess, onClose }) {
     };
 
     fetchCurrentUser();
-  }, []);
+  }, [paymentId]);
 
   const handleChange = (e) => {
     console.log("Current payment state:", payment);
@@ -72,34 +89,46 @@ export default function AddPayment({ onAddSuccess, onClose }) {
       return;
     }
 
+    // Prepare the payment data to be sent to the backend
     const paymentData = {
-      reservationId: parseInt(payment.reservationId, 10),
-      userId: parseInt(payment.userId, 10),
-      amount: parseFloat(payment.amount),
-      paymentMethod: payment.paymentMethod,
+      paymentId: payment.paymentId, // Keep as string
+      reservationId: parseInt(payment.reservationId, 10), // Convert to number, base 10
+      userId: parseInt(payment.userId, 10), // Convert to number, base 10
+      amount: parseFloat(payment.amount), // Convert to float
+      paymentMethod: payment.paymentMethod, // Keep as string
       dateTime: new Date().toISOString(), // Add current date and time
     };
 
-    const createPaymentDto = {
-      ...paymentData,
-    };
+    const apiUrl = paymentData.paymentId
+      ? `http://localhost:5296/api/Payments/UpdatePayment?paymentId=${paymentData.paymentId}`
+      : "http://localhost:5296/api/Payments/AddPayment";
 
-    fetch("http://localhost:5296/api/Payments/AddPayment", {
-      method: "POST",
+    const fetchMethod = paymentData.paymentId ? "PUT" : "POST";
+
+    fetch(apiUrl, {
+      method: fetchMethod,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      body: JSON.stringify(createPaymentDto),
+      body: JSON.stringify(paymentData),
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Failed to add payment");
+          throw new Error(
+            paymentData.paymentId
+              ? "Failed to update payment"
+              : "Failed to add payment"
+          );
         }
         return response.json();
       })
       .then((data) => {
-        setMessage("Payment added successfully!");
+        setMessage(
+          paymentData.paymentId
+            ? "Payment updated successfully!"
+            : "Payment added successfully!"
+        );
         onAddSuccess(data);
       })
       .catch((error) => {
@@ -111,8 +140,8 @@ export default function AddPayment({ onAddSuccess, onClose }) {
   };
 
   return (
-    <div>
-      <h2>Add Payment</h2>
+    <div className="container">
+      <h2>{paymentData ? "Update Payment" : "Add Payment"}</h2>
       <form onSubmit={handleSubmit}>
         <label>
           Reservation ID:
@@ -135,29 +164,44 @@ export default function AddPayment({ onAddSuccess, onClose }) {
         />
         <label>
           Amount:
-          <input 
-          type="number" 
-          name="amount" 
-          value={payment.amount} 
-          onChange={handleChange}
-          required />
-        </label>
-        <label>
-          Payment Method:
           <input
-            type="text"
-            name="paymentMethod"
-            value={payment.paymentMethod}
+            type="number"
+            name="amount"
+            min={0}
+            value={payment.amount}
             onChange={handleChange}
             required
           />
         </label>
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Adding..." : "Add Payment"}
-        </button>
-        <button type="button" onClick={onClose}>
-          Close
-        </button>
+        <label>
+          Payment Method:
+          <select
+            name="paymentMethod"
+            value={payment.paymentMethod}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Select a payment method</option>
+            <option value="credit card">Credit Card</option>
+            <option value="debit card">Debit Card</option>
+            <option value="paypal">Paypal</option>
+            <option value="cash">Cash</option>
+          </select>
+        </label>
+        <div className="button-container">
+          <button type="submit" disabled={isLoading}>
+            {isLoading
+              ? paymentData
+                ? "Updating..."
+                : "Adding..."
+              : paymentData
+              ? "Update Payment"
+              : "Add Payment"}
+          </button>
+          <button type="button" onClick={onClose}>
+            Close
+          </button>
+        </div>
       </form>
       {message && (
         <p
