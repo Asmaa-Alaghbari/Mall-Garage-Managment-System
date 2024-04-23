@@ -50,6 +50,7 @@
     display: flex;
     flex-direction: column;
     gap: 30px;
+    width: 100%;
 }
 
 .container input,
@@ -179,4 +180,84 @@
     color: red;
     text-align: center;
     margin-top: 20px;
+}
+
+/* For small devices */
+@media (max-width: 768px) {
+
+    .container input,
+    .container select,
+    .container textarea {
+        width: 100%;
+        margin-left: auto;
+    }
+
+    .search-filter input,
+    .search-filter select {
+        width: 100%;
+    }
+
+    .msg-textarea {
+        width: 100%;
+        margin-left: auto;
+    }
+
+    .msg-container textarea {
+        width: 100%;
+    }
+
+    .pagination {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .pagination button {
+        margin: 5px 0;
+    }
+
+    .container li {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .container button {
+        margin-left: 5px;
+    }
+
+    .container table {
+        overflow-x: auto;
+        display: block;
+    }
+
+    .container table th,
+    .container table td {
+        padding: 8px;
+        white-space: nowrap;
+    }
+
+    .container table th {
+        position: sticky;
+        top: 0;
+        background-color: #f2f2f2;
+    }
+
+    .container input[type="checkbox"],
+    .container input[type="radio"] {
+        margin-left: 12px;
+        margin-right: 5px;
+    }
+
+    .pagination {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    .pagination button {
+        margin: 5px;
+    }
 }

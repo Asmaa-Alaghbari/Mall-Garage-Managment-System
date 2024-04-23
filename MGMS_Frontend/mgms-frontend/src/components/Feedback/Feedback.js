@@ -201,20 +201,19 @@ export default function Feedback() {
                   <option value="Bug Report">Bug Report</option>
                   <option value="General">General</option>
                 </select>
+
                 {/* Filter by Rating */}
-                <input
-                  type="number"
-                  placeholder="Filter by Rating"
+                <select
                   value={filterByRating}
-                  min="1" // Minimum rating
-                  max="5" // Maximum rating
-                  onChange={(e) => {
-                    // Ensure the rating is between 1 and 5
-                    if (e.target.value >= 1 && e.target.value <= 5) {
-                      setFilterByRating(e.target.value);
-                    }
-                  }}
-                />
+                  onChange={(e) => setFilterByRating(e.target.value)}
+                >
+                  <option value="">Filter by Rating</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
 
                 {/* Filter by Date */}
                 <input
