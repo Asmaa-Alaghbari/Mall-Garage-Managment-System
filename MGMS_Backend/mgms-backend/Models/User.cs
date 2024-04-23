@@ -24,6 +24,7 @@ namespace mgms_backend.Models
 
         // Navigation properties for related entities
         public Profile Profile { get; set; }
+        public Settings Settings { get; set; }
         public ICollection<Reservation> Reservations { get; set; }
         public ICollection<Notification> Notifications { get; set; }
         public ICollection<Feedback> Feedbacks { get; set; }

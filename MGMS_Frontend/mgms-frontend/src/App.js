@@ -14,6 +14,7 @@ import Reservations from "./components/Reservation/Reservations";
 import ParkingSpots from "./components/ParkingSpot/ParkingSpots";
 import Payment from "./components/Payment/Payment";
 import Feedback from "./components/Feedback/Feedback";
+import Settings from "./components/Settings";
 
 import "./App.css";
 
@@ -71,6 +72,16 @@ export default function App() {
           <Route
             path="/feedbacks"
             element={isLoggedIn ? <Feedback /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/settings"
+            element={
+              isLoggedIn ? (
+                <Settings setIsLoggedIn={setIsLoggedIn} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
           />
           <Route path="*" element={<h1>Not Found</h1>} />
         </Routes>

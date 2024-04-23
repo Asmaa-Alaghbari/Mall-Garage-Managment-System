@@ -1,0 +1,108 @@
+.settings-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.settings-container h1 {
+    color: #333;
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.setting-item {
+    margin-bottom: 20px;
+}
+
+.setting-item button,
+.setting-item input[type="checkbox"] {
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.setting-item button {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.setting-item button:hover {
+    background-color: #0056b3;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #001;
+    color: #fff;
+}
+
+.dark-mode .settings-container {
+    background-color: #334;
+    color: #fff;
+}
+
+.dark-mode .settings-container h1 {
+    color: #fff;
+}
+
+/* Dark mode toggle */
+.setting-item label {
+    display: flex;
+    align-items: center;
+}
+
+/* Notification toggle */
+.setting-item input[type="checkbox"] {
+    transform: scale(1.5);
+}
+
+/* Log Out button */
+.setting-item button.logout-btn {
+    background-color: red;
+}
+
+.setting-item button.logout-btn:hover {
+    background-color: darkred;
+}
+
+.setting-item button,
+.setting-item input[type="checkbox"] {
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.setting-item button {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.setting-item button:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 15px;
+    }
+
+    .settings-container h1 {
+        font-size: 24px;
+    }
+
+    .setting-item button,
+    .setting-item input[type="checkbox"] {
+        margin-left: 5px;
+    }
+}

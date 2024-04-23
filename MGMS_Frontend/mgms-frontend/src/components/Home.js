@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { fetchCurrentUser } from "../Utils";
 import "./Home.css";
 
 export default function Home() {
   const [user, setUser] = useState(null);
-  const [recentReservations, setRecentReservations] = useState([]);
+  const [recentReservations] = useState([]);
   const [parkingSpotSummary, setParkingSpotSummary] = useState({
     available: 0,
     occupied: 0,
@@ -16,6 +17,9 @@ export default function Home() {
     avgRating: 0,
     receivedCount: 0,
   });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const location = useLocation();
@@ -25,25 +29,7 @@ export default function Home() {
     setIsLoading(true);
 
     // Fetch user data
-    fetch("http://localhost:5296/api/auth/GetUser", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setUser(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching user data:", error);
-        setError(error.toString());
-      });
+    fetchCurrentUser(setUser, setIsLoading, setError);
 
     // Fetch the parking spot summary (available, occupied, total)
     fetch("http://localhost:5296/api/parkingspots/GetParkingSpotSummary", {
@@ -122,9 +108,80 @@ export default function Home() {
     });
   }, [feedbacks, user]);
 
+  // Handle search input change and filter matching routes
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+
+    if (term.length === 0) {
+      setIsSearchOpen(false);
+      setSearchResults([]);
+      return;
+    }
+
+    // Search for matching routes
+    const matchingRoutes = [
+      { path: "/profile", name: "Profile" },
+      { path: "/reservations", name: "Reservations" },
+      { path: "/parking-spots", name: "ParkingSpots" },
+      { path: "/payments", name: "Payment" },
+      { path: "/feedbacks", name: "Feedback" },
+      { path: "/settings", name: "Settings" },
+    ].filter((route) => route.name.toLowerCase().includes(term));
+
+    setSearchResults(matchingRoutes);
+    setIsSearchOpen(true);
+  };
+
+  // Handle search input blur and close search results
+  const handleSearchBlur = () => {
+    setIsSearchOpen(false);
+  };
+
+  // Handle search input keydown and close search results on Escape key
+  const handleSearchKeyDown = (e) => {
+    if (e.key === "Escape") {
+      setIsSearchOpen(false);
+    }
+  };
+
   return (
     <div className="home-container">
       <header className="header">
+        {/* Search bar */}
+        <div className="search-container">
+          <div className="search-input">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={handleSearch}
+              onBlur={handleSearchBlur}
+              onKeyDown={handleSearchKeyDown}
+            />
+            <i className="fa fa-search search-icon"></i>
+          </div>
+          {isSearchOpen && (
+            <section className="search-results">
+              <ul className="card-body">
+                {searchResults.map((route) => (
+                  <li key={route.path} className="result-item">
+                    <Link
+                      to={route.path}
+                      onClick={() => setIsSearchOpen(false)}
+                    >
+                      {route.name}
+                    </Link>
+                  </li>
+                ))}
+                {searchResults.length === 0 && (
+                  <li>No matching pages found.</li>
+                )}
+              </ul>
+            </section>
+          )}
+        </div>
+
         <h1>
           Welcome,{" "}
           {user &&

@@ -14,9 +14,9 @@ export default function SignUp() {
     address: "", // Optional
   });
 
-  const [isLoading, setIsLoading] = useState(false); // Loading state for form submission requests
-  const [error, setError] = useState(""); // Error state for form submission errors
-  const [success, setSuccess] = useState(false); // Success state for successful form submissions
+  const [, setIsLoading] = useState(false); // Loading state for form submission requests
+  const [, setError] = useState(""); // Error state for form submission errors
+  const [, setSuccess] = useState(false); // Success state for successful form submissions
   const navigate = useNavigate(); // Redirect the user to the login page after successful registration
 
   // Handle form input changes (controlled component)

@@ -93,6 +93,18 @@
   opacity: 1;
 }
 
+.dark-mode .navbar {
+  background-color: #333;
+  color: #fff;
+}
+
+.dark-mode .nav-links:hover,
+.dark-mode .nav-links.active,
+.dark-mode .nav-item:hover {
+  background-color: #555;
+}
+
+
 /* Responsive styles to show/hide navbar */
 @media (max-width: 768px) {
   .nav-menu {

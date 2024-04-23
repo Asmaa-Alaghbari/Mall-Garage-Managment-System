@@ -20,6 +20,7 @@ namespace mgms_backend.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Service> Services { get; set; }
         public DbSet<ReservationService> ReservationServices { get; set; }
+        public DbSet<Settings> Settings { get; set; }
 
         // Define the relationships between the entities in the database using the Fluent API
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -50,12 +51,18 @@ namespace mgms_backend.Data
                 .WithOne(f => f.User)
                 .HasForeignKey(f => f.UserId);
 
+            // Define the one-to-many relationship between User and Settings
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Settings)
+                .WithOne(s => s.User)
+                .HasForeignKey<Settings>(s => s.UserId);
+
             // Define the one-to-many relationship between ParkingSpot and Reservation
             modelBuilder.Entity<ParkingSpot>()
                 .HasMany(p => p.Reservations)
                 .WithOne(r => r.ParkingSpot)
-                .HasForeignKey(r => r.ParkingSpotId);  
-            
+                .HasForeignKey(r => r.ParkingSpotId);
+
             // Define the one-to-many relationship between Reservation and Service
             modelBuilder.Entity<Reservation>()
                 .HasMany(r => r.Services)

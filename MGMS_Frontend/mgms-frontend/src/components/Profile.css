@@ -45,6 +45,12 @@
   background-color: #0056b3;
 }
 
+/* Dark mode styles */
+.dark-mode .profile-form-container {
+  background-color: #334;
+    color: #fff;
+}
+
 /* Style for error messages */
 .error-message {
   color: #d32f2f;

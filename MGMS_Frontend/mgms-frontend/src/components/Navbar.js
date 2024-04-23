@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { confirmLogout } from "../Utils";
 import "./Navbar.css";
 import {
   FaCalendarAlt, // Calendar icon
@@ -9,28 +10,14 @@ import {
   FaComments, // Comments icon
   FaSignOutAlt, // Sign out icon
   FaBars, // Hamburger icon
+  FaCog, // Cog icon
 } from "react-icons/fa"; // Importing icons
 
 // Navigation bar component
 export default function Navbar({ setIsLoggedIn }) {
-  const navigate = useNavigate(); // Redirect the user to the login page after logout
   const [isOpen, setIsOpen] = useState(false); // State to manage the mobile menu
   const navbarRef = useRef(null); // Reference to the navbar element
-
-  // Handle the actual logout process and redirect the user to the login page
-  const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove the token from local storage
-    setIsLoggedIn(false); // Update the login state to false
-    navigate("/login"); // Redirect the user to the login page
-  };
-
-  // Call the confirmation dialog before performing logout
-  const confirmLogout = () => {
-    // Display a confirmation dialog to the user
-    if (window.confirm("Are you sure you want to log out?")) {
-      handleLogout();
-    }
-  };
+  const navigate = useNavigate();
 
   // Handle the click outside the navbar to close the mobile menu
   const handleClickOutside = (event) => {
@@ -86,7 +73,16 @@ export default function Navbar({ setIsLoggedIn }) {
             icon={<FaComments className="nav-icon" />}
             closeNavbar={() => setIsOpen(false)}
           />
-          <li className="nav-item" onClick={confirmLogout}>
+          <NavItem
+            to="/settings"
+            label="Settings"
+            icon={<FaCog className="nav-icon" />}
+            closeNavbar={() => setIsOpen(false)}
+          />
+          <li
+            className="nav-item"
+            onClick={() => confirmLogout({ setIsLoggedIn, navigate })}
+          >
             <FaSignOutAlt className="logout-nav-icon" />
             <span className="nav-text">Logout</span>
           </li>
@@ -113,6 +109,3 @@ const NavItem = ({ to, label, icon, closeNavbar }) => {
     </li>
   );
 };
-
-
-// I want when I hover over the icon, the text will appear slightly below the icon

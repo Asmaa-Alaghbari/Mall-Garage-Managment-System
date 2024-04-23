@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { fetchCurrentUser } from "../../Utils";
 
 export default function AddFeedback({ onAddSuccess, onClose }) {
   const [feedback, setFeedback] = useState({
@@ -21,50 +22,13 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
     }));
   };
 
-  // F`etch the current user data from the backend
+  // Fetch the current user data from the backend
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found");
-        }
-
-        // Fetch the user data from the backend using the token for authentication
-        const response = await fetch("http://localhost:5296/api/auth/GetUser", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        // Check if the response is successful
-        if (!response.ok) {
-          throw new Error("Failed to fetch user");
-        }
-
-        // Parse the response body as JSON
-        const userData = await response.json();
-        console.log("Fetched user data:", userData); // Log the fetched user data
-
-        // Check if the UserId field exists in the userData
-        if (userData.userId) {
-          setFeedback((prev) => ({
-            ...prev,
-            userId: userData.userId, // Populate userId with the fetched ID
-          }));
-        } else {
-          console.error("UserId not found in user data");
-        }
-      } catch (err) {
-        console.error("Fetch user error:", err);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
+    const loadData = async () => {
+      await fetchCurrentUser(setFeedback, setIsLoading, setError);
     };
 
-    fetchCurrentUser();
+    loadData();
   }, []);
 
   const handleSubmit = (e) => {
@@ -137,7 +101,7 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
             hidden
           />
         </div>
-        <div ClassName="rating-cosntainer">
+        <div className="rating-cosntainer">
           <label>
             Rating:
             {[...Array(5)].map((star, i) => {
