@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { confirmLogout, fetchCurrentUser } from "../Utils";
+import { confirmLogout, fetchCurrentUser } from "./Utils";
 import "./Settings.css";
 
 export default function Settings({ setIsLoggedIn }) {

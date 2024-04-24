@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { formatDateTime, highlightText, paginate } from "../../Utils";
+import { formatDateTime, highlightText, paginate, pagination } from "../Utils";
 import AddFeedback from "./AddFeedback";
 import "../style.css";
 
@@ -304,18 +304,7 @@ export default function Feedback() {
 
               {/* Pagination */}
               <div className="pagination">
-                {totalPages > 1 &&
-                  Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={currentPage === page ? "active" : ""}
-                      >
-                        {page}
-                      </button>
-                    )
-                  )}
+                {pagination(totalPages, currentPage, setCurrentPage)}
               </div>
 
               <button onClick={() => setShowAddForm(true)}>

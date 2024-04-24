@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { fetchCurrentUser } from "../Utils";
+import { fetchCurrentUser } from "./Utils";
 import "./Home.css";
 
 export default function Home() {
@@ -22,6 +22,7 @@ export default function Home() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const currentYear = new Date().getFullYear(); // Get the current year
   const location = useLocation();
 
   // Fetch other pages data
@@ -279,6 +280,12 @@ export default function Home() {
           </div>
         </section>
       </main>
+
+      {/* Footer */}
+      <footer className="footer">
+        <p>&copy; {currentYear} MGMS Company</p>
+      </footer>
     </div>
   );
 }
+

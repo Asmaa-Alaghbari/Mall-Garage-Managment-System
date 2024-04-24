@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { fetchCurrentUser } from "../Utils";
 
 export default function AddPayment({
   onAddSuccess,
   onClose,
   paymentData,
-  paymentId,
 }) {
   const [payment, setPayment] = useState(
     paymentData || {
@@ -20,58 +20,8 @@ export default function AddPayment({
   const [, setError] = useState(null);
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      setIsLoading(true);
-
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found");
-        }
-
-        // Fetch the user data from the backend using the token for authentication
-        const response = await fetch("http://localhost:5296/api/auth/GetUser", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        // Check if the response is successful
-        if (!response.ok) {
-          throw new Error("Failed to fetch user");
-        }
-
-        // Parse the response body as JSON
-        const userData = await response.json();
-        console.log("Fetched user data:", userData); // Log the fetched user data
-
-        // Check if the UserId field exists in the userData
-        if (userData.userId) {
-          setPayment((prev) => ({
-            ...prev,
-            userId: userData.userId, // Populate userId with the fetched ID
-          }));
-        } else {
-          console.error("UserId not found in user data");
-        }
-
-        // Set the paymentId when updating a payment
-        if (paymentId) {
-          setPayment((prev) => ({
-            ...prev,
-            paymentId: paymentId, // Set the paymentId
-          }));
-        }
-      } catch (err) {
-        console.error("Fetch user error:", err);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCurrentUser();
-  }, [paymentId]);
+    fetchCurrentUser(setPayment, setIsLoading, setError, () => {});
+  }, []);
 
   const handleChange = (e) => {
     console.log("Current payment state:", payment);

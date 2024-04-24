@@ -2,7 +2,12 @@
 import React from "react";
 
 // Fetch the current user data from the backend
-export const fetchCurrentUser = async (setModel, setIsLoading, setError) => {
+export const fetchCurrentUser = async (
+  setModel,
+  setIsLoading,
+  setError,
+  setUserRole
+) => {
   setIsLoading(true);
   try {
     const token = localStorage.getItem("token");
@@ -27,9 +32,15 @@ export const fetchCurrentUser = async (setModel, setIsLoading, setError) => {
       setModel((prev) => ({
         ...prev,
         userId: userData.userId,
-        username: userData.username, 
-      role: userData.role 
+        username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone,
+        address: userData.address,
+        role: userData.role,
       }));
+      setUserRole(userData.role);
     } else {
       throw new Error("UserId not found in user data");
     }
@@ -70,6 +81,82 @@ export const paginate = (items, currentPage, itemsPerPage) => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   return items.slice(indexOfFirstItem, indexOfLastItem);
+};
+
+// Pagination component to navigate through pages (previous, next, and page numbers)
+export const pagination = (totalPages, currentPage, setCurrentPage) => {
+  const renderPages = () => {
+    const pages = [];
+
+    // If total pages are less than or equal to 1, return null
+    if (totalPages <= 1) {
+      return null;
+    }
+
+    // If total pages are less than or equal to 5, display all page numbers
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(
+          <button
+            key={i}
+            onClick={() => setCurrentPage(i)}
+            className={currentPage === i ? "active" : ""}
+          >
+            {i}
+          </button>
+        );
+      }
+    } else {
+      if (currentPage > 1) {
+        pages.push(
+          <button key="first" onClick={() => setCurrentPage(1)}>
+            {"<<"}
+          </button>
+        );
+        pages.push(
+          <button key="prev" onClick={() => setCurrentPage(currentPage - 1)}>
+            {"<"}
+          </button>
+        );
+      }
+
+      // Display the two pages before and after the current page
+      for (
+        let i = currentPage - 1;
+        i <= currentPage + 1 && i <= totalPages;
+        i++
+      ) {
+        if (i > 0) {
+          pages.push(
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i)}
+              className={currentPage === i ? "active" : ""}
+            >
+              {i}
+            </button>
+          );
+        }
+      }
+
+      if (currentPage < totalPages) {
+        pages.push(
+          <button key="next" onClick={() => setCurrentPage(currentPage + 1)}>
+            {">"}
+          </button>
+        );
+        pages.push(
+          <button key="last" onClick={() => setCurrentPage(totalPages)}>
+            {">>"}
+          </button>
+        );
+      }
+    }
+
+    return pages;
+  };
+
+  return <div className="pagination">{renderPages()}</div>;
 };
 
 // Handle the actual logout process and redirect the user to the login page

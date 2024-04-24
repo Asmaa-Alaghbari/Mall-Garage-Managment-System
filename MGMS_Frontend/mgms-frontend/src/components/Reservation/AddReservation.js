@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { fetchCurrentUser } from "../Utils";
 
 export default function AddReservation({
   onAddSuccess, // Callback function to handle successful reservation addition
@@ -21,72 +22,33 @@ export default function AddReservation({
   const [, setError] = useState(null);
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found");
-        }
-
-        // Fetch the user data from the backend using the token for authentication
-        const response = await fetch("http://localhost:5296/api/auth/GetUser", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        // Check if the response is successful
-        if (!response.ok) {
-          throw new Error("Failed to fetch user");
-        }
-
-        // Parse the response body as JSON
-        const userData = await response.json();
-        console.log("Fetched user data:", userData); // Log the fetched user data
-
-        // Check if the UserId field exists in the userData
-        if (userData.userId) {
-          setReservation((prev) => ({
-            ...prev,
-            userId: userData.userId, // Populate userId with the fetched ID
-          }));
-        } else {
-          console.error("UserId not found in user data");
-        }
-
-        // Set user role
-        setUserRole(userData.role); // Assuming the role is stored in userData.role
-      } catch (err) {
-        console.error("Fetch user error:", err);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCurrentUser();
+    fetchCurrentUser(setReservation, setIsLoading, setError, setUserRole);
   }, []);
 
   useEffect(() => {
-    console.log("Reservation data:", reservationData); // Log the reservation data
+    console.log("Reservation data:", reservationData);
 
     if (isUpdate && reservationData) {
-      // Map the properties from reservationData to the reservation state
-      const updatedReservation = {
-        ...reservation,
-        ...reservationData,
-        startTime: reservationData.startTime
-          ? new Date(reservationData.startTime).toISOString().slice(0, 16)
-          : "", // Format startTime
-        endTime: reservationData.endTime
-          ? new Date(reservationData.endTime).toISOString().slice(0, 16)
-          : "", // Format endTime
-      };
-
-      setReservation(updatedReservation);
+      updateReservation(reservationData);
     }
-  }, [isUpdate, reservation, reservationData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUpdate, reservationData]);
+
+  // Update the reservation state with the reservation data
+  const updateReservation = (data) => {
+    const updatedReservation = {
+      ...reservation,
+      ...data,
+      startTime: data.startTime
+        ? new Date(data.startTime).toISOString().slice(0, 16)
+        : "", // Format startTime
+      endTime: data.endTime
+        ? new Date(data.endTime).toISOString().slice(0, 16)
+        : "", // Format endTime
+    };
+
+    setReservation(updatedReservation);
+  };
 
   // Update the reservation state
   const handleChange = (e) => {
@@ -126,6 +88,22 @@ export default function AddReservation({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validate start time and end time
+    const startTime = new Date(reservation.startTime).getTime();
+    const endTime = new Date(reservation.endTime).getTime();
+    const currentTime = new Date().getTime();
+
+    if (startTime >= endTime) {
+      setMessage("Start time must be before end time.");
+      return;
+    }
+
+    if (startTime < currentTime || endTime < currentTime) {
+      setMessage("Reservation date and time cannot be in the past.");
+      return;
+    }
+
     setIsLoading(true);
 
     const apiUrl = isUpdate
@@ -240,7 +218,7 @@ export default function AddReservation({
           </label>
         )}
         <div className="button-container">
-          <button type="submit" disabled={isLoading}>
+          <button type="submit" disabled={isLoading || message}>
             {isLoading
               ? "Updating..."
               : isUpdate

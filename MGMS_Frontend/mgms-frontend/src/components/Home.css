@@ -128,9 +128,74 @@
   background-color: #d0d0d0;
 }
 
-
-.chart-container {
-  width: 80%; /* Adjust width as needed */
-  margin-bottom: 20px;
+.footer {
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 10px 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
 }
 
+.footer p {
+  margin: 0;
+}
+
+.footer p::before {
+  margin-right: 5px;
+}
+
+/* Dark mode styles */
+.dark-mode .home-container {
+  background-color: #223;
+  color: #fff;
+}
+
+.dark-mode .header {
+  color: #fff;
+}
+
+.dark-mode .main-content {
+  background-color: #333;
+}
+
+.dark-mode .card {
+  background-color: #444;
+  box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .card-header {
+  background-color: #555;
+}
+
+.dark-mode .card-body {
+  border-top: 1px solid #555;
+}
+
+.dark-mode .card-body li {
+  border-color: #555;
+}
+
+.dark-mode .feedback-stats {
+  border-top: 1px solid #555;
+}
+
+.dark-mode .feedback-links {
+  background-color: #555;
+}
+
+.dark-mode .search-container {
+  background-color: #333;
+}
+
+.dark-mode .search-container input[type="text"] {
+  background-color: #444;
+  color: #fff;
+}
+
+.dark-mode .search-container input[type="text"]:focus {
+  background-color: #555;
+}

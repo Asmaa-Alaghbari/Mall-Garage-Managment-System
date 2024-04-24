@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { confirmLogout } from "../Utils";
+import { confirmLogout } from "./Utils";
 import "./Navbar.css";
 import {
   FaCalendarAlt, // Calendar icon
@@ -11,6 +11,7 @@ import {
   FaSignOutAlt, // Sign out icon
   FaBars, // Hamburger icon
   FaCog, // Cog icon
+  FaHome, // Home icon
 } from "react-icons/fa"; // Importing icons
 
 // Navigation bar component
@@ -26,6 +27,12 @@ export default function Navbar({ setIsLoggedIn }) {
     }
   };
 
+  // Handle click on the MGMS text
+  const handleHomeClick = () => {
+    navigate("/home"); // Navigate to the home page
+    setIsOpen(false); // Close the navbar
+  };
+
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
 
@@ -37,12 +44,18 @@ export default function Navbar({ setIsLoggedIn }) {
   return (
     <nav className="navbar" ref={navbarRef}>
       <div className="navbar-container">
-        <Link to="/" className="navbar-logo">
+        <Link to="/" className="navbar-logo" onClick={handleHomeClick}>
           MGMS
         </Link>
         <FaBars className="burger-icon" onClick={() => setIsOpen(!isOpen)} />
 
         <ul className={isOpen ? "nav-menu active" : "nav-menu"}>
+          <NavItem
+            to="/home"
+            label="Home"
+            icon={<FaHome className="nav-icon" />}
+            closeNavbar={() => setIsOpen(false)}
+          />
           <NavItem
             to="/reservations"
             label="Reservations"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { formatDateTime, highlightText, paginate } from "../../Utils";
+import { formatDateTime, highlightText, paginate, pagination } from "../Utils";
 import AddPayment from "./AddPayment";
 import "../style.css";
 
@@ -9,7 +9,7 @@ export default function Payment() {
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [currentPage, setCurrentPage] = useState(1); // Current page number
-  const [itemsPerPage] = useState(10); // Number of items to display per page
+  const [itemsPerPage] = useState(5); // Number of items to display per page
   const [searchTerm, setSearchTerm] = useState(""); // search term
   const [sortType, setSortType] = useState("paymentId"); // Sort by payment ID by default
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("all"); // payment method filter
@@ -267,19 +267,9 @@ export default function Payment() {
 
           {/* Pagination */}
           <div className="pagination">
-            {totalPages > 1 &&
-              Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={currentPage === page ? "active" : ""}
-                  >
-                    {page}
-                  </button>
-                )
-              )}
+            {pagination(totalPages, currentPage, setCurrentPage)}
           </div>
+          
           <button onClick={() => setShowAddForm(true)}>Add New Payment</button>
         </>
       )}

@@ -111,7 +111,7 @@ namespace mgms_backend.Controllers
         // PUT: api/UpdateReservation
         [HttpPut("UpdateReservation")]
         [Authorize]
-        public async Task<IActionResult> UpdateReservation(int reservationId, [FromBody] UpdateReservationDTO updateReservationDto)
+        public async Task<IActionResult> UpdateReservation(int reservationId, [FromBody] ReservationDTO updateReservationDto)
         {
             // Convert DateTime to UTC if necessary to avoid timezone issues when storing in the database
             updateReservationDto.StartTime = updateReservationDto.StartTime.ToUniversalTime();
@@ -163,6 +163,7 @@ namespace mgms_backend.Controllers
             }
 
             // Update the reservation with the new values
+            reservation.ParkingSpotId = updateReservationDto.ParkingSpotId;
             reservation.StartTime = updateReservationDto.StartTime;
             reservation.EndTime = updateReservationDto.EndTime;
             reservation.Status = updateReservationDto.Status;

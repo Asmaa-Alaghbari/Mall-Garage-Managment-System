@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { highlightText, paginate } from "../../Utils";
+import { highlightText, paginate, pagination } from "../Utils";
 import AddParkingSpot from "./AddParkingSpot";
 import "../style.css";
 
@@ -9,7 +9,7 @@ export default function ParkingSpots() {
   const [selectedSpot, setSelectedSpot] = useState(null); // Store selected spot for updating
   const [showUpdateForm, setShowUpdateForm] = useState(false); // Show/hide the update form
   const [currentPage, setCurrentPage] = useState(1); // Current page for pagination
-  const [itemsPerPage] = useState(10); // Number of items per page for pagination
+  const [itemsPerPage] = useState(5); // Number of items per page for pagination
   const [searchTerm, setSearchTerm] = useState(""); // Search term for filtering
   const [statusFilter, setStatusFilter] = useState("all"); // Filter by status
   const [sizeFilter, setSizeFilter] = useState("all"); // Filter by size
@@ -305,18 +305,7 @@ export default function ParkingSpots() {
 
           {/* Pagination Controls */}
           <div className="pagination">
-            {totalPages > 1 &&
-              Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={currentPage === page ? "active" : ""}
-                  >
-                    {page}
-                  </button>
-                )
-              )}
+            {pagination(totalPages, currentPage, handlePageChange)}
           </div>
 
           <button onClick={() => setShowAddForm(true)}>

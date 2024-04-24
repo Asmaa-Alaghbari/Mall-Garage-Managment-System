@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchCurrentUser } from "../../Utils";
+import { fetchCurrentUser } from "../Utils";
 
 export default function AddFeedback({ onAddSuccess, onClose }) {
   const [feedback, setFeedback] = useState({
@@ -25,7 +25,7 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
   // Fetch the current user data from the backend
   useEffect(() => {
     const loadData = async () => {
-      await fetchCurrentUser(setFeedback, setIsLoading, setError);
+      await fetchCurrentUser(setFeedback, setIsLoading, setError, () => {});
     };
 
     loadData();

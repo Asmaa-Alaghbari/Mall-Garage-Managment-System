@@ -134,32 +134,76 @@
     height: 100px;
 }
 
+/* Pagination Styles */
 .pagination {
-    margin-top: 20px;
+    margin-top: 30px;
     display: flex;
     justify-content: center;
     gap: 10px;
+    align-items: center;
 }
 
 .pagination button {
-    padding: 5px 10px;
+    padding: 8px 12px;
     border: none;
-    background-color: #007bff;
-    color: white;
-    border-radius: 5px;
+    background-color: transparent;
+    color: #007bff;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-bottom: 15px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 16px;
 }
 
 .pagination button:hover {
-    background-color: #0056b3;
+    background-color: #f4f4f4;
+    color: #0056b3;
 }
 
 .pagination button.active {
-    background-color: #0056b3;
-    font-weight: bold;
+    background-color: #007bff;
+    color: white;
 }
+
+.pagination span {
+    padding: 0 5px;
+    font-size: 16px;
+    color: #777;
+    display: flex;
+    align-items: center;
+}
+
+.pagination .ellipsis {
+    font-size: 18px;
+    margin: 0 2px;
+}
+
+.pagination button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+}
+
+/* Dark Mode Styles */
+.dark-mode .pagination button {
+    color: #ccc;
+}
+
+.dark-mode .pagination button:hover {
+    background-color: #555;
+}
+
+.dark-mode .pagination button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.dark-mode .pagination span {
+    color: #777;
+}
+
+.dark-mode .pagination .ellipsis {
+    color: #ccc;
+}
+
 
 .star-icon {
     color: gold;
@@ -205,11 +249,6 @@
     background-color: #666;
 }
 
-.dark-mode .container {
-    background-color: #334;
-    color: #fff;
-}
-
 .dark-mode h1 {
     color: #fff;
 }
@@ -222,7 +261,41 @@
     border-color: #555;
 }
 
+/* Dark Mode Styles for Container */
+.dark-mode .container {
+    background-color: #223;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
 
+.dark-mode .container button {
+    background-color: #4c69a5;
+    color: white;
+}
+
+.dark-mode .container button:hover {
+    background-color: #4c69a5;
+}
+
+.dark-mode .container button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Dark Mode Styles for Pagination */
+.dark-mode .pagination button {
+    background-color: #4c69a5;
+    color: white;
+}
+
+.dark-mode .pagination button:hover {
+    background-color: #4c69a5;
+}
+
+.dark-mode .pagination button.active {
+    background-color: #007bff;
+    color: white;
+}
 
 /* For small devices */
 @media (max-width: 768px) {

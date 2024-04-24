@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { formatDateTime, highlightText, paginate } from "../../Utils";
+import { formatDateTime, highlightText, paginate, pagination } from "../Utils";
 import AddReservation from "./AddReservation";
 import "../style.css";
 
@@ -13,7 +13,7 @@ export default function Reservations() {
   const [dateFilter, setDateFilter] = useState(""); // Date filter
   const [sortType, setSortType] = useState("reservationId"); // Sort by reservation ID by default
   const [currentPage, setCurrentPage] = useState(1); // Pagination
-  const [itemsPerPage] = useState(10); // Display 5 items per page
+  const [itemsPerPage] = useState(5); // Display 5 items per page
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -270,19 +270,9 @@ export default function Reservations() {
 
           {/* Pagination */}
           <div className="pagination">
-            {totalPages > 1 &&
-              Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={currentPage === page ? "active" : ""}
-                  >
-                    {page}
-                  </button>
-                )
-              )}
+            {pagination(totalPages, currentPage, setCurrentPage)}
           </div>
+          
           <button onClick={() => setShowAddForm(true)}>Add Reservation</button>
         </>
       )}
