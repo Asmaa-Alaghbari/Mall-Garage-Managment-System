@@ -17,6 +17,12 @@ export default function Home() {
     avgRating: 0,
     receivedCount: 0,
   });
+  const [userStatistics, setUserStatistics] = useState({
+    totalUsersRole: 0,
+    totalAdminsRole: 0,
+    totalUsers: 0,
+  });
+  const [, setUserRole] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -30,7 +36,40 @@ export default function Home() {
     setIsLoading(true);
 
     // Fetch user data
-    fetchCurrentUser(setUser, setIsLoading, setError);
+    fetchCurrentUser(setUser, setIsLoading, setError, setUserRole);
+
+    if (user?.role === "ADMIN") {
+      // Fetch user statistics
+      fetch("http://localhost:5296/api/auth/GetUserStatistics", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            if (response.status === 403) {
+              throw new Error(
+                "Forbidden: You are not authorized to view this resource."
+              );
+            }
+            throw new Error(
+              `Failed to fetch user statistics: ${response.statusText}`
+            );
+          }
+          return response.json();
+        })
+        .then((data) => {
+          setUserStatistics(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching user statistics:", error);
+          setError(error.message);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
 
     // Fetch the parking spot summary (available, occupied, total)
     fetch("http://localhost:5296/api/parkingspots/GetParkingSpotSummary", {
@@ -259,26 +298,41 @@ export default function Home() {
         </section>
         <section className="card">
           <h2 className="card-header">Feedbacks</h2>
-          <div className="feedback-stats">
-            <p>Given Feedbacks: {feedbackStats.givenCount}</p>
-            <p>Average Rating: {feedbackStats.avgRating.toFixed(2)}</p>
+          <ul className="card-body">
+            <li>Given Feedbacks: {feedbackStats.givenCount}</li>
+            <li>Average Rating: {feedbackStats.avgRating.toFixed(2)}</li>
             {user?.role === "ADMIN" && (
-              <p>Received Feedbacks: {feedbacks.length}</p>
+              <li>Received Feedbacks: {feedbacks.length}</li>
             )}
-          </div>
-          <div className="feedback-links">
+          </ul>
+          <li className="nav-link">
             {user?.role === "USER" && (
-              <Link to="/feedbacks" className="nav-link">
+              <Link to="/feedbacks" className="feedback-links">
                 View My Feedbacks
               </Link>
             )}
             {user?.role === "ADMIN" && (
-              <Link to="/feedbacks" className="nav-link">
+              <Link to="/feedbacks" className="feedback-links">
                 View All Feedbacks
               </Link>
             )}
-          </div>
+          </li>
         </section>
+        {user?.role === "ADMIN" && (
+          <section className="card">
+            <h2 className="card-header">User Statistics</h2>
+            <ul className="card-body">
+              <li>Total Users: {userStatistics.totalUsersRole}</li>
+              <li>Total Admins: {userStatistics.totalAdminsRole}</li>
+              <li>Total Users: {userStatistics.totalUsers}</li>
+              <li>
+                <Link to="/users" className="nav-link">
+                  View All Users
+                </Link>
+              </li>
+            </ul>
+          </section>
+        )}
       </main>
 
       {/* Footer */}
@@ -288,4 +342,3 @@ export default function Home() {
     </div>
   );
 }
-

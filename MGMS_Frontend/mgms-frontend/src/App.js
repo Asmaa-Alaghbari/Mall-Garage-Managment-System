@@ -17,6 +17,7 @@ import Feedback from "./components/Feedback/Feedback";
 import Settings from "./components/Settings";
 
 import "./App.css";
+import UsersList from "./components/UserList";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Login state for the user
@@ -72,6 +73,10 @@ export default function App() {
           <Route
             path="/feedbacks"
             element={isLoggedIn ? <Feedback /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/users"
+            element={isLoggedIn ? <UsersList /> : <Navigate to="/login" />}
           />
           <Route
             path="/settings"

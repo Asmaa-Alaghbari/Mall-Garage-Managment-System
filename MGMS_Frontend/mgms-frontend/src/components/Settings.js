@@ -12,16 +12,11 @@ export default function Settings({ setIsLoggedIn }) {
     userId: "",
     darkMode: false,
     receiveNotifications: false,
+    role: "",
   });
 
   // Fetch the current user data from the backend and set the settings
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
-
-    console.log("Token from localStorage:", token);
-    console.log("UserID from localStorage:", userId);
-
     fetchCurrentUser(setSettings, setIsLoading, setError);
   }, []);
 
@@ -127,6 +122,13 @@ export default function Settings({ setIsLoggedIn }) {
         <button onClick={() => navigate("/profile")}>View Profile</button>
       </div>
 
+      {/* Navigate to UserList for ADMIN */}
+      {settings.role === "ADMIN" && (
+        <div className="setting-item">
+          <button onClick={() => navigate("/users")}>View Users List</button>
+        </div>
+      )}
+
       {/* Log Out */}
       <div className="setting-item">
         <button
@@ -139,3 +141,5 @@ export default function Settings({ setIsLoggedIn }) {
     </div>
   );
 }
+
+// I want to add another button appear only for ADMIN role, to navigate to UserList page

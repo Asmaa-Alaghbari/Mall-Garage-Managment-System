@@ -40,7 +40,9 @@ export const fetchCurrentUser = async (
         address: userData.address,
         role: userData.role,
       }));
-      setUserRole(userData.role);
+
+      console.log("User role:", userData.role); // Log user role
+      setUserRole(userData.role); // Set user role in state
     } else {
       throw new Error("UserId not found in user data");
     }

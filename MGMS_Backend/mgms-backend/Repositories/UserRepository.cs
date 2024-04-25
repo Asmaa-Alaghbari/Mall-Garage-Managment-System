@@ -70,8 +70,20 @@ namespace mgms_backend.Repositories
         public async Task<User> GetUserByUsernameOrEmailAsync(string usernameOrEmail)
         {
             return await _context.Users.FirstOrDefaultAsync(
-                u => u.Username.Equals(usernameOrEmail) || 
+                u => u.Username.Equals(usernameOrEmail) ||
                     u.Email.Equals(usernameOrEmail));
+        }
+
+        // Get the total number of users in the database
+        public async Task<int> GetTotalUsersAsync()
+        {
+            return await _context.Users.CountAsync();
+        }
+
+        // Get the total number of users by role in the database
+        public async Task<int> GetTotalUsersByRoleAsync(string role)
+        {
+            return await _context.Users.Where(u => u.Role == role).CountAsync();
         }
     }
 }

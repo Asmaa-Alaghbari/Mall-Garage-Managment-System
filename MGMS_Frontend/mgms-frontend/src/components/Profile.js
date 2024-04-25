@@ -1,84 +1,162 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchCurrentUser } from "./Utils";
 import "./Profile.css";
 
 export default function Profile() {
-  const [profileData, setProfileData] = useState({
+  const [userInfo, setUserInfo] = useState({
     firstName: "",
     lastName: "",
     username: "",
     email: "",
     phone: "",
-    address: "", // Optional
+    password: "",
+  });
+  const [profileInfo, setProfileInfo] = useState({
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "",
+    profilePictureUrl: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const navigate = useNavigate();
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   // Fetch the user's profile data when the component mounts (on initial render)
   useEffect(() => {
     // Fetch the user's profile data from the backend
-    const fetchProfile = async () => {
-      setIsLoading(true);
-      const token = localStorage.getItem("token");
-      try {
-        const response = await fetch("http://localhost:5296/api/auth/GetUser", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Could not fetch profile data.");
-        }
-        const userData = await response.json(); // Assuming the backend returns the user's profile in JSON format
-        setProfileData({
-          ...userData, // Spread userData directly
-        });
-      } catch (error) {
-        console.error("Profile fetch error:", error);
-        setErrorMessage("Failed to load profile data.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProfile();
+    fetchCurrentUser(setUserInfo, setIsLoading, setErrorMessage, () => {});
+    fetchUserProfile(setProfileInfo, setIsLoading, setErrorMessage);
   }, []);
 
-  // Handle input field changes and update the profile data state
-  const handleChange = (e) => {
-    setProfileData({ ...profileData, [e.target.name]: e.target.value });
+  const fetchUserProfile = async (setProfileInfo, setIsLoading, setError) => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found");
+      }
+
+      const response = await fetch(
+        "http://localhost:5296/api/auth/GetUserProfile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch user's profle: ${response.statusText}`
+        );
+      }
+
+      const userData = await response.json();
+      console.log("Fetched user's profile data:", userData);
+
+      if (userData.userId) {
+        setProfileInfo((prev) => ({
+          ...prev,
+          address: userData.address,
+          city: userData.city,
+          state: userData.state,
+          zipCode: userData.zipCode,
+          country: userData.country,
+          profilePictureUrl: userData.profilePictureUrl,
+        }));
+      } else {
+        throw new Error("UserId not found in user's profile data");
+      }
+    } catch (err) {
+      console.error("Fetch user's profile error:", err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUserInfoChange = (e) => {
+    setUserInfo({ ...userInfo, [e.target.name]: e.target.value });
+  };
+
+  const handleProfileInfoChange = (e) => {
+    setProfileInfo({ ...profileInfo, [e.target.name]: e.target.value });
   };
 
   // Handle form submission and update the user's profile
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+  
     const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+  
+    // Validate user ID and token
+    if (!userId || !token) {
+      setErrorMessage("User ID or token not found. Please login again.");
+      setIsLoading(false);
+      return;
+    }
+  
     try {
-      const response = await fetch("http://localhost:5296/api/auth/Update", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ...profileData, password }),
-      });
-      if (!response.ok) {
-        throw new Error("Could not update profile.");
+      // Update user info
+      const userResponse = await fetch(
+        `http://localhost:5296/api/auth/Update/${userId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            ...userInfo,
+          }),
+        }
+      );
+  
+      // Check if response body is empty
+      const userResult = userResponse.status !== 204 ? await userResponse.json() : {};
+  
+      if (!userResponse.ok) {
+        const errorMessage = userResult.message || "Unknown error";
+        throw new Error(`Could not update user info. ${errorMessage}`);
       }
+  
+      // Update user profile
+      const profileResponse = await fetch(
+        "http://localhost:5296/api/auth/UpdateUserProfile",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(profileInfo),
+        }
+      );
+  
+      // Check if response body is empty
+      const profileResult = profileResponse.status !== 204 ? await profileResponse.json() : {};
+  
+      if (!profileResponse.ok) {
+        const errorMessage = profileResult.message || "Unknown error";
+        throw new Error(`Could not update profile. ${errorMessage}`);
+      }
+  
       alert("Profile updated successfully!");
       navigate("/profile");
     } catch (error) {
-      console.error("Update profile error:", error);
-      setErrorMessage("Failed to update profile.");
+      console.error("Update error:", error);
+      setErrorMessage(error.message || "Could not update user info. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div className="profile-form-container">
@@ -89,29 +167,29 @@ export default function Profile() {
           type="text"
           name="firstName"
           placeholder="First Name"
-          value={profileData.firstName}
-          onChange={handleChange}
+          value={userInfo.firstName || ""}
+          onChange={handleUserInfoChange}
         />
         <input
           type="text"
           name="lastName"
           placeholder="Last Name"
-          value={profileData.lastName}
-          onChange={handleChange}
+          value={userInfo.lastName || ""}
+          onChange={handleUserInfoChange}
         />
         <input
           type="text"
           name="username"
           placeholder="Username"
-          value={profileData.username}
-          onChange={handleChange}
+          value={userInfo.username || ""}
+          onChange={handleUserInfoChange}
         />
         <input
           type="email"
           name="email"
           placeholder="Email"
-          value={profileData.email}
-          onChange={handleChange}
+          value={userInfo.email || ""}
+          onChange={handleUserInfoChange}
         />
         <input
           type="password"
@@ -124,15 +202,50 @@ export default function Profile() {
           type="tel"
           name="phone"
           placeholder="Phone"
-          value={profileData.phone}
-          onChange={handleChange}
+          value={userInfo.phone || ""}
+          onChange={handleUserInfoChange}
         />
         <input
           type="text"
           name="address"
           placeholder="Address"
-          value={profileData.address}
-          onChange={handleChange}
+          value={profileInfo.address || ""}
+          onChange={handleProfileInfoChange}
+        />
+        <input
+          type="text"
+          name="city"
+          placeholder="City"
+          value={profileInfo.city || ""}
+          onChange={handleProfileInfoChange}
+        />
+        <input
+          type="text"
+          name="state"
+          placeholder="State"
+          value={profileInfo.state || ""}
+          onChange={handleProfileInfoChange}
+        />
+        <input
+          type="text"
+          name="zipCode"
+          placeholder="Zip Code"
+          value={profileInfo.zipCode || ""}
+          onChange={handleProfileInfoChange}
+        />
+        <input
+          type="text"
+          name="country"
+          placeholder="Country"
+          value={profileInfo.country || ""}
+          onChange={handleProfileInfoChange}
+        />
+        <input
+          type="text"
+          name="profilePictureUrl"
+          placeholder="Profile Picture URL"
+          value={profileInfo.profilePictureUrl || ""}
+          onChange={handleProfileInfoChange}
         />
         <button type="submit" disabled={isLoading}>
           {isLoading ? "Updating..." : "Update Profile"}

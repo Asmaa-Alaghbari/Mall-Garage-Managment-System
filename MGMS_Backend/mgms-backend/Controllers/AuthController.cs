@@ -19,11 +19,16 @@ namespace mgms_backend.Controllers
         // Dependency injection for the UserRepository and IConfiguration services
         private readonly IUserRepository _userRepository; // Repository for user-related operations 
         private readonly IConfiguration _configuration; // Configuration settings for the application 
+        private readonly IProfileRepository _profileRepository; // Repository for profile-related operations
 
-        public AuthController(IUserRepository userRepository, IConfiguration configuration)
+        public AuthController(
+            IUserRepository userRepository,
+            IConfiguration configuration,
+            IProfileRepository profileRepository)
         {
             _userRepository = userRepository;
             _configuration = configuration;
+            _profileRepository = profileRepository;
         }
 
         // GET: api/auth/GetAll
@@ -96,6 +101,78 @@ namespace mgms_backend.Controllers
             }
         }
 
+        // GET: api/auth/GetUserStatistics
+        [HttpGet("GetUserStatistics")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> GetUserStatistics()
+        {
+            try
+            {
+                var totalUsers = await _userRepository.GetTotalUsersAsync();
+                var totalAdminsRole = await _userRepository.GetTotalUsersByRoleAsync("ADMIN");
+                var totalUsersRole = await _userRepository.GetTotalUsersByRoleAsync("USER");
+
+                return Ok(new
+                {
+                    TotalUsersRole = totalUsersRole,
+                    TotalAdminsRole = totalAdminsRole,
+                    TotalUsers = totalUsers
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return StatusCode(500, "An error occurred while retrieving user statistics.");
+            }
+        }
+
+        // GET: api/auth/GetUserProfile
+        [HttpGet("GetUserProfile")] // Route to the GetUserProfile endpoint
+        [Authorize]
+        public async Task<IActionResult> GetUserProfile()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; // Extracting user ID from the token
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    return BadRequest("User ID claim not found.");
+                }
+
+                var userId = int.Parse(userIdClaim); // Parsing the user ID from string to int
+
+                var profile = await _profileRepository.GetProfileByUserIdAsync(userId); // Fetching profile by user ID
+
+                if (profile == null)
+                {
+                    Console.WriteLine("Profile not found for user ID: " + userId);
+
+                    // Create a new profile object with default values
+                    var newProfile = new Profile
+                    {
+                        UserId = userId,
+                        Address = "",
+                        City = "",
+                        State = "",
+                        ZipCode = "",
+                        Country = ""
+                    };
+
+                    // Add the new profile to the Profiles table in the database
+                    await _profileRepository.AddProfileAsync(newProfile);
+                    await _profileRepository.SaveChangesAsync();
+
+                    profile = newProfile; // Set the profile to the newly created profile
+                }
+
+                return Ok(profile); // Return the profile of the logged-in user
+            }
+            catch (FormatException)
+            {
+                return BadRequest("Invalid user ID format.");
+            }
+        }
+
         // POST: api/auth/Register 
         [HttpPost("Register")] // Route to the Register endpoint 
         [AllowAnonymous] // Allow unauthenticated access to the endpoint
@@ -147,8 +224,18 @@ namespace mgms_backend.Controllers
                     DateCreated = DateTime.UtcNow // Set the current date and time
                 };
 
+                var newProfile = new Profile
+                {
+                    Address = "",
+                    City = "",
+                    State = "",
+                    ZipCode = "",
+                    Country = ""
+                };
+
                 // Add the new user to the Users table in the database
                 await _userRepository.AddUserAsync(newUser);
+                await _profileRepository.AddProfileAsync(newProfile);
                 await _userRepository.SaveChangesAsync();
 
                 // Create a JWT token with the user data
@@ -268,6 +355,93 @@ namespace mgms_backend.Controllers
             return Ok(new { message = "User updated successfully!", user }); // Return the updated user object as a response 
         }
 
+        // PUT: api/auth/UpdateUserProfile
+        [HttpPut("UpdateUserProfile")] // Route to the UpdateUserProfile endpoint
+        [Authorize]
+        public async Task<IActionResult> UpdateUserProfile([FromBody] ProfileDto profileDto)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    return BadRequest("User ID claim not found.");
+                }
+
+                var userId = int.Parse(userIdClaim);
+
+                var profile = await _profileRepository.GetProfileByUserIdAsync(userId);
+
+                if (profile == null)
+                {
+                    return NotFound("Profile not found.");
+                }
+
+                profile.UserId = userId;
+                profile.Address = profileDto.Address;
+                profile.City = profileDto.City;
+                profile.State = profileDto.State;
+                profile.ZipCode = profileDto.ZipCode;
+                profile.Country = profileDto.Country;
+                profile.ProfilePictureUrl = profileDto.ProfilePictureUrl;
+
+                await _profileRepository.UpdateProfileAsync(profile);
+
+                return Ok(new { message = "Profile updated successfully!", profile });
+            }
+            catch (FormatException)
+            {
+                return BadRequest("Invalid user ID format.");
+            }
+        }
+
+        // PUT: api/auth/UpdateRole
+        [HttpPut("UpdateRole")] // Route to the UpdateRole endpoint
+        [Authorize(Roles = "ADMIN")] // Allow only Admin role to access the endpoint
+        public async Task<IActionResult> UpdateRole([FromBody] UserRoleDto userRoleDto)
+        {
+
+            // Check if the userRoleDto object is null or the role is empty
+            if (userRoleDto == null || string.IsNullOrEmpty(userRoleDto.Role))
+            {
+                return BadRequest("Invalid role data");
+            }
+
+            // Find the user with the given id in the database
+            var userId = userRoleDto.UserId;
+            var role = userRoleDto.Role;
+
+            // Check if the user exists
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Convert the role to uppercase to make the role check case-insensitive
+            role = role.ToUpper();
+
+            // Ensure the role is either "USER" or "ADMIN"
+            if (role != "USER" && role != "ADMIN")
+            {
+                return BadRequest("Invalid role. Role must be either 'USER' or 'ADMIN'.");
+            }
+
+            // Check if the user is already assigned the same role
+            if (user.Role == role)
+            {
+                return StatusCode(304, "User is already assigned the same role.");
+            }
+
+            // Update the role of the user
+            user.Role = role;
+
+            // Save the changes to the database
+            await _userRepository.UpdateUserAsync(user);
+
+            return Ok(new { message = "User role updated successfully!", user }); // Return the updated user object as a response
+        }
+
         // DELETE: api/auth/Delete
         [HttpDelete("Delete")] // Route to the Delete endpoint
         [Authorize(Roles = "ADMIN")] // Allow only Admin role to access the endpoint
@@ -294,8 +468,9 @@ namespace mgms_backend.Controllers
         {
             List<Claim> claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.Name, user.Username), // Set the username as the Name claim
+                new Claim(ClaimTypes.Role, user.Role), // Set the user role as the Role claim
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()) // Convert the user ID to a string
             };
 
             // Create a symmetric security key using the app settings token (Secret key for token generation) 

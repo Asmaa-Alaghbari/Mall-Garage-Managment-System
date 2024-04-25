@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { confirmLogout } from "./Utils";
+import { fetchCurrentUser, confirmLogout } from "./Utils";
 import "./Navbar.css";
 import {
   FaCalendarAlt, // Calendar icon
@@ -10,14 +10,18 @@ import {
   FaComments, // Comments icon
   FaSignOutAlt, // Sign out icon
   FaBars, // Hamburger icon
-  FaCog, // Cog icon
+  FaUsersCog, // Users icon
+  FaCog, // Setting icon
   FaHome, // Home icon
 } from "react-icons/fa"; // Importing icons
 
 // Navigation bar component
 export default function Navbar({ setIsLoggedIn }) {
-  const [isOpen, setIsOpen] = useState(false); // State to manage the mobile menu
+  const [isOpen, setIsOpen] = useState(false); // Manage the mobile menu
+  const [userRole, setUserRole] = useState(""); // Store the user role
   const navbarRef = useRef(null); // Reference to the navbar element
+  const [, setIsLoading] = useState(false);
+  const [, setError] = useState("");
   const navigate = useNavigate();
 
   // Handle the click outside the navbar to close the mobile menu
@@ -35,6 +39,9 @@ export default function Navbar({ setIsLoggedIn }) {
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
+
+    // Fetch the current user data from the backend and set the user role
+    fetchCurrentUser(setUserRole, setIsLoading, setError, setUserRole);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -86,6 +93,14 @@ export default function Navbar({ setIsLoggedIn }) {
             icon={<FaComments className="nav-icon" />}
             closeNavbar={() => setIsOpen(false)}
           />
+          {userRole === "ADMIN" && (
+            <NavItem
+              to="/users"
+              label="Users"
+              icon={<FaUsersCog className="nav-icon" />}
+              closeNavbar={() => setIsOpen(false)}
+            />
+          )}
           <NavItem
             to="/settings"
             label="Settings"

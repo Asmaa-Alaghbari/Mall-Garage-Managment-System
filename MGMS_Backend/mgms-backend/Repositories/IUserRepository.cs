@@ -13,5 +13,7 @@ namespace mgms_backend.Repositories
         Task SaveChangesAsync(); // Save changes to the database
         Task<bool> UserExistsAsync(string username, string email, string phone, int? excludeUserId = null); // Check if a user exists in the database
         Task<User> GetUserByUsernameOrEmailAsync(string usernameOrEmail); // Get a user by username or email from the database
+        Task<int> GetTotalUsersAsync(); // Get the total number of users in the database
+        Task<int> GetTotalUsersByRoleAsync(string role); // Get the total number of users by role in the database
     }
 }
