@@ -3,7 +3,7 @@ import { highlightText, paginate, pagination } from "../Utils";
 import AddParkingSpot from "./AddParkingSpot";
 import "../style.css";
 
-export default function ParkingSpots() {
+export default function ParkingSpots({ userRole }) {
   const [parkingSpots, setParkingSpots] = useState([]); // Store parking spots from the API
   const [showAddForm, setShowAddForm] = useState(false); // Show/hide the add form
   const [selectedSpot, setSelectedSpot] = useState(null); // Store selected spot for updating
@@ -262,7 +262,7 @@ export default function ParkingSpots() {
                 <th>Section</th>
                 <th>Status</th>
                 <th>Size</th>
-                <th>Actions</th>
+                {userRole === "ADMIN" && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -284,20 +284,22 @@ export default function ParkingSpots() {
                   </td>
                   <td>{highlightText(spot.size ?? "", searchTerm)}</td>
 
-                  <td>
-                    <button
-                      onClick={() => {
-                        setSelectedSpot(spot);
-                        setShowUpdateForm(true);
-                      }}
-                      style={{ marginRight: "10px" }}
-                    >
-                      Update
-                    </button>
-                    <button onClick={() => handleDelete(spot.parkingSpotId)}>
-                      Delete
-                    </button>
-                  </td>
+                  {userRole === "ADMIN" && (
+                    <td>
+                      <button
+                        onClick={() => {
+                          setSelectedSpot(spot);
+                          setShowUpdateForm(true);
+                        }}
+                        style={{ marginRight: "10px" }}
+                      >
+                        Update
+                      </button>
+                      <button onClick={() => handleDelete(spot.parkingSpotId)}>
+                        Delete
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -308,9 +310,11 @@ export default function ParkingSpots() {
             {pagination(totalPages, currentPage, handlePageChange)}
           </div>
 
-          <button onClick={() => setShowAddForm(true)}>
-            Add New Parking Spot
-          </button>
+          {userRole === "ADMIN" && (
+            <button onClick={() => setShowAddForm(true)}>
+              Add New Parking Spot
+            </button>
+          )}
         </>
       )}
     </div>

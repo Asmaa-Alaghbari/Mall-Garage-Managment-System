@@ -11,12 +11,12 @@ export default function SignUp() {
     email: "",
     password: "",
     phone: "",
-    address: "", // Optional
+    Role: "USER",
   });
 
   const [, setIsLoading] = useState(false); // Loading state for form submission requests
-  const [, setError] = useState(""); // Error state for form submission errors
-  const [, setSuccess] = useState(false); // Success state for successful form submissions
+  const [error, setError] = useState(""); // Error state for form submission errors
+  const [success, setSuccess] = useState(false); // Success state for successful form submissions
   const navigate = useNavigate(); // Redirect the user to the login page after successful registration
 
   // Handle form input changes (controlled component)
@@ -42,7 +42,6 @@ export default function SignUp() {
       Role: "User", // By default
     };
 
-    // Add the optional address field if it's not empty
     const requestOptions = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -53,26 +52,37 @@ export default function SignUp() {
     try {
       // Make a POST request to the API server (backend)
       const apiURL = "http://localhost:5296/api/auth/Register"; // API URL for user registration
-
       const response = await fetch(apiURL, requestOptions);
 
       if (!response.ok) {
         const errorData = await response.text(); // Use .text() first
         try {
           const jsonError = JSON.parse(errorData); // Try to parse JSON
-          setError(jsonError.message || "Registration failed!");
+
+          // Check for specific error message when user already exists
+          if (
+            jsonError.message ===
+            "A user with the given username, email, or phone already exists."
+          ) {
+            setError(
+              "User already exists. Please try with a different username, email, or phone."
+            );
+          } else {
+            setError(jsonError.message || "Registration failed!");
+          }
         } catch {
           setError("An unexpected error occurred.");
         }
       } else {
         setSuccess(true);
+        setError(""); // Clear any previous errors
+
         // Redirect to login page after a short delay to show the success message
         setTimeout(() => {
           navigate("/login");
-        }, 500); // 0.5 seconds
+        }, 2000); // 2 seconds delay
 
-        console.log("Registration successful!");
-        // Proceed with user registration success flow
+        console.log("Registration successful!"); // Log success message
       }
     } catch (error) {
       console.error("There was an error!", error);
@@ -131,19 +141,19 @@ export default function SignUp() {
           onChange={handleChange}
           required
         />
-        <input
-          type="text"
-          name="address"
-          placeholder="Address"
-          value={formData.address}
-          onChange={handleChange}
-        />
         <button type="submit">Sign Up</button>
       </form>
 
       <p>
         Already have an account? <a href="/login">Login</a>
       </p>
+
+      {success && (
+        <p className="success-message">
+          Registration successful! Redirecting...
+        </p>
+      )}
+      {error && <p className="error-message">{error}</p>}
     </div>
   );
 }

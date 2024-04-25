@@ -224,31 +224,21 @@ namespace mgms_backend.Controllers
                     DateCreated = DateTime.UtcNow // Set the current date and time
                 };
 
-                var newProfile = new Profile
-                {
-                    Address = "",
-                    City = "",
-                    State = "",
-                    ZipCode = "",
-                    Country = ""
-                };
-
                 // Add the new user to the Users table in the database
                 await _userRepository.AddUserAsync(newUser);
-                await _profileRepository.AddProfileAsync(newProfile);
                 await _userRepository.SaveChangesAsync();
 
                 // Create a JWT token with the user data
                 string token = CreateToken(newUser);
 
-                return Ok(new { message = "Registration successful!" });
+                return Ok(new { message = "Registration successful!", user = newUser });
             }
             catch (Exception ex)
             {
                 // Log the exception details
                 Console.WriteLine(ex.ToString());
                 // Return a generic error message or a detailed one based on your security policies
-                return StatusCode(500, "An error occurred while processing your request.");
+                return StatusCode(500, "An error occurred while processing your request: {ex.Message}");
             }
         }
 
