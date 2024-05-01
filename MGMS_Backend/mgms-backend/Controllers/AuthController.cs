@@ -8,6 +8,8 @@ using System.Text;
 using mgms_backend.Models;
 using mgms_backend.DTO;
 using mgms_backend.Repositories;
+using mgms_backend.Utilities;
+using System.Net;
 
 namespace mgms_backend.Controllers
 {
@@ -31,7 +33,7 @@ namespace mgms_backend.Controllers
             _profileRepository = profileRepository;
         }
 
-        // GET: api/auth/GetAll
+        // GET: api/auth/GetAll 
         [HttpGet("GetAll")] // Route to the GetAll endpoint
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> GetAll()
@@ -39,6 +41,36 @@ namespace mgms_backend.Controllers
             // Get all the users from the Users table in the database
             var users = await _userRepository.GetAllUsersAsync();
             return Ok(users); // Return the list of users as a response
+        }
+
+        // GET: api/auth/GetAllPaginated 
+        [HttpGet("GetAllPaginated")] // Route to the GetAllPaginated endpoint
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> GetAllPaginated(int pageNumber = 1, int pageSize = 5)
+        {
+            try
+            {
+                var users = await _userRepository.GetAllUsersAsync();
+
+                // Paginate the users
+                var paginatedUsers = PaginationList<User>.Create(users.AsQueryable(), pageNumber, pageSize);
+
+                // Return paginated users along with metadata
+                return Ok(new
+                {
+                    Users = paginatedUsers,
+                    TotalUsers = users.Count(), // Total number of users
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    TotalPages = (int)Math.Ceiling((double)users.Count() / pageSize) // Calculate total pages
+
+                });
+            }
+            catch (Exception ex)
+            {
+                // Handle exception
+                return StatusCode(500, "An error occurred while retrieving users.");
+            }
         }
 
         // GET: api/auth/GetById
@@ -287,6 +319,71 @@ namespace mgms_backend.Controllers
                 userId = user.UserId,
                 role = user.Role
             });
+        }
+
+        // POST: api/auth/AddUser 
+        [HttpPost("AddUser")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<ActionResult<User>> AddUser(RegisterDto request)
+        {
+            try
+            {
+                // Trim the username and email to remove leading and trailing whitespace
+                var cleanedUsername = request.Username?.Trim();
+                var cleanedEmail = request.Email?.Trim();
+
+                // Check if the cleaned username or email contains spaces
+                if (cleanedUsername?.Contains(" ") == true || cleanedEmail?.Contains(" ") == true)
+                {
+                    return StatusCode(422, "Username or Email should not contain spaces.");
+                }
+
+                // Check if the user with the given username/email/phone already exists in the database
+                var userExists = await _userRepository.UserExistsAsync(
+                    cleanedUsername, cleanedEmail, request.Phone);
+
+                if (userExists)
+                {
+                    return Conflict("A user with the given username, email, or phone already exists."); // 409
+                }
+
+                // Convert the role to lowercase to make the role check case-insensitive
+                string role = string.IsNullOrWhiteSpace(request.Role) ? "user" : request.Role.ToUpper();
+
+                // Ensure the role is either "User" or "Admin"
+                if (role != "USER" && role != "ADMIN")
+                {
+                    role = "USER"; // Set the default role to "User" if an invalid role is provided
+                }
+
+                // Hash the password using BCrypt.Net library 
+                string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+                // Create a new user object and set the user data from the request
+                var newUser = new User
+                {
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Username = cleanedUsername,
+                    Email = cleanedEmail,
+                    Password = passwordHash,
+                    Phone = request.Phone,
+                    Role = role, // Set the role of the user (USER or ADMIN)
+                    DateCreated = DateTime.UtcNow // Set the current date and time
+                };
+
+                // Add the new user to the Users table in the database
+                await _userRepository.AddUserAsync(newUser);
+                await _userRepository.SaveChangesAsync();
+
+                return Ok(new { message = "User added successfully!", user = newUser });
+            }
+            catch (Exception ex)
+            {
+                // Handle any errors
+                Console.WriteLine(ex.ToString());
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
         // PUT: api/auth/Update

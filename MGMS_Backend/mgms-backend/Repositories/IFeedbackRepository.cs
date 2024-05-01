@@ -10,6 +10,5 @@ namespace mgms_backend.Repositories
         Task AddFeedbackAsync(Feedback feedbackId); // Add feedback
         Task SaveChangesAsync(); // Save changes
         Task DeleteFeedbackAsync(int feedbackId); // Delete feedback
-
     }
 }

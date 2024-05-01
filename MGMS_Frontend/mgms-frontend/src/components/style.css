@@ -136,7 +136,8 @@
 
 /* Pagination Styles */
 .pagination {
-    margin-top: 30px;
+    margin-top: 5px;
+    margin-bottom: 5px;
     display: flex;
     justify-content: center;
     gap: 10px;
@@ -203,7 +204,6 @@
 .dark-mode .pagination .ellipsis {
     color: #ccc;
 }
-
 
 .star-icon {
     color: gold;

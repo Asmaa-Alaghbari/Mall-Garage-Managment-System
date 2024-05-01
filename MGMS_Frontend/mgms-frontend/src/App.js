@@ -15,9 +15,9 @@ import ParkingSpots from "./components/ParkingSpot/ParkingSpots";
 import Payment from "./components/Payment/Payment";
 import Feedback from "./components/Feedback/Feedback";
 import Settings from "./components/Settings";
+import UsersList from "./components/Auth/UserList";
 
 import "./App.css";
-import UsersList from "./components/UserList";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Login state for the user

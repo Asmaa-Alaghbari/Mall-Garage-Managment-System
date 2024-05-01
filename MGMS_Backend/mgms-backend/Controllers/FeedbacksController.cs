@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using mgms_backend.Repositories;
 using mgms_backend.Models;
 using mgms_backend.DTO;
+using mgms_backend.Utilities;
 
 namespace mgms_backend.Controllers
 {
@@ -12,12 +13,12 @@ namespace mgms_backend.Controllers
     [Authorize]
     public class FeedbacksController : ControllerBase
     {
-        private readonly IFeedbackRepository _feedbackIdRepository;
+        private readonly IFeedbackRepository _feedbackRepository;
         private readonly IUserRepository _userRepository;
 
         public FeedbacksController(IFeedbackRepository repository, IUserRepository userRepository)
         {
-            _feedbackIdRepository = repository;
+            _feedbackRepository = repository;
             _userRepository = userRepository;
         }
 
@@ -26,7 +27,7 @@ namespace mgms_backend.Controllers
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<IEnumerable<Feedback>>> GetAllFeedbacks()
         {
-            var feedbacks = await _feedbackIdRepository.GetAllFeedbacksAsync();
+            var feedbacks = await _feedbackRepository.GetAllFeedbacksAsync();
             return Ok(feedbacks);
         }
 
@@ -35,7 +36,7 @@ namespace mgms_backend.Controllers
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<Feedback>> GetFeedbackById(int feedbackId)
         {
-            var feedback = await _feedbackIdRepository.GetFeedbackByIdAsync(feedbackId);
+            var feedback = await _feedbackRepository.GetFeedbackByIdAsync(feedbackId);
             if (feedback == null)
             {
                 return NotFound("Feedback not found!");
@@ -62,7 +63,7 @@ namespace mgms_backend.Controllers
             }
 
             // Return an empty list result when no feedbacks are found
-            var feedbacks = await _feedbackIdRepository.GetFeedbackByUserIdAsync(userId);
+            var feedbacks = await _feedbackRepository.GetFeedbackByUserIdAsync(userId);
             if (feedbacks == null || !feedbacks.Any())
             {
                 var emptyFeedbackList = new List<Feedback>();
@@ -117,8 +118,8 @@ namespace mgms_backend.Controllers
                 return StatusCode(422, "Message cannot be empty!");
             }
 
-            await _feedbackIdRepository.AddFeedbackAsync(feedback);
-            await _feedbackIdRepository.SaveChangesAsync();
+            await _feedbackRepository.AddFeedbackAsync(feedback);
+            await _feedbackRepository.SaveChangesAsync();
 
             return Ok(new { message = "Feedback added successfully!" });
         }
@@ -128,15 +129,15 @@ namespace mgms_backend.Controllers
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult> DeleteFeedback(int feedbackId)
         {
-            var payment = await _feedbackIdRepository.GetFeedbackByIdAsync(feedbackId);
+            var payment = await _feedbackRepository.GetFeedbackByIdAsync(feedbackId);
             if (payment == null)
             {
                 return NotFound("Feedback not found!");
             }
 
             // Delete the Payment from the database
-            await _feedbackIdRepository.DeleteFeedbackAsync(feedbackId);
-            await _feedbackIdRepository.SaveChangesAsync();
+            await _feedbackRepository.DeleteFeedbackAsync(feedbackId);
+            await _feedbackRepository.SaveChangesAsync();
 
             return Ok(new { message = $"Feedback with ID {feedbackId} deleted successfully!" });
         }

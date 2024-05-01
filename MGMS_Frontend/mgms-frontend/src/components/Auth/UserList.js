@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { highlightText, paginate, pagination } from "./Utils";
+import { highlightText, paginate, pagination } from "../Utils";
+import AddUser from "./AddUser";
+import "../style.css";
 
 export default function UsersList() {
   const [users, setUsers] = useState([]);
@@ -9,11 +11,20 @@ export default function UsersList() {
   const [currentPage, setCurrentPage] = useState(1); // Pagination
   const [itemsPerPage] = useState(5); // Pagination
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false); // Show/hide the add form
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    if (!showAddForm) {
+      loadUsers();
+    }
+  }, [showAddForm]);
+
+  // Handle adding a new user to the list of users
+  const addUser = (newUser) => {
+    setUsers([...users, newUser]); // Add the new user to the list
+    setShowAddForm(false); // Close the add form
+  };
 
   // Fetch all users from the backend
   const loadUsers = () => {
@@ -157,72 +168,87 @@ export default function UsersList() {
     <div className="container">
       <h1>All Users</h1>
 
-      {/* Search */}
-      <div className="search-sort">
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      {/* Add user form */}
+      {showAddForm && (
+        <AddUser onAddSuccess={addUser} onClose={() => setShowAddForm(false)} />
+      )}
+      {!showAddForm && (
+        <div>
+          {/* Search */}
+          <div className="search-sort">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
 
-        {/* Filter by role */}
-        <select
-          value={filterByRole}
-          onChange={(e) => setFilterByRole(e.target.value)}
-        >
-          <option value="all">Filter by Role</option>
-          <option value="admin">Admin</option>
-          <option value="user">User</option>
-        </select>
+            {/* Filter by role */}
+            <select
+              value={filterByRole}
+              onChange={(e) => setFilterByRole(e.target.value)}
+            >
+              <option value="all">Filter by Role</option>
+              <option value="admin">Admin</option>
+              <option value="user">User</option>
+            </select>
 
-        {/* Sort by */}
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-          <option value="userId">Sort by</option>
-          <option value="userId">User ID</option>
-          <option value="username">Username</option>
-          <option value="email">Email</option>
-          <option value="role">Role</option>
-        </select>
-      </div>
+            {/* Sort by */}
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="userId">Sort by</option>
+              <option value="userId">User ID</option>
+              <option value="username">Username</option>
+              <option value="email">Email</option>
+              <option value="role">Role</option>
+            </select>
+          </div>
 
-      {/* Pagination */}
-      <div className="pagination">
-        {pagination(totalPages, currentPage, setCurrentPage)}
-      </div>
+          {/* Users table */}
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedUsers.map((user) => (
+                <tr key={user.userId}>
+                  <td>{highlightText(user.userId.toString(), searchTerm)}</td>{" "}
+                  <td>{highlightText(user.username, searchTerm)}</td>
+                  <td>{highlightText(user.email, searchTerm)}</td>
+                  <td>{highlightText(user.phone.toString(), searchTerm)}</td>
+                  <td>{highlightText(user.role, searchTerm)}</td>
+                  <td>
+                    <button
+                      onClick={() => toggleUserRole(user.userId, user.role)}
+                    >
+                      {user.role === "ADMIN"
+                        ? "Demote to User"
+                        : "Promote to Admin"}
+                    </button>
+                    <button onClick={() => deleteUser(user.userId)}>
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-      {/* Users table */}
-      <table className="users-table">
-        <thead>
-          <tr>
-            <th>User ID</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Role</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedUsers.map((user) => (
-            <tr key={user.userId}>
-              <td>{highlightText(user.userId.toString(), searchTerm)}</td>{" "}
-              <td>{highlightText(user.username, searchTerm)}</td>
-              <td>{highlightText(user.email, searchTerm)}</td>
-              <td>{highlightText(user.phone.toString(), searchTerm)}</td>
-              <td>{highlightText(user.role, searchTerm)}</td>
-              <td>
-                <button onClick={() => toggleUserRole(user.userId, user.role)}>
-                  {user.role === "ADMIN"
-                    ? "Demote to User"
-                    : "Promote to Admin"}
-                </button>
-                <button onClick={() => deleteUser(user.userId)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          {/* Pagination */}
+          <div className="pagination">
+            {pagination(totalPages, currentPage, setCurrentPage)}
+          </div>
+
+          {/* Button to add a new user */}
+          <button onClick={() => setShowAddForm(true)}>Add New User</button>
+        </div>
+      )}
     </div>
   );
 }
