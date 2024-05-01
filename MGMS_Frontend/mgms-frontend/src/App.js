@@ -26,7 +26,22 @@ export default function App() {
     // Check if the user is logged in by verifying the token or other credentials
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token); // Set the login state based on the token's presence
+
+    // Check for token expiration
+    const tokenExpiration = localStorage.getItem("tokenExpiration");
+    const currentTime = new Date().getTime();
+    if (tokenExpiration && currentTime > tokenExpiration) {
+      // Token expired, log out the user
+      logout();
+    }
   }, []);
+
+  // Function to handle logout
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("tokenExpiration");
+    setIsLoggedIn(false);
+  };
 
   return (
     <div className="App">

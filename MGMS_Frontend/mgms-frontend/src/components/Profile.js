@@ -91,17 +91,17 @@ export default function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-  
+
     const token = localStorage.getItem("token");
     const userId = localStorage.getItem("userId");
-  
+
     // Validate user ID and token
     if (!userId || !token) {
       setErrorMessage("User ID or token not found. Please login again.");
       setIsLoading(false);
       return;
     }
-  
+
     try {
       // Update user info
       const userResponse = await fetch(
@@ -117,15 +117,16 @@ export default function Profile() {
           }),
         }
       );
-  
+
       // Check if response body is empty
-      const userResult = userResponse.status !== 204 ? await userResponse.json() : {};
-  
+      const userResult =
+        userResponse.status !== 204 ? await userResponse.json() : {};
+
       if (!userResponse.ok) {
         const errorMessage = userResult.message || "Unknown error";
         throw new Error(`Could not update user info. ${errorMessage}`);
       }
-  
+
       // Update user profile
       const profileResponse = await fetch(
         "http://localhost:5296/api/auth/UpdateUserProfile",
@@ -138,25 +139,32 @@ export default function Profile() {
           body: JSON.stringify(profileInfo),
         }
       );
-  
+
       // Check if response body is empty
-      const profileResult = profileResponse.status !== 204 ? await profileResponse.json() : {};
-  
+      const profileResult =
+        profileResponse.status !== 204 ? await profileResponse.json() : {};
+
       if (!profileResponse.ok) {
         const errorMessage = profileResult.message || "Unknown error";
         throw new Error(`Could not update profile. ${errorMessage}`);
       }
-  
+
       alert("Profile updated successfully!");
       navigate("/profile");
     } catch (error) {
       console.error("Update error:", error);
-      setErrorMessage(error.message || "Could not update user info. Please try again.");
+      setErrorMessage(
+        error.message || "Could not update user info. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
   };
-  
+
+  // Close the profile form and navigate to the home page
+  const handleClose = () => {
+    navigate("/home");
+  };
 
   return (
     <div className="profile-form-container">
@@ -247,9 +255,12 @@ export default function Profile() {
           value={profileInfo.profilePictureUrl || ""}
           onChange={handleProfileInfoChange}
         />
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Updating..." : "Update Profile"}
-        </button>
+        <div className="button-container">
+          <button type="submit" onClick={handleSubmit} disabled={isLoading}>
+            {isLoading ? "Updating..." : "Update Profile"}
+          </button>
+          <button onClick={handleClose}>Close</button>
+        </div>
       </form>
     </div>
   );

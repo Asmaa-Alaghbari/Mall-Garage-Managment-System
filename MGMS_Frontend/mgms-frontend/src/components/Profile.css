@@ -38,6 +38,7 @@
   border: none;
   border-radius: 4px;
   transition: background-color 0.2s;
+  margin: 10px;
 }
 
 /* Hover effect for the submit button */
@@ -48,7 +49,7 @@
 /* Dark mode styles */
 .dark-mode .profile-form-container {
   background-color: #334;
-    color: #fff;
+  color: #fff;
 }
 
 /* Style for error messages */

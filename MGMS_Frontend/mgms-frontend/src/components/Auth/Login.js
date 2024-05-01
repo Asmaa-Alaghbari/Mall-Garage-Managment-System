@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./AuthForms.css";
 
@@ -8,6 +8,11 @@ export default function Login({ setIsLoggedIn }) {
   const [isLoading, setIsLoading] = useState(false); // Loading state for form submission requests
   const [errorMessage, setErrorMessage] = useState(""); // Error state for form submission errors
   const navigate = useNavigate(); // Redirect the user to the home page after successful login
+
+  // Update token expiration time whenever the component is mounted
+  useEffect(() => {
+    updateTokenExpiration();
+  }, []);
 
   // Handle form submission (POST request) to the API server (backend)
   const handleSubmit = async (e) => {
@@ -52,6 +57,23 @@ export default function Login({ setIsLoggedIn }) {
     } finally {
       setIsLoading(false);
     }
+
+    // On successful login
+    handleLoginSuccess();
+    updateTokenExpiration();
+  };
+
+  // Handle successful login
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true); // Update the state to indicate the user is logged in
+    navigate("/home"); // Redirect to home page on successful login
+  };
+
+  // Update token expiration on successful login
+  const updateTokenExpiration = () => {
+    const currentTime = new Date().getTime();
+    const expirationTime = currentTime + 60 * 60 * 1000; // 1 hour expiration time
+    localStorage.setItem("tokenExpiration", expirationTime);
   };
 
   return (

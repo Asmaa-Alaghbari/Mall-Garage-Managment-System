@@ -9,7 +9,6 @@ using mgms_backend.Models;
 using mgms_backend.DTO;
 using mgms_backend.Repositories;
 using mgms_backend.Utilities;
-using System.Net;
 
 namespace mgms_backend.Controllers
 {
@@ -570,7 +569,7 @@ namespace mgms_backend.Controllers
             // Create a JWT token with the claims, expiration date, and signing credentials
             var token = new JwtSecurityToken(
                     claims: claims,
-                    expires: DateTime.Now.AddDays(1),
+                    expires: DateTime.Now.AddHours(1),
                     signingCredentials: creds
                 );
 
