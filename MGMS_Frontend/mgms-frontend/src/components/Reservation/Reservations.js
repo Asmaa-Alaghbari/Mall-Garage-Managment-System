@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { formatDateTime, highlightText, paginate, pagination } from "../Utils";
+import {
+  formatDateTime,
+  highlightText,
+  paginate,
+  pagination,
+  calculateIndex,
+} from "../Utils";
 import AddReservation from "./AddReservation";
 import "../style.css";
 
@@ -218,6 +224,7 @@ export default function Reservations() {
           <table className="reservation-table">
             <thead>
               <tr>
+                <th>No.</th>
                 <th>Reservation ID</th>
                 <th>Start Time</th>
                 <th>End Time</th>
@@ -226,8 +233,18 @@ export default function Reservations() {
               </tr>
             </thead>
             <tbody>
-              {paginatedReservations.map((reservation) => (
+              {paginatedReservations.map((reservation, index) => (
                 <tr key={reservation.reservationId}>
+                  <td>
+                    {highlightText(
+                      calculateIndex(
+                        index,
+                        currentPage,
+                        itemsPerPage
+                      ).toString(),
+                      searchTerm
+                    )}
+                  </td>
                   <td>
                     {highlightText(
                       reservation.reservationId.toString(),
@@ -272,7 +289,7 @@ export default function Reservations() {
           <div className="pagination">
             {pagination(totalPages, currentPage, setCurrentPage)}
           </div>
-          
+
           <button onClick={() => setShowAddForm(true)}>Add Reservation</button>
         </>
       )}

@@ -60,10 +60,16 @@ export const formatDateTime = (dateStr) => {
   return date.toLocaleString("en-US");
 };
 
+// Calculate the correct index for the "No." column
+export const calculateIndex = (index, currentPage, itemsPerPage) => {
+  return index + 1 + (currentPage - 1) * itemsPerPage;
+};
+
 // Highlight the search term in the text
 export const highlightText = (text, highlight) => {
-  if (!text || !highlight) {
-    return text; // Return text as is if either text or highlight is undefined
+  if (!text || !highlight || typeof text !== "string") {
+    // Return text as is if either text or highlight is undefined or if text is not a string
+    return text;
   }
 
   const parts = text.split(new RegExp(`(${highlight})`, "gi"));
@@ -75,6 +81,27 @@ export const highlightText = (text, highlight) => {
     ) : (
       part
     )
+  );
+};
+
+// Show a message dialog with the given content and a close button
+export const ShowMessageModel = ({ isOpen, onClose, children }) => {
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <>
+      {isOpen && (
+        <div className="modal-overlay" onClick={handleOverlayClick}>
+          <div className="modal">
+            <div className="modal-content">{children}</div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

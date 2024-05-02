@@ -4,8 +4,9 @@
     "\\MGMS_Backend",
     "\\MGMS_Backend\\mgms-backend",
     "\\MGMS_Backend\\mgms-backend\\Controllers",
-    "\\MGMS_Backend\\mgms-backend\\Models"
+    "\\MGMS_Backend\\mgms-backend\\Models",
+    "\\MGMS_Backend\\mgms-backend\\Repositories"
   ],
-  "SelectedNode": "\\MGMS_Backend\\mgms-backend\\Controllers\\FeedbacksController.cs",
+  "SelectedNode": "\\MGMS_Backend\\mgms-backend\\Controllers\\AuthController.cs",
   "PreviewInSolutionExplorer": false
 }

@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("mgms-backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+76257cfdd0a6c898fe5bafc5f25554c398d6f060")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+54584c9ec5c8b19baa9966b95a276f6e9bc3173e")]
 [assembly: System.Reflection.AssemblyProductAttribute("mgms-backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("mgms-backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

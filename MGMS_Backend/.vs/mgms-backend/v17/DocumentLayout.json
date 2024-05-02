@@ -3,52 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\controllers\\feedbackscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\controllers\\feedbackscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\dto\\userroledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\dto\\userroledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\repositories\\feedbackrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\repositories\\feedbackrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\dto\\profiledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\dto\\profiledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\dto\\registerdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\dto\\registerdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\dto\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\dto\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\dto\\userdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\dto\\userdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\models\\profile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\models\\profile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\repositories\\profilerepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\repositories\\profilerepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\repositories\\iprofilerepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\repositories\\iprofilerepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|c:\\users\\asmaa\\documents\\github\\mall-garage-managment-system\\mgms_backend\\mgms-backend\\repositories\\ifeedbackrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3FE99C9-B2AF-4104-B8E1-B9B958C20F78}|mgms-backend\\mgms-backend.csproj|solutionrelative:mgms-backend\\repositories\\ifeedbackrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -58,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 301,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -66,158 +30,41 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "UserRoleDto.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\DTO\\UserRoleDto.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\DTO\\UserRoleDto.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\DTO\\UserRoleDto.cs",
-              "RelativeToolTip": "mgms-backend\\DTO\\UserRoleDto.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAUAAAAoAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-25T05:46:41.599Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "UserRepository.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Repositories\\UserRepository.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\Repositories\\UserRepository.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Repositories\\UserRepository.cs",
-              "RelativeToolTip": "mgms-backend\\Repositories\\UserRepository.cs",
-              "ViewState": "AQIAACcAAAAAAAAAAAAcwE4AAAAJAAAA",
+              "Title": "IFeedbackRepository.cs",
+              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Repositories\\IFeedbackRepository.cs",
+              "RelativeDocumentMoniker": "mgms-backend\\Repositories\\IFeedbackRepository.cs",
+              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Repositories\\IFeedbackRepository.cs",
+              "RelativeToolTip": "mgms-backend\\Repositories\\IFeedbackRepository.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAkAAAB1AAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T19:11:34.478Z",
+              "WhenOpened": "2024-05-01T20:34:16.505Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "AuthController.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Controllers\\AuthController.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\Controllers\\AuthController.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Controllers\\AuthController.cs",
-              "RelativeToolTip": "mgms-backend\\Controllers\\AuthController.cs",
-              "ViewState": "AQIAAGQBAAAAAAAAAAAuwJ4BAABGAAAA",
+              "Title": "FeedbacksController.cs",
+              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Controllers\\FeedbacksController.cs",
+              "RelativeDocumentMoniker": "mgms-backend\\Controllers\\FeedbacksController.cs",
+              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Controllers\\FeedbacksController.cs",
+              "RelativeToolTip": "mgms-backend\\Controllers\\FeedbacksController.cs",
+              "ViewState": "AQIAAAoAAAAAAAAAAAAQwLQAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T13:34:34.054Z",
+              "WhenOpened": "2024-05-01T15:57:43.979Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "RegisterDto.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\DTO\\RegisterDto.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\DTO\\RegisterDto.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\DTO\\RegisterDto.cs",
-              "RelativeToolTip": "mgms-backend\\DTO\\RegisterDto.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA8AAAABAAAA",
+              "DocumentIndex": 1,
+              "Title": "FeedbackRepository.cs",
+              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Repositories\\FeedbackRepository.cs",
+              "RelativeDocumentMoniker": "mgms-backend\\Repositories\\FeedbackRepository.cs",
+              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Repositories\\FeedbackRepository.cs",
+              "RelativeToolTip": "mgms-backend\\Repositories\\FeedbackRepository.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAADgAAAAoAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T18:32:09.104Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "LoginDto.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\DTO\\LoginDto.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\DTO\\LoginDto.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\DTO\\LoginDto.cs",
-              "RelativeToolTip": "mgms-backend\\DTO\\LoginDto.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T18:32:05.89Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "UserDto.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\DTO\\UserDto.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\DTO\\UserDto.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\DTO\\UserDto.cs",
-              "RelativeToolTip": "mgms-backend\\DTO\\UserDto.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA0AAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T18:31:55.295Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "User.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Models\\User.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\Models\\User.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Models\\User.cs",
-              "RelativeToolTip": "mgms-backend\\Models\\User.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAACEAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T18:31:37.802Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "ProfileDto.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\DTO\\ProfileDto.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\DTO\\ProfileDto.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\DTO\\ProfileDto.cs",
-              "RelativeToolTip": "mgms-backend\\DTO\\ProfileDto.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA0AAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T17:44:39.85Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "ApplicationDbContext.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Data\\ApplicationDbContext.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\Data\\ApplicationDbContext.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Data\\ApplicationDbContext.cs",
-              "RelativeToolTip": "mgms-backend\\Data\\ApplicationDbContext.cs",
-              "ViewState": "AQIAADQAAAAAAAAAAAAswG8AAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T18:32:29.077Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "Profile.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Models\\Profile.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\Models\\Profile.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Models\\Profile.cs",
-              "RelativeToolTip": "mgms-backend\\Models\\Profile.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAsAAAAnAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T18:12:39.3Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "ProfileRepository.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Repositories\\ProfileRepository.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\Repositories\\ProfileRepository.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Repositories\\ProfileRepository.cs",
-              "RelativeToolTip": "mgms-backend\\Repositories\\ProfileRepository.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAABEAAAAJAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T12:14:42.091Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "IProfileRepository.cs",
-              "DocumentMoniker": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Repositories\\IProfileRepository.cs",
-              "RelativeDocumentMoniker": "mgms-backend\\Repositories\\IProfileRepository.cs",
-              "ToolTip": "C:\\Users\\Asmaa\\Documents\\GitHub\\Mall-Garage-Managment-System\\MGMS_Backend\\mgms-backend\\Repositories\\IProfileRepository.cs",
-              "RelativeToolTip": "mgms-backend\\Repositories\\IProfileRepository.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAcAAABWAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-24T12:11:59.336Z",
+              "WhenOpened": "2024-04-30T20:04:06.754Z",
               "EditorCaption": ""
             }
           ]

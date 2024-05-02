@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { highlightText, paginate, pagination } from "../Utils";
+import { highlightText, paginate, pagination, calculateIndex } from "../Utils";
 import AddUser from "./AddUser";
 import "../style.css";
 
@@ -207,6 +207,7 @@ export default function UsersList() {
           <table className="users-table">
             <thead>
               <tr>
+                <th>No.</th>
                 <th>User ID</th>
                 <th>Username</th>
                 <th>Email</th>
@@ -216,8 +217,18 @@ export default function UsersList() {
               </tr>
             </thead>
             <tbody>
-              {paginatedUsers.map((user) => (
+              {paginatedUsers.map((user, index) => (
                 <tr key={user.userId}>
+                  <td>
+                    {highlightText(
+                      calculateIndex(
+                        index,
+                        currentPage,
+                        itemsPerPage
+                      ).toString(),
+                      searchTerm
+                    )}
+                  </td>
                   <td>{highlightText(user.userId.toString(), searchTerm)}</td>{" "}
                   <td>{highlightText(user.username, searchTerm)}</td>
                   <td>{highlightText(user.email, searchTerm)}</td>

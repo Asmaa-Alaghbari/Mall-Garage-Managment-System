@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { formatDateTime, highlightText, paginate, pagination } from "../Utils";
+import {
+  formatDateTime,
+  highlightText,
+  ShowMessageModel,
+  paginate,
+  pagination,
+  calculateIndex,
+} from "../Utils";
 import AddFeedback from "./AddFeedback";
 import "../style.css";
 
@@ -14,6 +21,8 @@ export default function Feedback() {
   const [filterByRating, setFilterByRating] = useState(""); // Filter by rating
   const [filterByDate, setFilterByDate] = useState(""); // Filter by date
   const [sortBy, setSortBy] = useState("userId"); // Sort
+  const [modalOpen, setModalOpen] = useState(false); // Modal visibility
+  const [modalMessage, setModalMessage] = useState(""); // Modal message
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const location = useLocation(); // Get the current location to trigger useEffect
@@ -71,11 +80,13 @@ export default function Feedback() {
       });
   }, [location, navigate]); // Fetch feedbacks once when the component mounts
 
+  // Add a new feedback
   const handleAddSuccess = (newFeedback) => {
     setFeedbacks([...feedbacks, newFeedback]); // Add the new feedback to the list
     setShowAddForm(false); // Close the add form
   };
 
+  // Delete a feedback
   const handleDelete = (feedbackId) => {
     // Ask the user to confirm the deletion
     if (window.confirm("Are you sure you want to delete this feedback?")) {
@@ -106,6 +117,13 @@ export default function Feedback() {
     }
   };
 
+  // Show a modal with the given message
+  const handleShowMessage = (message) => {
+    setModalMessage(message); // Set the message to be displayed in the modal
+    setModalOpen(true); // Open the modal
+  };
+
+  // Filter feedbacks
   const filteredFeedbacks = feedbacks.filter((feedback) => {
     const searchTermLower = searchTerm.toLowerCase();
     const filterByLower = filterBy.toLowerCase();
@@ -114,6 +132,9 @@ export default function Feedback() {
       : "";
     const messageLower = feedback.message ? feedback.message.toLowerCase() : "";
     const userId = feedback.userId ? feedback.userId.toString() : "";
+    const dateTimeStr = feedback.dateTime
+      ? formatDateTime(feedback.dateTime).toLowerCase()
+      : "";
 
     const ratingMatch =
       filterByRating === "" || feedback.rating.toString() === filterByRating;
@@ -122,16 +143,27 @@ export default function Feedback() {
     const dateMatch =
       filterByDate === "" ||
       new Date(feedback.dateTime).toISOString().split("T")[0] === filterByDate;
+    const timeMatch = filterByDate === "" || dateTimeStr.includes(filterByDate);
 
+    const calculatedIndex = calculateIndex(
+      feedbacks.indexOf(feedback),
+      currentPage,
+      itemsPerPage
+    ).toString();
+
+    // Include the messageLower in the search condition
     return (
       (searchTermLower === "" ||
+        calculatedIndex.includes(searchTermLower) ||
         userId.includes(searchTermLower) ||
         feedback.rating.toString().includes(searchTermLower) ||
         feedbackTypeLower.includes(searchTermLower) ||
-        messageLower.includes(searchTermLower)) &&
+        messageLower.includes(searchTermLower) ||
+        dateTimeStr.includes(searchTermLower)) &&
       ratingMatch &&
       typeMatch &&
-      dateMatch
+      dateMatch &&
+      timeMatch
     );
   });
 
@@ -239,21 +271,32 @@ export default function Feedback() {
               <table className="feedback-table">
                 <thead>
                   <tr>
+                    <th>No.</th>
                     {localStorage.getItem("role") === "ADMIN" && (
                       <th>User ID</th>
                     )}
                     <th>Rating</th>
                     <th>Type</th>
-                    <th>Message</th>
                     <th>Date Time</th>
+                    <th>Message</th>
                     {localStorage.getItem("role") === "ADMIN" && (
                       <th>Actions</th>
                     )}
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedFeedbacks.map((feedback) => (
+                  {paginatedFeedbacks.map((feedback, index) => (
                     <tr key={feedback.feedbackId}>
+                      <td>
+                        {highlightText(
+                          calculateIndex(
+                            index,
+                            currentPage,
+                            itemsPerPage
+                          ).toString(),
+                          searchTerm
+                        )}
+                      </td>
                       {localStorage.getItem("role") === "ADMIN" && (
                         <td>
                           {highlightText(
@@ -276,16 +319,19 @@ export default function Feedback() {
                       </td>
                       <td>
                         {highlightText(
-                          feedback.message ? feedback.message : "",
+                          feedback.dateTime
+                            ? formatDateTime(feedback.dateTime)
+                            : "",
                           searchTerm
                         )}
                       </td>
                       <td>
                         {highlightText(
-                          feedback.dateTime
-                            ? formatDateTime(feedback.dateTime)
-                            : "",
-                          searchTerm
+                          <button
+                            onClick={() => handleShowMessage(feedback.message)}
+                          >
+                            Show Message
+                          </button>
                         )}
                       </td>
                       {localStorage.getItem("role") === "ADMIN" && (
@@ -314,6 +360,12 @@ export default function Feedback() {
           )}
         </>
       )}
+
+      {/* Modal to display feedback message */}
+      <ShowMessageModel isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+        <h4>Feedback Message</h4>
+        <p>{modalMessage}</p>
+      </ShowMessageModel>
     </div>
   );
 }

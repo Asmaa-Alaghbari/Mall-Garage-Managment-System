@@ -53,5 +53,11 @@ namespace mgms_backend.Repositories
         {
             return await _context.Feedbacks.Where(f => f.UserId == userId).ToListAsync();
         }
+
+        // Get feedbacks with pagination
+        public async Task<IEnumerable<Feedback>> GetFeedbacksAsync(int pageNumber, int pageSize)
+        {
+            return await _context.Feedbacks.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+        }
     }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { highlightText, paginate, pagination } from "../Utils";
+import { highlightText, paginate, pagination, calculateIndex } from "../Utils";
 import AddParkingSpot from "./AddParkingSpot";
 import "../style.css";
 
@@ -257,6 +257,7 @@ export default function ParkingSpots({ userRole }) {
           <table className="parking-spots-table">
             <thead>
               <tr>
+                <th>No.</th>
                 <th>Spot ID</th>
                 <th>Number</th>
                 <th>Section</th>
@@ -266,8 +267,18 @@ export default function ParkingSpots({ userRole }) {
               </tr>
             </thead>
             <tbody>
-              {paginatedParkingSpots.map((spot) => (
+              {paginatedParkingSpots.map((spot, index) => (
                 <tr key={spot.parkingSpotId}>
+                  <td>
+                    {highlightText(
+                      calculateIndex(
+                        index,
+                        currentPage,
+                        itemsPerPage
+                      ).toString(),
+                      searchTerm
+                    )}
+                  </td>
                   <td>
                     {highlightText(
                       (spot.parkingSpotId ?? "").toString(),

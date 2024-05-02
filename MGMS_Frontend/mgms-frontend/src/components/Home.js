@@ -11,16 +11,17 @@ export default function Home() {
     occupied: 0,
     total: 0,
   });
-  const [feedbacks, setFeedbacks] = useState([]);
-  const [feedbackStats, setFeedbackStats] = useState({
-    givenCount: 0,
-    avgRating: 0,
-    receivedCount: 0,
-  });
   const [userStatistics, setUserStatistics] = useState({
     totalUsersRole: 0,
     totalAdminsRole: 0,
     totalUsers: 0,
+  });
+  const [feedbackStatistics, setFeedbackStatistics] = useState({
+    totalFeedbacks: 0,
+    totalPositiveFeedbacks: 0,
+    totalNegativeFeedbacks: 0,
+    totalAnonymousFeedbacks: 0,
+    averageRating: 0,
   });
   const [, setUserRole] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,6 +70,27 @@ export default function Home() {
         .finally(() => {
           setIsLoading(false);
         });
+
+      // Fetch feedback statistics
+      fetch("http://localhost:5296/api/Feedbacks/GetFeedbackStatistics", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch feedback statistics");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          setFeedbackStatistics(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching feedback statistics:", error);
+          setError(error.toString());
+        });
     }
 
     // Fetch the parking spot summary (available, occupied, total)
@@ -91,62 +113,7 @@ export default function Home() {
         console.error("Error fetching parking spot summary:", error);
         setError(error.toString());
       });
-
-    // Fetch feedbacks based on user role
-    const fetchFeedbacksUrl =
-      user?.role === "ADMIN"
-        ? "http://localhost:5296/api/feedbacks/GetAllFeedbacks"
-        : `http://localhost:5296/api/feedbacks/GetFeedbackByUserId?userId=${localStorage.getItem(
-            "userId"
-          )}`;
-
-    fetch(fetchFeedbacksUrl, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch feedbacks: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data && data.emptyFeedbackList) {
-          setFeedbacks([]);
-        } else if (Array.isArray(data)) {
-          setFeedbacks(data);
-        } else {
-          throw new Error("Invalid data format");
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching feedbacks:", error);
-        setError(error.toString());
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
   }, [location, user?.id, user?.role]);
-
-  // Calculate feedback stats whenever feedbacks or user changes
-  useEffect(() => {
-    const givenCount = feedbacks.length; // Feedbacks given by the user
-    const totalRating = feedbacks.reduce(
-      // Total rating of feedbacks given by the user
-      (acc, feedback) => acc + feedback.rating,
-      0
-    );
-    // Average rating of feedbacks given by the user
-    const avgRating = feedbacks.length > 0 ? totalRating / feedbacks.length : 0;
-
-    setFeedbackStats({
-      givenCount,
-      avgRating,
-      receivedCount: user?.role === "ADMIN" ? feedbacks.length : 0, // Feedbacks received by the user
-    });
-  }, [feedbacks, user]);
 
   // Handle search input change and filter matching routes
   const handleSearch = (e) => {
@@ -296,28 +263,25 @@ export default function Home() {
             </li>
           </ul>
         </section>
-        <section className="card">
-          <h2 className="card-header">Feedbacks</h2>
-          <ul className="card-body">
-            <li>Given Feedbacks: {feedbackStats.givenCount}</li>
-            <li>Average Rating: {feedbackStats.avgRating.toFixed(2)}</li>
-            {user?.role === "ADMIN" && (
-              <li>Received Feedbacks: {feedbacks.length}</li>
-            )}
-          </ul>
-          <li className="nav-link">
-            {user?.role === "USER" && (
-              <Link to="/feedbacks" className="feedback-links">
-                View My Feedbacks
-              </Link>
-            )}
-            {user?.role === "ADMIN" && (
-              <Link to="/feedbacks" className="feedback-links">
-                View All Feedbacks
-              </Link>
-            )}
-          </li>
-        </section>
+        {user?.role === "USER" && (
+          <section className="card">
+            <h2 className="card-header">Payments</h2>
+            <ul className="card-body">
+              <li>
+                <Link to="/payments" className="nav-link">
+                  View Payment History
+                </Link>
+              </li>
+              <li>
+                <Link to="/payments/add" className="nav-link"> Add Payment</Link>
+              </li>
+            </ul>
+          </section>
+        )}
+
+
+
+        {/* Display user statistics for admin users */}
         {user?.role === "ADMIN" && (
           <section className="card">
             <h2 className="card-header">User Statistics</h2>
@@ -329,6 +293,31 @@ export default function Home() {
                 <Link to="/users" className="nav-link">
                   View All Users
                 </Link>
+              </li>
+            </ul>
+          </section>
+        )}
+
+        {/* Display feedback statistics for admin users */}
+        {user?.role === "ADMIN" && (
+          <section className="card">
+            <h2 className="card-header">Feedback Statistics</h2>
+            <ul className="card-body">
+              <li>Total Feedbacks: {feedbackStatistics.totalFeedbacks}</li>
+              <li>
+                Total Positive Feedbacks:{" "}
+                {feedbackStatistics.totalPositiveFeedbacks}
+              </li>
+              <li>
+                Total Negative Feedbacks:{" "}
+                {feedbackStatistics.totalNegativeFeedbacks}
+              </li>
+              <li>
+                Total Anonymous Feedbacks:{" "}
+                {feedbackStatistics.totalAnonymousFeedbacks}
+              </li>
+              <li>
+                Average Rating: {feedbackStatistics.averageRating.toFixed(2)}
               </li>
             </ul>
           </section>

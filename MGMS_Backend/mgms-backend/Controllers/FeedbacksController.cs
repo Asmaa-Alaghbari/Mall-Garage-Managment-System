@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using mgms_backend.Repositories;
 using mgms_backend.Models;
 using mgms_backend.DTO;
-using mgms_backend.Utilities;
 
 namespace mgms_backend.Controllers
 {
@@ -28,6 +27,15 @@ namespace mgms_backend.Controllers
         public async Task<ActionResult<IEnumerable<Feedback>>> GetAllFeedbacks()
         {
             var feedbacks = await _feedbackRepository.GetAllFeedbacksAsync();
+            return Ok(feedbacks);
+        }
+
+        // GET: api/Feedbacks/GetFeedbackPagination
+        [HttpGet("GetFeedbackPagination")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<ActionResult<IEnumerable<Feedback>>> GetFeedbacks(int pageNumber = 1, int pageSize = 10)
+        {
+            var feedbacks = await _feedbackRepository.GetFeedbacksAsync(pageNumber, pageSize);
             return Ok(feedbacks);
         }
 
@@ -82,6 +90,33 @@ namespace mgms_backend.Controllers
             }).ToList();
 
             return Ok(feedbackDTOs);
+        }
+
+        // GET: api/Feedbacks/GetFeedbackStatistics
+        [HttpGet("GetFeedbackStatistics")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<ActionResult> GetFeedbackStatistics()
+        {
+            var feedbacks = await _feedbackRepository.GetAllFeedbacksAsync();
+            if (feedbacks == null || !feedbacks.Any())
+            {
+                return Ok(new { message = "No feedbacks found!" });
+            }
+
+            var totalFeedbacks = feedbacks.Count();
+            var totalPositiveFeedbacks = feedbacks.Count(f => f.Rating >= 2);
+            var totalNegativeFeedbacks = feedbacks.Count(f => f.Rating < 2);
+            var totalAnonymousFeedbacks = feedbacks.Count(f => f.IsAnonymous);
+            var averageRating = feedbacks.Average(f => f.Rating);
+
+            return Ok(new
+            {
+                totalFeedbacks,
+                totalPositiveFeedbacks,
+                totalNegativeFeedbacks,
+                totalAnonymousFeedbacks,
+                averageRating
+            });
         }
 
         // POST: api/Feedbacks/AddFeedback

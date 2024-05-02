@@ -11,11 +11,16 @@ import Home from "./components/Home";
 import Navbar from "./components/Navbar";
 import Profile from "./components/Profile";
 import Reservations from "./components/Reservation/Reservations";
+import AddReservation from "./components/Reservation/AddReservation";
 import ParkingSpots from "./components/ParkingSpot/ParkingSpots";
+import AddParkingSpot from "./components/ParkingSpot/AddParkingSpot";
 import Payment from "./components/Payment/Payment";
+import AddPayment from "./components/Payment/AddPayment";
 import Feedback from "./components/Feedback/Feedback";
+import AddFeedback from "./components/Feedback/AddFeedback";
 import Settings from "./components/Settings";
 import UsersList from "./components/Auth/UserList";
+import AddUser from "./components/Auth/AddUser";
 
 import "./App.css";
 
@@ -78,20 +83,40 @@ export default function App() {
             element={isLoggedIn ? <ParkingSpots /> : <Navigate to="/login" />}
           />
           <Route
+            path="/parking-spots/add"
+            element={isLoggedIn ? <AddParkingSpot /> : <Navigate to="/login" />}
+          />
+          <Route
             path="/reservations"
             element={isLoggedIn ? <Reservations /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/reservations/add"
+            element={isLoggedIn ? <AddReservation /> : <Navigate to="/login" />}
           />
           <Route
             path="/payments"
             element={isLoggedIn ? <Payment /> : <Navigate to="/login" />}
           />
           <Route
+            path="/payments/add"
+            element={isLoggedIn ? <AddPayment /> : <Navigate to="/login" />}
+          />
+          <Route
             path="/feedbacks"
             element={isLoggedIn ? <Feedback /> : <Navigate to="/login" />}
           />
           <Route
+            path="/feedbacks/add"
+            element={isLoggedIn ? <AddFeedback /> : <Navigate to="/login" />}
+          />
+          <Route
             path="/users"
             element={isLoggedIn ? <UsersList /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/users/add"
+            element={isLoggedIn ? <AddUser /> : <Navigate to="/login" />}
           />
           <Route
             path="/settings"

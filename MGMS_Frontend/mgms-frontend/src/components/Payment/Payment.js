@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { formatDateTime, highlightText, paginate, pagination } from "../Utils";
+import {
+  formatDateTime,
+  highlightText,
+  paginate,
+  pagination,
+  calculateIndex,
+} from "../Utils";
 import AddPayment from "./AddPayment";
 import "../style.css";
 
@@ -212,6 +218,7 @@ export default function Payment() {
           <table className="payment-table">
             <thead>
               <tr>
+                <th>No.</th>
                 <th>Payment ID</th>
                 <th>Reservation ID</th>
                 <th>Amount</th>
@@ -221,8 +228,18 @@ export default function Payment() {
               </tr>
             </thead>
             <tbody>
-              {paginatedPayments.map((payment) => (
+              {paginatedPayments.map((payment, index) => (
                 <tr key={payment.paymentId}>
+                  <td>
+                    {highlightText(
+                      calculateIndex(
+                        index,
+                        currentPage,
+                        itemsPerPage
+                      ).toString(),
+                      searchTerm
+                    )}
+                  </td>
                   <td>
                     {highlightText(
                       payment.paymentId?.toString() || "N/A",
@@ -233,8 +250,7 @@ export default function Payment() {
                     {highlightText(
                       payment.reservationId?.toString() || "N/A",
                       searchTerm
-                    )}{" "}
-                    {/* Add this line */}
+                    )}
                   </td>
                   <td>
                     {highlightText(
@@ -269,7 +285,7 @@ export default function Payment() {
           <div className="pagination">
             {pagination(totalPages, currentPage, setCurrentPage)}
           </div>
-          
+
           <button onClick={() => setShowAddForm(true)}>Add New Payment</button>
         </>
       )}
