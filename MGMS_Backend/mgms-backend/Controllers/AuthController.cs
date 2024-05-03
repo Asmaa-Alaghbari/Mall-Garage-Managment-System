@@ -157,6 +157,41 @@ namespace mgms_backend.Controllers
             }
         }
 
+        // GET: api/auth/GetUserRoles
+        [HttpGet("GetUserRoles")]
+        [Authorize]
+        public async Task<IActionResult> GetUserRoles()
+        {
+            try
+            {
+                // Extract the username from the JWT token
+                var username = User.Identity?.Name;
+
+                // Check if the username is null or empty
+                if (string.IsNullOrEmpty(username))
+                {
+                    return Unauthorized("Invalid token data.");
+                }
+
+                // Retrieve the user from the database using the username
+                var user = await _userRepository.GetUserByUsernameOrEmailAsync(username);
+
+                // Check if the user exists
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+
+                // Return the role of the authenticated user
+                return Ok(new { UserId = user.UserId, Role = user.Role });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return StatusCode(500, "An error occurred while retrieving user roles.");
+            }
+        }
+
         // GET: api/auth/GetUserProfile
         [HttpGet("GetUserProfile")] // Route to the GetUserProfile endpoint
         [Authorize]

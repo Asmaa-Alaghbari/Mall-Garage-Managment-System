@@ -64,5 +64,13 @@ namespace mgms_backend.Repositories
         {
             return _context.SaveChangesAsync();
         }
+
+        // Get reservations by parking spot id
+        public async Task<List<Reservation>> GetReservationsByParkingSpotIdAsync(int parkingSpotId)
+        {
+            return await _context.Reservations
+                                  .Where(r => r.ParkingSpotId == parkingSpotId)
+                                  .ToListAsync();
+        }
     }
 }

@@ -3,7 +3,6 @@ using mgms_backend.Models;
 using mgms_backend.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace mgms_backend.Controllers
 {
@@ -49,6 +48,39 @@ namespace mgms_backend.Controllers
                 return NotFound("Reservation not found!");
             }
             return Ok(reservation);
+        }
+
+        // GET: api/GetReservationsByParkingSpotId
+        [HttpGet("GetReservationsByParkingSpotId")]
+        [Authorize]
+        public async Task<ActionResult> GetReservationsByParkingSpotId(int parkingSpotId)
+        {
+
+            // Check if the parking spot exists
+            var parkingSpot = await _parkingSpotRepository.GetParkingSpotByIdAsync(parkingSpotId);
+            if (parkingSpot == null)
+            {
+                return NotFound($"No parking spot found with ID {parkingSpotId}.");
+            }
+
+            var reservations = await _reservationRepository.GetReservationsByParkingSpotIdAsync(parkingSpotId);
+            var reservationDTOs = reservations.Select(r => new ReservationDTO
+            {
+                ReservationId = r.ReservationId,
+                UserId = r.UserId,
+                ParkingSpotId = r.ParkingSpotId,
+                StartTime = r.StartTime,
+                EndTime = r.EndTime,
+                Status = r.Status
+            }).ToList();
+
+            // If no reservations are found, return a 404 Not Found
+            if (reservations == null || !reservations.Any())
+            {
+                return NotFound("No reservations found for the specified parking spot ID.");
+            }
+
+            return Ok(reservationDTOs);
         }
 
         // POST: api/AddReservation

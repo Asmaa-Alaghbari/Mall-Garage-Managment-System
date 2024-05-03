@@ -27,6 +27,16 @@ namespace mgms_backend.Controllers
             return Ok(spots);
         }
 
+        // GET: api/GetParkingSpotsPagination
+        [HttpGet("GetParkingSpotsPagination")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<ParkingSpot>>> GetParkingSpotsPagination(
+            int pageNumber = 1, int pageSize = 10)
+        {
+            var spots = await _parkingSpotRepository.GetParkingSpotsAsync(pageNumber, pageSize);
+            return Ok(spots);
+        }
+
         // GET: api/GetParkingSpotById
         [HttpGet("GetParkingSpotById")]
         [Authorize]
@@ -120,6 +130,30 @@ namespace mgms_backend.Controllers
             await _parkingSpotRepository.UpdateParkingSpotAsync(parkingSpotToUpdate);
 
             return Ok(new { message = "Spot updated successfully!", parkingSpotToUpdate });
+        }
+
+        // PUT: api/ReserveParkingSpot
+        [HttpPut("ReserveParkingSpot")]
+        [Authorize]
+        public async Task<IActionResult> ReserveParkingSpot(int parkingSpotId)
+        {
+            var parkingSpot = await _parkingSpotRepository.GetParkingSpotByIdAsync(parkingSpotId);
+            if (parkingSpot == null)
+            {
+                return NotFound("Spot not found!");
+            }
+
+            // Check if the spot is already occupied
+            if (parkingSpot.IsOccupied)
+            {
+                return Conflict(new { message = "Spot is already occupied!" });
+            }
+
+            // Update the spot to be occupied
+            parkingSpot.IsOccupied = true;
+            await _parkingSpotRepository.UpdateParkingSpotAsync(parkingSpot);
+
+            return Ok(new { message = "Spot reserved successfully!", parkingSpot });
         }
 
         // DELETE: api/DeleteParkingSpot

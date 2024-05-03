@@ -29,7 +29,7 @@ namespace mgms_backend.Repositories
                 _context.ParkingSpots.Remove(parkingSpot);
                 await _context.SaveChangesAsync();
             }
-        }    
+        }
 
         // Get all parking spots from the database
         public async Task<IEnumerable<ParkingSpot>> GetAllParkingSpotsAsync()
@@ -61,6 +61,12 @@ namespace mgms_backend.Repositories
         {
             return await _context.ParkingSpots.FirstOrDefaultAsync(ps => ps.Number == number);
 
+        }
+
+        // Get parking spots paginated
+        public async Task<IEnumerable<ParkingSpot>> GetParkingSpotsAsync(int pageNumber, int pageSize)
+        {
+            return await _context.ParkingSpots.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
         }
 
         // Save changes to the database
