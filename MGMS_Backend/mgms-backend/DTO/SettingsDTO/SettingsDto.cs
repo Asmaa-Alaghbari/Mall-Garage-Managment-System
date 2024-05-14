@@ -1,5 +1,6 @@
-﻿namespace mgms_backend.DTO
+﻿namespace mgms_backend.DTO.SettingsDTO
 {
+    // Represents the settings of a user
     public class SettingsDTO
     {
         public int UserId { get; set; }

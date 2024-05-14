@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace mgms_backend.DTO
+namespace mgms_backend.DTO.PaymentDTO
 {
-    public class PaymentDTO
+    // Represents a payment data transfer object
+    public class PaymentDto
     {
+        public int PaymentId { get; set; }
         public int ReservationId { get; set; }
         public int UserId { get; set; }
         [Required]

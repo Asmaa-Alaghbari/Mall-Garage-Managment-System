@@ -1,11 +1,11 @@
-namespace mgms_backend.DTO
+namespace mgms_backend.DTO.UserDTO
 {
-    // Represent the user entity in the database for registration
+    // Represent the user entity in the database for registration (Sign up)
     public class RegisterDto
     {
         public int UserId { get; set; } // Primary key
-        public required string FirstName { get; set; } = default!; 
-        public required string LastName { get; set; } = default!; 
+        public required string FirstName { get; set; } = default!;
+        public required string LastName { get; set; } = default!;
         public required string Username { get; set; } // Unique username
         public required string Email { get; set; } // Unique email address
         public required string Password { get; set; } // Hashed password

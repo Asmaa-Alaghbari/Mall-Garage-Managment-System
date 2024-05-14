@@ -1,4 +1,4 @@
-﻿namespace mgms_backend.DTO
+﻿namespace mgms_backend.DTO.UserDTO
 {
     // Represent the user entity in the database for login
     public class LoginDto

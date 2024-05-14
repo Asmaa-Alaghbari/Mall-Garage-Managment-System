@@ -1,5 +1,6 @@
-﻿namespace mgms_backend.DTO
+﻿namespace mgms_backend.DTO.UserDTO
 {
+    // User data transfer object (DTO) for user information 
     public class UserDto
     {
         public int UserId { get; set; }
