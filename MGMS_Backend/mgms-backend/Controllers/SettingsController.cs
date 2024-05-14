@@ -1,14 +1,15 @@
-﻿using mgms_backend.DTO;
-using mgms_backend.Models;
-using mgms_backend.Repositories;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using mgms_backend.DTO.SettingsDTO;
+using mgms_backend.Repositories.Interface;
+using mgms_backend.Exceptions;
+using mgms_backend.Entities;
 
 namespace mgms_backend.Controllers
 {
     [Route("api/settings")]
     [ApiController]
+    [Authorize]
     public class SettingsController : ControllerBase
     {
         private readonly ISettingsRepository _settingsRepository;
@@ -25,70 +26,55 @@ namespace mgms_backend.Controllers
             return settings != null;
         }
 
-        // GET: api/settings/GetSettingsByUserId
+        // GET: api/settings/GetSettingsByUserId: Get the settings by user ID
         [HttpGet("GetSettingsByUserId")]
         [Authorize]
         public async Task<ActionResult<SettingsDTO>> GetSettingsByUserId(int userId)
         {
+            // Check if the user ID is valid
             if (userId <= 0)
             {
-                return BadRequest("Invalid user ID");
+                throw new ServerValidationException("Invalid user ID");
             }
 
             var settings = await _settingsRepository.GetSettingsByUserIdAsync(userId);
 
+            // Check if the settings exist
             if (settings == null)
             {
-                return NotFound("Settings not found");
+                return Ok(new SettingsDTO
+                {
+                    UserId = 0,
+                    ReceiveNotifications = false,
+                    DarkMode = false,
+                });
             }
 
-            var settingsDTO = new SettingsDTO
-            {
-                UserId = settings.UserId,
-                ReceiveNotifications = settings.ReceiveNotifications,
-                DarkMode = settings.DarkMode,
-            };
-
-            return Ok(settingsDTO);
-        }
-
-        // PUT: api/settings/UpdateSettings
-        [HttpPut("UpdateSettings")]
-        [Authorize]
-        public async Task<IActionResult> UpdateSettings(int userId, SettingsDTO settingsDTO)
-        {
-            if (userId != settingsDTO.UserId)
-            {
-                return BadRequest("User ID mismatch");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var settings = new Settings
+            return Ok(new SettingsDTO
             {
                 UserId = userId,
-                ReceiveNotifications = settingsDTO.ReceiveNotifications,
-                DarkMode = settingsDTO.DarkMode,
-            };
+                ReceiveNotifications = settings.ReceiveNotifications,
+                DarkMode = settings.DarkMode,
+            });
+        }
 
-            try
+        // PUT: api/settings/UpdateSettings: Update the settings
+        [HttpPut("UpdateSettings")]
+        [Authorize]
+        public async Task<IActionResult> UpdateSettings([FromQuery] int userId, [FromBody] SettingsDTO settingsDTO)
+        {
+            var existingSettings = await _settingsRepository.GetSettingsByUserIdAsync(userId) ?? new Settings();
+
+            if (userId != settingsDTO.UserId)
             {
-                await _settingsRepository.UpdateSettingsAsync(settings);
+                throw new ServerValidationException("User ID mismatch");
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await SettingsExists(userId))
-                {
-                    return NotFound("Settings not exists");
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            existingSettings.UserId = userId;
+            existingSettings.ReceiveNotifications = settingsDTO.ReceiveNotifications;
+            existingSettings.DarkMode = settingsDTO.DarkMode;
+
+            await _settingsRepository.UpdateSettingsAsync(existingSettings);
 
             return Ok(new { message = "Settings updated successfully" });
         }

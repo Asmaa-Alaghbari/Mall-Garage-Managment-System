@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using mgms_backend.DTO.FeedbackDTO;
+using mgms_backend.Entities.Feedbacks;
+using mgms_backend.Exceptions;
+using mgms_backend.Mappers.Interface;
 using mgms_backend.Repositories;
-using mgms_backend.Models;
-using mgms_backend.DTO;
+using mgms_backend.Repositories.Interface;
 
 namespace mgms_backend.Controllers
 {
@@ -14,14 +17,19 @@ namespace mgms_backend.Controllers
     {
         private readonly IFeedbackRepository _feedbackRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IFeedbackMapper _feedbackMapper;
 
-        public FeedbacksController(IFeedbackRepository repository, IUserRepository userRepository)
+        public FeedbacksController(
+            IFeedbackRepository repository,
+            IUserRepository userRepository,
+            IFeedbackMapper feedbackMapper)
         {
             _feedbackRepository = repository;
             _userRepository = userRepository;
+            _feedbackMapper = feedbackMapper;
         }
 
-        // GET: api/Feedbacks/GetAllFeedbacks
+        // GET: api/Feedbacks/GetAllFeedbacks: Get all feedbacks
         [HttpGet("GetAllFeedbacks")]
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<IEnumerable<Feedback>>> GetAllFeedbacks()
@@ -30,16 +38,7 @@ namespace mgms_backend.Controllers
             return Ok(feedbacks);
         }
 
-        // GET: api/Feedbacks/GetFeedbackPagination
-        [HttpGet("GetFeedbackPagination")]
-        [Authorize(Roles = "ADMIN")]
-        public async Task<ActionResult<IEnumerable<Feedback>>> GetFeedbacks(int pageNumber = 1, int pageSize = 10)
-        {
-            var feedbacks = await _feedbackRepository.GetFeedbacksAsync(pageNumber, pageSize);
-            return Ok(feedbacks);
-        }
-
-        // GET: api/Feedbacks/GetFeedbackById
+        // GET: api/Feedbacks/GetFeedbackById: Get feedback by ID
         [HttpGet("GetFeedbackById")]
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<Feedback>> GetFeedbackById(int feedbackId)
@@ -47,12 +46,12 @@ namespace mgms_backend.Controllers
             var feedback = await _feedbackRepository.GetFeedbackByIdAsync(feedbackId);
             if (feedback == null)
             {
-                return NotFound("Feedback not found!");
+                throw new EntityNotFoundException("Feedback not found!");
             }
             return Ok(feedback);
         }
 
-        // GET: api/Feedbacks/GetFeedbackByUserId
+        // GET: api/Feedbacks/GetFeedbackByUserId: Get feedbacks by User ID
         [HttpGet("GetFeedbackByUserId")]
         [Authorize(Roles = "ADMIN, USER")]
         public async Task<ActionResult<IEnumerable<Feedback>>> GetFeedbackByUserId([FromQuery] int userId)
@@ -78,7 +77,7 @@ namespace mgms_backend.Controllers
                 return Ok(new { message = "Feedbacks not found for the user!", emptyFeedbackList }); // Return an empty list
             }
 
-            var feedbackDTOs = feedbacks.Select(f => new FeedbackDTO
+            var feedbackDTOs = feedbacks.Select(f => new FeedbackDto
             {
                 FeedbackId = f.FeedbackId,
                 UserId = f.UserId,
@@ -92,7 +91,7 @@ namespace mgms_backend.Controllers
             return Ok(feedbackDTOs);
         }
 
-        // GET: api/Feedbacks/GetFeedbackStatistics
+        // GET: api/Feedbacks/GetFeedbackStatistics: Get feedback statistics
         [HttpGet("GetFeedbackStatistics")]
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult> GetFeedbackStatistics()
@@ -119,39 +118,33 @@ namespace mgms_backend.Controllers
             });
         }
 
-        // POST: api/Feedbacks/AddFeedback
+        // POST: api/Feedbacks/AddFeedback: Add feedback
         [HttpPost("AddFeedback")]
         [Authorize]
-        public async Task<ActionResult> AddFeedback(FeedbackDTO feedbackDTO)
+        public async Task<ActionResult> AddFeedback(FeedbackDto feedbackDTO)
         {
-            var feedback = new Feedback
-            {
-                UserId = feedbackDTO.UserId,
-                Message = feedbackDTO.Message,
-                Rating = feedbackDTO.Rating,
-                FeedbackType = feedbackDTO.FeedbackType,
-                IsAnonymous = feedbackDTO.IsAnonymous,
-                DateTime = DateTime.UtcNow
-            };
+            var feedback = _feedbackMapper.ToModel(feedbackDTO);
 
             // Check if UserId is provided
             if (feedbackDTO.UserId <= 0)
             {
-                return BadRequest("UserId must be provided!");
+                throw new ServerValidationException("UserId must be provided!");
             }
 
             // Validate existence of the User
             var userExists = await _userRepository.GetUserByIdAsync(feedbackDTO.UserId);
             if (userExists == null)
             {
-                return NotFound($"User with ID {feedbackDTO.UserId} not found!");
+                throw new EntityNotFoundException($"User with ID {feedbackDTO.UserId} not found!");
             }
 
             // Check if the message is empty
             if (string.IsNullOrWhiteSpace(feedback.Message))
             {
-                return StatusCode(422, "Message cannot be empty!");
+                throw new ServerValidationException("Message cannot be empty!");
             }
+
+            feedback.DateTime = DateTime.UtcNow;
 
             await _feedbackRepository.AddFeedbackAsync(feedback);
             await _feedbackRepository.SaveChangesAsync();
@@ -159,15 +152,30 @@ namespace mgms_backend.Controllers
             return Ok(new { message = "Feedback added successfully!" });
         }
 
-        // DELETE: api/Feedbacks/DeleteFeedback
+        // POST: api/SearchPaginated: Search feedbacks with pagination
+        [HttpPost("SearchPaginated")]
+        [Authorize]
+        public async Task<IActionResult> SearchPaginated([FromQuery] int pageNumber, [FromQuery] int pageSize, [FromBody] FeedbackSearchCriteriaDto? searchCriteria = null)
+        {
+            var searchCriteriaModel = _feedbackMapper.ToSearchCriteriaModel(searchCriteria);
+            var fetchedResults = await _feedbackRepository.SearchAsync(searchCriteriaModel);
+            var totalRecords = fetchedResults.Count();
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+            var paginatedData = fetchedResults.Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize).ToList();
+
+            return Ok(new { TotalPages = totalPages, Data = _feedbackMapper.ToCollectionDto(paginatedData) });
+        }
+
+        // DELETE: api/Feedbacks/DeleteFeedback: Delete feedback by ID
         [HttpDelete("DeleteFeedback")]
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult> DeleteFeedback(int feedbackId)
         {
-            var payment = await _feedbackRepository.GetFeedbackByIdAsync(feedbackId);
-            if (payment == null)
+            var feedback = await _feedbackRepository.GetFeedbackByIdAsync(feedbackId);
+            if (feedback == null)
             {
-                return NotFound("Feedback not found!");
+                throw new EntityNotFoundException("Feedback not found!");
             }
 
             // Delete the Payment from the database

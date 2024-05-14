@@ -5,10 +5,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-using mgms_backend.Models;
-using mgms_backend.DTO;
-using mgms_backend.Repositories;
-using mgms_backend.Utilities;
+using mgms_backend.DTO.UserDTO;
+using mgms_backend.Entities.Users;
+using mgms_backend.Mappers.Interface;
+using mgms_backend.Repositories.Interface;
+using mgms_backend.Exceptions;
 
 namespace mgms_backend.Controllers
 {
@@ -21,59 +22,30 @@ namespace mgms_backend.Controllers
         private readonly IUserRepository _userRepository; // Repository for user-related operations 
         private readonly IConfiguration _configuration; // Configuration settings for the application 
         private readonly IProfileRepository _profileRepository; // Repository for profile-related operations
+        private readonly IUserMapper _userMapper; // Mapper for user entities and DTOs
 
         public AuthController(
-            IUserRepository userRepository,
             IConfiguration configuration,
-            IProfileRepository profileRepository)
+            IProfileRepository profileRepository,
+            IUserMapper userMapper,
+            IUserRepository userRepository)
         {
-            _userRepository = userRepository;
             _configuration = configuration;
             _profileRepository = profileRepository;
+            _userMapper = userMapper;
+            _userRepository = userRepository;
         }
 
-        // GET: api/auth/GetAll 
-        [HttpGet("GetAll")] // Route to the GetAll endpoint
+        // GET: api/auth/GetAllUsers: Get all users 
+        [HttpGet("GetAllUsers")] // Route to the GetAll endpoint
         [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAllUsers()
         {
-            // Get all the users from the Users table in the database
-            var users = await _userRepository.GetAllUsersAsync();
-            return Ok(users); // Return the list of users as a response
+            return Ok(await _userRepository.GetAllUsersAsync());
         }
 
-        // GET: api/auth/GetAllPaginated 
-        [HttpGet("GetAllPaginated")] // Route to the GetAllPaginated endpoint
-        [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> GetAllPaginated(int pageNumber = 1, int pageSize = 5)
-        {
-            try
-            {
-                var users = await _userRepository.GetAllUsersAsync();
-
-                // Paginate the users
-                var paginatedUsers = PaginationList<User>.Create(users.AsQueryable(), pageNumber, pageSize);
-
-                // Return paginated users along with metadata
-                return Ok(new
-                {
-                    Users = paginatedUsers,
-                    TotalUsers = users.Count(), // Total number of users
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                    TotalPages = (int)Math.Ceiling((double)users.Count() / pageSize) // Calculate total pages
-
-                });
-            }
-            catch (Exception ex)
-            {
-                // Handle exception
-                return StatusCode(500, "An error occurred while retrieving users.");
-            }
-        }
-
-        // GET: api/auth/GetById
-        [HttpGet("GetById")] // Route to the GetById endpoint
+        // GET: api/auth/GetUserById: Get user by ID
+        [HttpGet("GetUserById")] // Route to the GetById endpoint
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> GetUserById(int UserId)
         {
@@ -89,157 +61,115 @@ namespace mgms_backend.Controllers
             return Ok(user); // Return the user object as a response
         }
 
-        // GET: api/auth/GetUser
+        // GET: api/auth/GetUserProfile: Get user
         [HttpGet("GetUser")] // Route to the GetUser endpoint
         [Authorize] // The user should only be able to access their own profile
         public async Task<IActionResult> GetUser()
         {
             // Extract the username from the JWT token
-            var username = User.Identity?.Name; // Ccontains the username from the token
+            var username = User.Identity?.Name; // Contains the username from the token
 
             // Check if the username is null or empty (should not happen with JWT authentication) 
             if (string.IsNullOrEmpty(username))
             {
-                return Unauthorized("Invalid token data."); // 401
+                throw new UnauthorizedAccessException("Invalid token data."); // 401
             }
 
-            try
+            // Fetch the user details from the database
+            var user = await _userRepository.GetUserByUsernameOrEmailAsync(username);
+            if (user == null)
             {
-                // Fetch the user details from the database
-                var user = await _userRepository.GetUserByUsernameOrEmailAsync(username);
-                if (user == null)
-                {
-                    return NotFound("User not found.");
-                }
+                throw new EntityNotFoundException("User not found.");
+            }
 
-                // Return the user data as a response (excluding sensitive fields like password)
-                return Ok(new
-                {
-                    user.UserId,
-                    user.FirstName,
-                    user.LastName,
-                    user.Username,
-                    user.Email,
-                    user.Phone,
-                    user.Role
-                });
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                Console.WriteLine(ex.ToString());
-                return StatusCode(500, "An error occurred while retrieving user data.");
-            }
+            // Return the user data as a response (excluding sensitive fields like password)
+            return Ok(_userMapper.ToDto(user));
         }
 
-        // GET: api/auth/GetUserStatistics
-        [HttpGet("GetUserStatistics")]
-        [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> GetUserStatistics()
-        {
-            try
-            {
-                var totalUsers = await _userRepository.GetTotalUsersAsync();
-                var totalAdminsRole = await _userRepository.GetTotalUsersByRoleAsync("ADMIN");
-                var totalUsersRole = await _userRepository.GetTotalUsersByRoleAsync("USER");
-
-                return Ok(new
-                {
-                    TotalUsersRole = totalUsersRole,
-                    TotalAdminsRole = totalAdminsRole,
-                    TotalUsers = totalUsers
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                return StatusCode(500, "An error occurred while retrieving user statistics.");
-            }
-        }
-
-        // GET: api/auth/GetUserRoles
+        // GET: api/auth/GetUserRoles: Get user roles
         [HttpGet("GetUserRoles")]
         [Authorize]
         public async Task<IActionResult> GetUserRoles()
         {
-            try
+            // Extract the username from the JWT token
+            var username = User.Identity?.Name;
+
+            // Check if the username is null or empty
+            if (string.IsNullOrEmpty(username))
             {
-                // Extract the username from the JWT token
-                var username = User.Identity?.Name;
-
-                // Check if the username is null or empty
-                if (string.IsNullOrEmpty(username))
-                {
-                    return Unauthorized("Invalid token data.");
-                }
-
-                // Retrieve the user from the database using the username
-                var user = await _userRepository.GetUserByUsernameOrEmailAsync(username);
-
-                // Check if the user exists
-                if (user == null)
-                {
-                    return NotFound("User not found.");
-                }
-
-                // Return the role of the authenticated user
-                return Ok(new { UserId = user.UserId, Role = user.Role });
+                throw new UnauthorizedAccessException("Invalid token data.");
             }
-            catch (Exception ex)
+
+            // Retrieve the user from the database using the username
+            var user = await _userRepository.GetUserByUsernameOrEmailAsync(username);
+
+            // Check if the user exists
+            if (user == null)
             {
-                Console.WriteLine(ex.ToString());
-                return StatusCode(500, "An error occurred while retrieving user roles.");
+                throw new EntityNotFoundException("User not found.");
             }
+
+            // Return the role of the authenticated user
+            return Ok(new { user.UserId, user.Role });
         }
 
-        // GET: api/auth/GetUserProfile
+        // GET: api/auth/GetUserProfile: Get user profile
         [HttpGet("GetUserProfile")] // Route to the GetUserProfile endpoint
         [Authorize]
         public async Task<IActionResult> GetUserProfile()
         {
-            try
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; // Extracting user ID from the token
+
+            // Check if the user ID claim is null or empty
+            if (string.IsNullOrEmpty(userIdClaim))
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; // Extracting user ID from the token
-                if (string.IsNullOrEmpty(userIdClaim))
-                {
-                    return BadRequest("User ID claim not found.");
-                }
-
-                var userId = int.Parse(userIdClaim); // Parsing the user ID from string to int
-
-                var profile = await _profileRepository.GetProfileByUserIdAsync(userId); // Fetching profile by user ID
-
-                if (profile == null)
-                {
-                    Console.WriteLine("Profile not found for user ID: " + userId);
-
-                    // Create a new profile object with default values
-                    var newProfile = new Profile
-                    {
-                        UserId = userId,
-                        Address = "",
-                        City = "",
-                        State = "",
-                        ZipCode = "",
-                        Country = ""
-                    };
-
-                    // Add the new profile to the Profiles table in the database
-                    await _profileRepository.AddProfileAsync(newProfile);
-                    await _profileRepository.SaveChangesAsync();
-
-                    profile = newProfile; // Set the profile to the newly created profile
-                }
-
-                return Ok(profile); // Return the profile of the logged-in user
+                throw new ServerValidationException("User ID claim not found.");
             }
-            catch (FormatException)
+
+            var userId = int.Parse(userIdClaim); // Parsing the user ID from string to int
+            var profile = await _profileRepository.GetProfileByUserIdAsync(userId); // Fetching profile by user ID
+
+            if (profile == null)
             {
-                return BadRequest("Invalid user ID format.");
+                // Create a new profile object with default values
+                var newProfile = new Profile
+                {
+                    UserId = userId,
+                    Address = "",
+                    City = "",
+                    State = "",
+                    ZipCode = "",
+                    Country = ""
+                };
+
+                // Add the new profile to the Profiles table in the database
+                await _profileRepository.AddProfileAsync(newProfile);
+                await _profileRepository.SaveChangesAsync();
+
+                profile = newProfile; // Set the profile to the newly created profile
             }
+
+            return Ok(profile); // Return the profile of the logged-in user
         }
 
-        // POST: api/auth/Register 
+        // GET: api/auth/GetUserStatistics: Get user statistics
+        [HttpGet("GetUserStatistics")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> GetUserStatistics()
+        {
+            var totalUsers = await _userRepository.GetTotalUsersAsync();
+            var totalAdminsRole = await _userRepository.GetTotalUsersByRoleAsync("ADMIN");
+            var totalUsersRole = await _userRepository.GetTotalUsersByRoleAsync("USER");
+
+            return Ok(new
+            {
+                TotalUsersRole = totalUsersRole, // Total users with the role "USER"
+                TotalAdminsRole = totalAdminsRole, // Total users with the role "ADMIN"
+                TotalUsers = totalUsers // Total number of users
+            });
+        }
+
+        // POST: api/auth/Register: Register a new user
         [HttpPost("Register")] // Route to the Register endpoint 
         [AllowAnonymous] // Allow unauthenticated access to the endpoint
         public async Task<ActionResult<User>> Register(RegisterDto request)
@@ -251,79 +181,66 @@ namespace mgms_backend.Controllers
             // Check if the cleaned username or email contains spaces
             if (cleanedUsername?.Contains(" ") == true || cleanedEmail?.Contains(" ") == true)
             {
-                return StatusCode(422, "Username or Email should not contain spaces.");
+                throw new ServerValidationException("Username or Email should not contain spaces.");
             }
 
             // Check if the user with the given username/email/phone already exists in the database
             var userExists = await _userRepository.UserExistsAsync(
                 cleanedUsername, cleanedEmail, request.Phone);
 
-            try
+            // Check if the user already exists
+            if (userExists)
             {
-                if (userExists)
-                {
-                    return Conflict("A user with the given username, email, or phone already exists."); // 409
-                }
-
-                // Convert the role to lowercase to make the role check case-insensitive
-                string role = string.IsNullOrWhiteSpace(request.Role) ? "user" : request.Role.ToUpper();
-
-                // Ensure the role is either "User" or "Admin"
-                if (role != "USER" && role != "ADMIN")
-                {
-                    role = "USER"; // Set the default role to "User" if an invalid role is provided
-                }
-
-                // Hash the password using BCrypt.Net library 
-                string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-                // Create a new user object and set the user data from the request
-                var newUser = new User
-                {
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    Username = cleanedUsername,
-                    Email = cleanedEmail,
-                    Password = passwordHash,
-                    Phone = request.Phone,
-                    Role = role, // Set the role of the user (USER or ADMIN)
-                    DateCreated = DateTime.UtcNow // Set the current date and time
-                };
-
-                // Add the new user to the Users table in the database
-                await _userRepository.AddUserAsync(newUser);
-                await _userRepository.SaveChangesAsync();
-
-                // Create a JWT token with the user data
-                string token = CreateToken(newUser);
-
-                return Ok(new { message = "Registration successful!", user = newUser });
+                throw new ServerValidationException("A user with the given username, email, or phone already exists."); // 409
             }
-            catch (Exception ex)
+
+            // Convert the role to lowercase to make the role check case-insensitive
+            string role = string.IsNullOrWhiteSpace(request.Role) ? "user" : request.Role.ToUpper();
+
+            // Ensure the role is either "User" or "Admin"
+            if (role != "USER" && role != "ADMIN")
             {
-                // Log the exception details
-                Console.WriteLine(ex.ToString());
-                // Return a generic error message or a detailed one based on your security policies
-                return StatusCode(500, "An error occurred while processing your request: {ex.Message}");
+                role = "USER"; // Set the default role to "User" if an invalid role is provided
             }
+
+            // Hash the password using BCrypt.Net library 
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+            // Create a new user object and set the user data from the request
+            var newUser = new User
+            {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Username = cleanedUsername,
+                Email = cleanedEmail,
+                Password = passwordHash,
+                Phone = request.Phone,
+                Role = role, // Set the role of the user (USER or ADMIN)
+                DateCreated = DateTime.UtcNow // Set the current date and time
+            };
+
+            // Add the new user to the Users table in the database
+            await _userRepository.AddUserAsync(newUser);
+            await _userRepository.SaveChangesAsync();
+
+            return Ok(new { message = "Registration successful!", user = newUser });
         }
 
-        // POST: api/auth/Login
+        // POST: api/auth/Login: Login user
         [HttpPost("Login")] // Route to the Login endpoint
         [AllowAnonymous] // Allow unauthenticated access to the endpoint
         public async Task<ActionResult> Login(LoginDto request)
         {
-            Console.WriteLine("Login request received");
             // Check if the username or email is provided in the request
             if (string.IsNullOrEmpty(request.Username))
             {
-                return BadRequest("Username or Email is required."); // 400
+                throw new ServerValidationException("Username or Email is required."); // 400
             }
 
             // Check if the password is provided in the request
             if (string.IsNullOrEmpty(request.Password))
             {
-                return BadRequest("Password is required."); // 400
+                throw new ServerValidationException("Password is required."); // 400
             }
 
             // Trim any leading or trailing whitespace from the username
@@ -335,13 +252,13 @@ namespace mgms_backend.Controllers
             // Check if the user exists in the database
             if (user == null)
             {
-                return NotFound("User not found."); // 404
+                throw new EntityNotFoundException("User not found."); // 404
             }
 
             // Verify the password using BCrypt.Net library
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
             {
-                return Unauthorized("Invalid password."); // 401
+                throw new UnauthorizedAccessException("Invalid password."); // 401
             }
 
             // Create a JWT token with the user data and return it
@@ -355,69 +272,78 @@ namespace mgms_backend.Controllers
             });
         }
 
-        // POST: api/auth/AddUser 
+        // POST: api/auth/AddUser: Add a new user
         [HttpPost("AddUser")]
         [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<User>> AddUser(RegisterDto request)
         {
-            try
+            // Trim the username and email to remove leading and trailing whitespace
+            var cleanedUsername = request.Username?.Trim();
+            var cleanedEmail = request.Email?.Trim();
+
+            // Check if the cleaned username or email contains spaces
+            if (cleanedUsername?.Contains(" ") == true || cleanedEmail?.Contains(" ") == true)
             {
-                // Trim the username and email to remove leading and trailing whitespace
-                var cleanedUsername = request.Username?.Trim();
-                var cleanedEmail = request.Email?.Trim();
-
-                // Check if the cleaned username or email contains spaces
-                if (cleanedUsername?.Contains(" ") == true || cleanedEmail?.Contains(" ") == true)
-                {
-                    return StatusCode(422, "Username or Email should not contain spaces.");
-                }
-
-                // Check if the user with the given username/email/phone already exists in the database
-                var userExists = await _userRepository.UserExistsAsync(
-                    cleanedUsername, cleanedEmail, request.Phone);
-
-                if (userExists)
-                {
-                    return Conflict("A user with the given username, email, or phone already exists."); // 409
-                }
-
-                // Convert the role to lowercase to make the role check case-insensitive
-                string role = string.IsNullOrWhiteSpace(request.Role) ? "user" : request.Role.ToUpper();
-
-                // Ensure the role is either "User" or "Admin"
-                if (role != "USER" && role != "ADMIN")
-                {
-                    role = "USER"; // Set the default role to "User" if an invalid role is provided
-                }
-
-                // Hash the password using BCrypt.Net library 
-                string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-                // Create a new user object and set the user data from the request
-                var newUser = new User
-                {
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    Username = cleanedUsername,
-                    Email = cleanedEmail,
-                    Password = passwordHash,
-                    Phone = request.Phone,
-                    Role = role, // Set the role of the user (USER or ADMIN)
-                    DateCreated = DateTime.UtcNow // Set the current date and time
-                };
-
-                // Add the new user to the Users table in the database
-                await _userRepository.AddUserAsync(newUser);
-                await _userRepository.SaveChangesAsync();
-
-                return Ok(new { message = "User added successfully!", user = newUser });
+                throw new ServerValidationException("Username or Email should not contain spaces.");
             }
-            catch (Exception ex)
+
+            // Check if the user with the given username/email/phone already exists in the database
+            var userExists = await _userRepository.UserExistsAsync(
+                cleanedUsername, cleanedEmail, request.Phone);
+
+            // Check if the user already exists
+            if (userExists)
             {
-                // Handle any errors
-                Console.WriteLine(ex.ToString());
-                return StatusCode(500, "An error occurred while processing your request.");
+                throw new ServerValidationException("A user with the given username, email, or phone already exists."); // 409
             }
+
+            // Convert the role to lowercase to make the role check case-insensitive
+            string role = string.IsNullOrWhiteSpace(request.Role) ? "user" : request.Role.ToUpper();
+
+            // Ensure the role is either "User" or "Admin"
+            if (role != "USER" && role != "ADMIN")
+            {
+                role = "USER"; // Set the default role to "User" if an invalid role is provided
+            }
+
+            // Hash the password using BCrypt.Net library 
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+            // Create a new user object and set the user data from the request
+            var newUser = new User
+            {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Username = cleanedUsername,
+                Email = cleanedEmail,
+                Password = passwordHash,
+                Phone = request.Phone,
+                Role = role, // Set the role of the user (USER or ADMIN)
+                DateCreated = DateTime.UtcNow // Set the current date and time
+            };
+
+            // Add the new user to the Users table in the database
+            await _userRepository.AddUserAsync(newUser);
+            await _userRepository.SaveChangesAsync();
+
+            return Ok(new { message = "User added successfully!", user = newUser });
+        }
+
+        // POST: api/SearchPaginated: Search users paginated
+        [HttpPost("SearchPaginated")]
+        [Authorize]
+        public async Task<IActionResult> SearchPaginated([FromQuery] int pageNumber, [FromQuery] int pageSize,
+            [FromBody] UserSearchCriteriaDto? searchCriteria = null)
+        {
+            var searchCriteriaModel = _userMapper.ToSearchCriteriaModel(searchCriteria); // Convert DTO to model
+            var fetchedResults = await _userRepository.SearchAsync(searchCriteriaModel); // Search users based on criteria
+            var totalRecords = fetchedResults.Count(); // Get the total number of records
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize); // Calculate the total number of pages
+            var paginatedData = fetchedResults.Skip((pageNumber - 1) * pageSize) // Skip records based on pageNumber
+                .Take(pageSize)
+                .ToList();
+
+            return Ok(new { TotalPages = totalPages, Data = _userMapper.ToCollectionDto(paginatedData) });
         }
 
         // PUT: api/auth/Update
@@ -431,101 +357,77 @@ namespace mgms_backend.Controllers
             // Check if the user exists
             if (user == null)
             {
-                return NotFound("User not found.");
+                throw new EntityNotFoundException("User not found.");
             }
 
             // This check ensures that only admins can change roles, or users can update their own data without changing roles
             if (!User.IsInRole("ADMIN") && request.Role != user.Role)
             {
-                return StatusCode(403, "Only admins can change roles!"); // 403
+                throw new UnauthorizedAccessException("Only admins can change roles!");
             }
 
-            // Check if the username/email/phone is being updated to a value that already exists for another user
-            var userExists = await _userRepository.UserExistsAsync(
-                               request.Username, request.Email, request.Phone, user.UserId);
-
-            if (userExists)
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
             {
-                return Conflict("A user with the given username, email, or phone already exists.");
-            }
-
-            // Check if the information is unchanged (including Role)
-            if (request.FirstName == user.FirstName &&
-                request.LastName == user.LastName &&
-                request.Username == user.Username &&
-                request.Email == user.Email &&
-                BCrypt.Net.BCrypt.Verify(request.Password, user.Password) &&
-                request.Phone == user.Phone &&
-                request.Role == user.Role)
-            {
-                return StatusCode(304, "No new information was provided for the update!");
+                throw new ServerValidationException("Password is invalid! Cannot save changes!");
             }
 
             // Update the user data with the new values from the request
             user.FirstName = request.FirstName;
             user.LastName = request.LastName;
-            user.Username = request.Username;
             user.Email = request.Email;
-            user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
             user.Phone = request.Phone;
             user.Role = request.Role;
 
             // Save the changes to the database
             await _userRepository.UpdateUserAsync(user);
 
-            return Ok(new { message = "User updated successfully!", user }); // Return the updated user object as a response 
+            return Ok(new { message = "User updated successfully!", success = true });
         }
 
-        // PUT: api/auth/UpdateUserProfile
+        // PUT: api/auth/UpdateUserProfile: Update user profile
         [HttpPut("UpdateUserProfile")] // Route to the UpdateUserProfile endpoint
         [Authorize]
         public async Task<IActionResult> UpdateUserProfile([FromBody] ProfileDto profileDto)
         {
-            try
+            // Check if the profileDto object is null
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userIdClaim))
-                {
-                    return BadRequest("User ID claim not found.");
-                }
-
-                var userId = int.Parse(userIdClaim);
-
-                var profile = await _profileRepository.GetProfileByUserIdAsync(userId);
-
-                if (profile == null)
-                {
-                    return NotFound("Profile not found.");
-                }
-
-                profile.UserId = userId;
-                profile.Address = profileDto.Address;
-                profile.City = profileDto.City;
-                profile.State = profileDto.State;
-                profile.ZipCode = profileDto.ZipCode;
-                profile.Country = profileDto.Country;
-                profile.ProfilePictureUrl = profileDto.ProfilePictureUrl;
-
-                await _profileRepository.UpdateProfileAsync(profile);
-
-                return Ok(new { message = "Profile updated successfully!", profile });
+                throw new ServerValidationException("User ID claim not found.");
             }
-            catch (FormatException)
+
+            var userId = int.Parse(userIdClaim);
+            var profile = await _profileRepository.GetProfileByUserIdAsync(userId);
+
+            // Check if the profile exists
+            if (profile == null)
             {
-                return BadRequest("Invalid user ID format.");
+                throw new EntityNotFoundException("Profile not found.");
             }
+
+            // Update the profile data with the new values from the request
+            profile.UserId = userId;
+            profile.Address = profileDto.Address;
+            profile.City = profileDto.City;
+            profile.State = profileDto.State;
+            profile.ZipCode = profileDto.ZipCode;
+            profile.Country = profileDto.Country;
+            profile.ProfilePictureUrl = profileDto.ProfilePictureUrl;
+
+            await _profileRepository.UpdateProfileAsync(profile);
+
+            return Ok(new { message = "Profile updated successfully!", profile });
         }
 
-        // PUT: api/auth/UpdateRole
+        // PUT: api/auth/UpdateRole: Update user role
         [HttpPut("UpdateRole")] // Route to the UpdateRole endpoint
         [Authorize(Roles = "ADMIN")] // Allow only Admin role to access the endpoint
         public async Task<IActionResult> UpdateRole([FromBody] UserRoleDto userRoleDto)
         {
-
             // Check if the userRoleDto object is null or the role is empty
             if (userRoleDto == null || string.IsNullOrEmpty(userRoleDto.Role))
             {
-                return BadRequest("Invalid role data");
+                throw new ServerValidationException("Invalid role data");
             }
 
             // Find the user with the given id in the database
@@ -536,7 +438,7 @@ namespace mgms_backend.Controllers
             var user = await _userRepository.GetUserByIdAsync(userId);
             if (user == null)
             {
-                return NotFound("User not found.");
+                throw new EntityNotFoundException("User not found.");
             }
 
             // Convert the role to uppercase to make the role check case-insensitive
@@ -545,13 +447,13 @@ namespace mgms_backend.Controllers
             // Ensure the role is either "USER" or "ADMIN"
             if (role != "USER" && role != "ADMIN")
             {
-                return BadRequest("Invalid role. Role must be either 'USER' or 'ADMIN'.");
+                throw new ServerValidationException("Invalid role. Role must be either 'USER' or 'ADMIN'.");
             }
 
             // Check if the user is already assigned the same role
             if (user.Role == role)
             {
-                return StatusCode(304, "User is already assigned the same role.");
+                throw new ServerValidationException("User is already assigned the same role.");
             }
 
             // Update the role of the user
@@ -560,10 +462,11 @@ namespace mgms_backend.Controllers
             // Save the changes to the database
             await _userRepository.UpdateUserAsync(user);
 
-            return Ok(new { message = "User role updated successfully!", user }); // Return the updated user object as a response
+            return Ok(new
+            { message = "User role updated successfully!", user }); // Return the updated user object as a response
         }
 
-        // DELETE: api/auth/Delete
+        // DELETE: api/auth/Delete: Delete user
         [HttpDelete("Delete")] // Route to the Delete endpoint
         [Authorize(Roles = "ADMIN")] // Allow only Admin role to access the endpoint
         public async Task<ActionResult<User>> DeleteUser(int UserId)
@@ -574,7 +477,7 @@ namespace mgms_backend.Controllers
             // Check if the user exists
             if (user == null)
             {
-                return NotFound("User not found.");
+                throw new EntityNotFoundException("User not found.");
             }
 
             // Remove the user from the Users table in the database

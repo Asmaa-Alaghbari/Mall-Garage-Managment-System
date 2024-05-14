@@ -1,8 +1,10 @@
-﻿using mgms_backend.DTO;
-using mgms_backend.Models;
-using mgms_backend.Repositories;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using mgms_backend.Helpers;
+using mgms_backend.Mappers.Interface;
+using mgms_backend.Repositories.Interface;
+using mgms_backend.Exceptions;
+using mgms_backend.DTO.ReservationDTO;
 
 namespace mgms_backend.Controllers
 {
@@ -11,22 +13,27 @@ namespace mgms_backend.Controllers
     [Authorize]
     public class ReservationsController : ControllerBase
     {
+        private readonly IParkingSpotRepository _parkingSpotRepository;
         private readonly IReservationRepository _reservationRepository;
         private readonly IUserRepository _userRepository;
-        private readonly IParkingSpotRepository _parkingSpotRepository;
+        private readonly IReservationMapper _reservationMapper;
+        private readonly IUserHelper _userHelper;
 
         public ReservationsController(
+            IParkingSpotRepository parkingSpotRepository,
             IReservationRepository reservationRepository,
             IUserRepository userRepository,
-            IParkingSpotRepository parkingSpotRepository
-            )
+            IReservationMapper reservationMapper,
+            IUserHelper userHelper)
         {
+            _parkingSpotRepository = parkingSpotRepository;
             _reservationRepository = reservationRepository;
             _userRepository = userRepository;
-            _parkingSpotRepository = parkingSpotRepository;
+            _reservationMapper = reservationMapper;
+            _userHelper = userHelper;
         }
 
-        // GET: api/GetAllReservations
+        // GET: api/GetAllReservations: Get all reservations
         [HttpGet("GetAllReservations")]
         [Authorize]
         public async Task<ActionResult> GetAllReservations()
@@ -35,40 +42,39 @@ namespace mgms_backend.Controllers
             return Ok(reservations);
         }
 
-        // GET: api/GetReservationById
+        // GET: api/GetReservationById: Get reservation by ID
         [HttpGet("GetReservationById")]
         [Authorize]
         public async Task<ActionResult> GetReservationById(int reservationId)
         {
             var reservation = await _reservationRepository.GetReservationByIdAsync(reservationId);
 
-            // If the reservation is not found, return a 404 Not Found
+            // Check if the reservation exists
             if (reservation == null)
             {
-                return NotFound("Reservation not found!");
+                throw new EntityNotFoundException("Reservation not found!");
             }
             return Ok(reservation);
         }
 
-        // GET: api/GetReservationsByParkingSpotId
+        // GET: api/GetReservationsByParkingSpotId: Get reservations by parking spot ID
         [HttpGet("GetReservationsByParkingSpotId")]
         [Authorize]
         public async Task<ActionResult> GetReservationsByParkingSpotId(int parkingSpotId)
         {
-
             // Check if the parking spot exists
             var parkingSpot = await _parkingSpotRepository.GetParkingSpotByIdAsync(parkingSpotId);
             if (parkingSpot == null)
             {
-                return NotFound($"No parking spot found with ID {parkingSpotId}.");
+                throw new EntityNotFoundException($"No parking spot found with ID {parkingSpotId}.");
             }
 
             var reservations = await _reservationRepository.GetReservationsByParkingSpotIdAsync(parkingSpotId);
-            var reservationDTOs = reservations.Select(r => new ReservationDTO
+            var reservationDTOs = reservations.Select(r => new ReservationDto
             {
                 ReservationId = r.ReservationId,
                 UserId = r.UserId,
-                ParkingSpotId = r.ParkingSpotId,
+                ParkingSpotNumber = r.ParkingSpot.Number,
                 StartTime = r.StartTime,
                 EndTime = r.EndTime,
                 Status = r.Status
@@ -77,61 +83,73 @@ namespace mgms_backend.Controllers
             // If no reservations are found, return a 404 Not Found
             if (reservations == null || !reservations.Any())
             {
-                return NotFound("No reservations found for the specified parking spot ID.");
+                throw new EntityNotFoundException("No reservations found for the specified parking spot ID.");
             }
 
             return Ok(reservationDTOs);
         }
 
-        // POST: api/AddReservation
+        // GET: api/GetReservationByUserId: Get reservation by user ID
+        [HttpGet("GetReservationsByUserId")]
+        [Authorize]
+        public async Task<ActionResult> GetReservationsByUserId([FromQuery] int userId)
+        {
+            var user = await _userRepository.GetUserByIdAsync(userId);
+
+            if (ReferenceEquals(null, user))
+            {
+                throw new EntityNotFoundException($"Parking spots: User with id {userId} was not found!");
+            }
+
+            var reservations = await _reservationRepository.GetReservationsByUserId(userId);
+
+            return Ok(_reservationMapper.ToCollectionDto(reservations));
+        }
+
+        // POST: api/AddReservation: Add a new reservation
         [HttpPost("AddReservation")]
         [Authorize]
-        public async Task<ActionResult> AddReservation([FromBody] ReservationDTO createReservationDto)
+        public async Task<ActionResult> AddReservation([FromBody] ReservationDto createReservationDto)
         {
             // Convert DateTime to UTC if necessary to avoid timezone issues when storing in the database
             createReservationDto.StartTime = createReservationDto.StartTime.ToUniversalTime();
             createReservationDto.EndTime = createReservationDto.EndTime.ToUniversalTime();
 
             // Check if UserId and ParkingSpotId are provided and valid
-            if (createReservationDto.UserId <= 0 || createReservationDto.ParkingSpotId <= 0)
+            if (createReservationDto.UserId <= 0 || createReservationDto.ParkingSpotNumber <= 0)
             {
-                return StatusCode(422, "UserId and ParkingSpotId must be provided!");
+                throw new ServerValidationException("UserId and ParkingSpotNumber must be provided!");
             }
 
             // Check for the existence of the user
             var user = await _userRepository.GetUserByIdAsync(createReservationDto.UserId);
             if (user == null)
             {
-                return NotFound($"User with ID {createReservationDto.UserId} not found.");
+                throw new EntityNotFoundException($"User with ID {createReservationDto.UserId} not found.");
             }
 
             // Check for the existence of the parking spot
-            var parkingSpot = await _parkingSpotRepository.GetParkingSpotByIdAsync(createReservationDto.ParkingSpotId);
+            var parkingSpot =
+                await _parkingSpotRepository.GetParkingSpotByNumberAsync(createReservationDto.ParkingSpotNumber);
             if (parkingSpot == null)
             {
-                return NotFound($"Parking spot with ID {createReservationDto.ParkingSpotId} not found!");
+                throw new EntityNotFoundException($"Parking spot with number {createReservationDto.ParkingSpotNumber} not found!");
             }
 
-            var newReservation = new Reservation
-            {
-                UserId = createReservationDto.UserId,
-                ParkingSpotId = createReservationDto.ParkingSpotId,
-                StartTime = createReservationDto.StartTime,
-                EndTime = createReservationDto.EndTime,
-                Status = createReservationDto.Status
-            };
+            var newReservation = _reservationMapper.MapToModel(createReservationDto);
+            newReservation.ParkingSpotId = parkingSpot.ParkingSpotId;
 
             // Check if the reservation is valid (e.g. start time is before end time) before adding it
             if (newReservation.StartTime >= newReservation.EndTime)
             {
-                return StatusCode(422, "Start time must be before end time");
+                throw new ServerValidationException("Start time must be before end time");
             }
 
             // Check if the parking spot is available for the given time range before adding the reservation
-            bool isSpotAvailable = await _reservationRepository.IsParkingSpotAvailableAsync(newReservation.ParkingSpotId, newReservation.StartTime, newReservation.EndTime);
+            bool isSpotAvailable = await _reservationRepository.IsParkingSpotAvailableAsync(newReservation.ParkingSpotId, 0, newReservation.StartTime, newReservation.EndTime);
             if (!isSpotAvailable)
             {
-                return Conflict("Parking spot is not available for the given time range.");
+                throw new ServerValidationException("Parking spot is not available for the given time range.");
             }
 
             await _reservationRepository.AddReservationAsync(newReservation);
@@ -140,10 +158,29 @@ namespace mgms_backend.Controllers
             return Ok(new { message = "Reservation added successfully!" });
         }
 
-        // PUT: api/UpdateReservation
+        // POST: api/SearchPaginated: Search for reservations with pagination
+        [HttpPost("SearchPaginated")]
+        [Authorize]
+        public async Task<IActionResult> SearchPaginated([FromQuery] int pageNumber, [FromQuery] int pageSize,
+            [FromBody] ReservationSearchCriteriaDto? searchCriteria = null)
+        {
+            var searchCriteriaModel = _reservationMapper.ToSearchCriteriaModel(searchCriteria);
+            searchCriteriaModel.UserId = await _userHelper.GetUserIdForSearchCriteria(User.Identity);
+
+            var fetchedResults = await _reservationRepository.SearchAsync(searchCriteriaModel);
+            var totalRecords = fetchedResults.Count();
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+            var paginatedData = fetchedResults.Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return Ok(new { TotalPages = totalPages, Data = _reservationMapper.MapToCollectionDto(paginatedData) });
+        }
+
+        // PUT: api/UpdateReservation: Update an existing reservation
         [HttpPut("UpdateReservation")]
         [Authorize]
-        public async Task<IActionResult> UpdateReservation(int reservationId, [FromBody] ReservationDTO updateReservationDto)
+        public async Task<IActionResult> UpdateReservation(int reservationId, [FromBody] ReservationDto updateReservationDto)
         {
             // Convert DateTime to UTC if necessary to avoid timezone issues when storing in the database
             updateReservationDto.StartTime = updateReservationDto.StartTime.ToUniversalTime();
@@ -152,19 +189,19 @@ namespace mgms_backend.Controllers
             var reservation = await _reservationRepository.GetReservationByIdAsync(reservationId);
             if (reservation == null)
             {
-                return NotFound("Reservation not found!");
+                throw new EntityNotFoundException("Reservation not found!");
             }
 
             // Check if the reservation is valid (e.g. start time is before end time) before updating it
             if (updateReservationDto.StartTime >= updateReservationDto.EndTime)
             {
-                return StatusCode(422, "Start time must be before end time");
+                throw new ServerValidationException("Start time must be before end time");
             }
 
             // Check if the start time and end time are in the future
             if (updateReservationDto.StartTime < DateTime.UtcNow || updateReservationDto.EndTime < DateTime.UtcNow)
             {
-                return StatusCode(422, "Start time and End time must be in the future");
+                throw new ServerValidationException("Start time and End time must be in the future");
             }
 
             // Check if StartTime, EndTime, or Status has changed
@@ -173,7 +210,6 @@ namespace mgms_backend.Controllers
 
             // Check if the status has changed
             bool statusChanged = reservation.Status != updateReservationDto.Status;
-
 
             // If time is not changed, set it back to the original values
             if (!datesChanged)
@@ -186,32 +222,41 @@ namespace mgms_backend.Controllers
             {
                 // Check if the parking spot is available for the given time range
                 bool isSpotAvailable = await _reservationRepository.IsParkingSpotAvailableAsync(
-                    reservation.ParkingSpotId, updateReservationDto.StartTime, updateReservationDto.EndTime);
+                    reservation.ParkingSpotId, reservation.ReservationId, updateReservationDto.StartTime, updateReservationDto.EndTime);
 
                 if (!isSpotAvailable)
                 {
-                    return Conflict("Parking spot is not available for the given time range.");
+                    throw new ServerValidationException("Parking spot is not available for the given time range.");
                 }
             }
 
+            var parkingSpot =
+                await _parkingSpotRepository.GetParkingSpotByNumberAsync(updateReservationDto.ParkingSpotNumber);
+
+            if (ReferenceEquals(null, parkingSpot))
+            {
+                throw new ServerValidationException(
+                    $"Parking spot with number {updateReservationDto.ParkingSpotNumber} was not found!");
+            }
+
             // Update the reservation with the new values
-            reservation.ParkingSpotId = updateReservationDto.ParkingSpotId;
+            reservation.ParkingSpotId = parkingSpot.ParkingSpotId;
             reservation.StartTime = updateReservationDto.StartTime;
             reservation.EndTime = updateReservationDto.EndTime;
             reservation.Status = updateReservationDto.Status;
 
             await _reservationRepository.UpdateReservationAsync(reservation);
-            return Ok(new { message = "Reservation updated successfully!", reservation });
+            return Ok(new { message = "Reservation updated successfully!" });
         }
 
-        // DELETE: api/DeleteReservation
+        // DELETE: api/DeleteReservation: Delete a reservation
         [HttpDelete("DeleteReservation")]
-        public async Task<IActionResult> DeleteReservation(int reservationId)
+        public async Task<IActionResult> DeleteReservation([FromQuery] int reservationId)
         {
             var reservation = await _reservationRepository.GetReservationByIdAsync(reservationId);
             if (reservation == null)
             {
-                return NotFound("Reservation not found!");
+                throw new EntityNotFoundException("Reservation not found!");
             }
 
             // Delete the reservation from the database
