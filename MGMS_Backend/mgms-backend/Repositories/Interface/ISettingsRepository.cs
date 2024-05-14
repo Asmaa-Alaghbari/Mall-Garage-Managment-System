@@ -1,6 +1,6 @@
-﻿using mgms_backend.Models;
+﻿using mgms_backend.Entities;
 
-namespace mgms_backend.Repositories
+namespace mgms_backend.Repositories.Interface
 {
     public interface ISettingsRepository
     {

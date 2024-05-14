@@ -1,8 +1,9 @@
 ﻿using mgms_backend.Data;
-using mgms_backend.Models;
+using mgms_backend.Entities.Users;
+using mgms_backend.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace mgms_backend.Repositories
+namespace mgms_backend.Repositories.Implementation
 {
     public class ProfileRepository : IProfileRepository
     {
@@ -19,6 +20,12 @@ namespace mgms_backend.Repositories
             return await _context.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
         }
 
+        // Add a new profile to the database
+        public async Task AddProfileAsync(Profile newProfile)
+        {
+            await _context.Profiles.AddAsync(newProfile);
+        }
+
         // Update the profile of a user
         public async Task UpdateProfileAsync(Profile profile)
         {
@@ -30,12 +37,6 @@ namespace mgms_backend.Repositories
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
-        }
-
-        // Add a new profile to the database
-        public async Task AddProfileAsync(Profile newProfile)
-        {
-            await _context.Profiles.AddAsync(newProfile);
         }
     }
 }
