@@ -1,20 +1,19 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using mgms_backend.Entities.Users;
 
-namespace mgms_backend.Models
+namespace mgms_backend.Entities.Notifications
 {
     // Represent the notification entity in the database
     public class Notification
     {
         [Key] // Data annotation for the primary key
         public int NotificationId { get; set; }
-        [ForeignKey("User")] // Data annotation for the foreign key
         public int UserId { get; set; }
         public string Message { get; set; }
         public DateTime DateTime { get; set; }
         public bool IsRead { get; set; }
 
         // Navigation properties for related entities
-        public User User { get; set; }
+        public virtual User Users{ get; set; }
     }
 }

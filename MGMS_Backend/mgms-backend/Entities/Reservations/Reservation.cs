@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using mgms_backend.Entities.ParkingSpots;
+using mgms_backend.Entities.Payments;
+using mgms_backend.Entities.Users;
 
-namespace mgms_backend.Models
+namespace mgms_backend.Entities.Reservations
 {
     // Represent the reservation entity in the database
     public class Reservation
@@ -17,11 +20,9 @@ namespace mgms_backend.Models
         public string Status { get; set; }
 
         // Navigation properties for related entities 
-        public User User { get; set; }
-        public ParkingSpot ParkingSpot { get; set; }
-        public ICollection<Service> Services { get; set; }
-        public ICollection<ReservationService> ReservationServices { get; set; }
-        public ICollection<Payment> Payments { get; set; }
-
+        public virtual User User { get; set; }
+        public virtual ParkingSpot ParkingSpot { get; set; }
+        public virtual ICollection<ReservationService> Services { get; set; }
+        public virtual ICollection<Payment> Payments { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace mgms_backend.Models
+namespace mgms_backend.Entities.Users
 {
     // Represent the user entity in the database
     public class User
@@ -21,13 +21,5 @@ namespace mgms_backend.Models
         public string Phone { get; set; } = default!; // Phone number
         public string Role { get; set; } // Role of the user (Admin, User) 
         public DateTime DateCreated { get; set; } // Date the user account was created
-
-        // Navigation properties for related entities
-        public Profile Profile { get; set; }
-        public Settings Settings { get; set; }
-        public ICollection<Reservation> Reservations { get; set; }
-        public ICollection<Notification> Notifications { get; set; }
-        public ICollection<Feedback> Feedbacks { get; set; }
-        public ICollection<Payment> Payments { get; set; }
     }
 }

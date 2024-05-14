@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using mgms_backend.Entities.Users;
 
-namespace mgms_backend.Models
+namespace mgms_backend.Entities
 {
     public class Settings
     {
@@ -12,8 +13,7 @@ namespace mgms_backend.Models
         public bool ReceiveNotifications { get; set; } // Whether the user wants to receive notifications
         public bool DarkMode { get; set; } // Whether the user wants to use dark mode
 
-
         // Navigation property to User
-        public User User { get; set; }
+        public virtual User User { get; set; }
     }
 }

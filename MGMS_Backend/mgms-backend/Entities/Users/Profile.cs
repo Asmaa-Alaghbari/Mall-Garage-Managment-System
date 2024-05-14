@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace mgms_backend.Models
+namespace mgms_backend.Entities.Users
 {
     // Represent the profile entity in the database
     public class Profile
@@ -18,6 +18,6 @@ namespace mgms_backend.Models
         public string? ProfilePictureUrl { get; set; }
 
         // Navigation properties for related entities
-        public User User { get; set; }
+        public virtual User User { get; set; }
     }
 }

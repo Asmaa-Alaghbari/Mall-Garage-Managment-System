@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using mgms_backend.Entities.Reservations;
+using mgms_backend.Entities.Users;
 
-namespace mgms_backend.Models
+namespace mgms_backend.Entities.Payments
 {
     // Represent the payment entity in the database
     public class Payment
@@ -12,7 +14,7 @@ namespace mgms_backend.Models
         public int ReservationId { get; set; }
         [ForeignKey("User")] // Data annotation for the foreign key
         public int UserId { get; set; }
-        [Required] 
+        [Required]
         [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero!")]
         public decimal Amount { get; set; }
         [MaxLength(50)] // Data annotation for the maximum length of the string
@@ -21,7 +23,7 @@ namespace mgms_backend.Models
         public DateTime DateTime { get; set; }
 
         // Navigation properties for related entities
-        public Reservation Reservation { get; set; }
-        public User User { get; set; }
+        public virtual Reservation Reservation { get; set; }
+        public virtual User User { get; set; }
     }
 }
