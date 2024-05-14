@@ -4,7 +4,13 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using mgms_backend.Data;
+using mgms_backend.Mappers.Implementation;
+using mgms_backend.Mappers.Interface;
 using mgms_backend.Repositories;
+using mgms_backend.Repositories.Implementation;
+using mgms_backend.Repositories.Interface;
+using mgms_backend.Exceptions;
+using mgms_backend.Helpers;
 
 namespace mgms_backend
 {
@@ -14,20 +20,33 @@ namespace mgms_backend
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
             // Add DbContext and configure it to use PostgreSQL
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            // Add HttpContextAccessor
+            builder.Services.AddHttpContextAccessor();
+
             // Register the repository service 
-            builder.Services.AddScoped<IUserRepository, UserRepository>(); // User repository 
-            builder.Services.AddScoped<IParkingSpotRepository, ParkingSpotRepository>(); // Parking spot repository
-            builder.Services.AddScoped<IReservationRepository, ReservationRepository>(); // Reservation repository
-            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>(); // Payment repository
             builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>(); // Feedback repository
-            builder.Services.AddScoped<ISettingsRepository, SettingsRepository>(); // Settings repository
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>(); // Notification repository
+            builder.Services.AddScoped<IParkingSpotRepository, ParkingSpotRepository>(); // Parking spot repository
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>(); // Payment repository
             builder.Services.AddScoped<IProfileRepository, ProfileRepository>(); // Profile repository
+            builder.Services.AddScoped<IReservationRepository, ReservationRepository>(); // Reservation repository
+            builder.Services.AddScoped<IServiceRepository, ServiceRepository>(); // Service repository
+            builder.Services.AddScoped<ISettingsRepository, SettingsRepository>(); // Settings repository
+            builder.Services.AddScoped<IUserRepository, UserRepository>(); // User repository 
+
+            // Register the mapper service
+            builder.Services.AddScoped<IFeedbackMapper, FeedbackMapper>(); // Feedback mapper
+            builder.Services.AddScoped<INotificationMapper, NotificationMapper>(); // Notification mapper
+            builder.Services.AddScoped<IParkingSpotMapper, ParkingSpotMapper>(); // Parking spot mapper
+            builder.Services.AddScoped<IPaymentMapper, PaymentMapper>(); // Payment mapper
+            builder.Services.AddScoped<IReservationMapper, ReservationMapper>(); // Reservation mapper
+            builder.Services.AddScoped<IServiceCollection, ServiceCollection>(); // Service collection mapper
+            builder.Services.AddScoped<IUserMapper, UserMapper>(); // User mapper
+            builder.Services.AddScoped<IUserHelper, UserHelper>(); // User helper
 
             // Add CORS (Cross-Origin Resource Sharing) policy to allow requests from the front-end application 
             builder.Services.AddCors(options =>
@@ -41,7 +60,12 @@ namespace mgms_backend
                     });
             });
 
-            builder.Services.AddControllers();
+            // Add controllers and configure JSON serialization options
+            builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = null; // Disable reference tracking
+            });
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -104,6 +128,7 @@ namespace mgms_backend
 
             app.UseAuthentication(); // Enable authentication
             app.UseAuthorization();
+            app.UseMiddleware<ExceptionMiddleware>(); // Custom exception middleware
 
             app.MapControllers();
 
