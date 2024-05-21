@@ -103,7 +103,7 @@ namespace mgms_backend.Controllers
             }
 
             var totalFeedbacks = feedbacks.Count();
-            var totalPositiveFeedbacks = feedbacks.Count(f => f.Rating >= 2);
+            var totalPositiveFeedbacks = feedbacks.Count(f => f.Rating >= 3);
             var totalNegativeFeedbacks = feedbacks.Count(f => f.Rating < 2);
             var totalAnonymousFeedbacks = feedbacks.Count(f => f.IsAnonymous);
             var averageRating = feedbacks.Average(f => f.Rating);
@@ -155,7 +155,8 @@ namespace mgms_backend.Controllers
         // POST: api/SearchPaginated: Search feedbacks with pagination
         [HttpPost("SearchPaginated")]
         [Authorize]
-        public async Task<IActionResult> SearchPaginated([FromQuery] int pageNumber, [FromQuery] int pageSize, [FromBody] FeedbackSearchCriteriaDto? searchCriteria = null)
+        public async Task<IActionResult> SearchPaginated([FromQuery] int pageNumber,
+            [FromQuery] int pageSize, [FromBody] FeedbackSearchCriteriaDto? searchCriteria = null)
         {
             var searchCriteriaModel = _feedbackMapper.ToSearchCriteriaModel(searchCriteria);
             var fetchedResults = await _feedbackRepository.SearchAsync(searchCriteriaModel);

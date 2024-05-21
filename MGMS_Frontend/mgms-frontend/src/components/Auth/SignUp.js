@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { sendFetchRequest } from "../Utils/Utils";
 import "./AuthForms.css";
 
-// Handle user registration
+// Handle user registration and sign up
 export default function SignUp() {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -11,11 +12,10 @@ export default function SignUp() {
     email: "",
     password: "",
     phone: "",
-    Role: "USER",
+    Role: "USER", // Default role set to User
   });
 
   const [, setIsLoading] = useState(false); // Loading state for form submission requests
-  const [error, setError] = useState(""); // Error state for form submission errors
   const [success, setSuccess] = useState(false); // Success state for successful form submissions
   const navigate = useNavigate(); // Redirect the user to the login page after successful registration
 
@@ -27,8 +27,6 @@ export default function SignUp() {
   // Handle form submission (POST request) to the API server (backend)
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission behavior
-    setIsLoading(true); // Start loading
-    setError(""); // Reset previous errors
     setSuccess(false); // Reset previous success state
 
     // Update the requestData to match the updated backend requirements
@@ -39,53 +37,27 @@ export default function SignUp() {
       Email: formData.email,
       Password: formData.password,
       Phone: formData.phone,
-      Role: "User", // By default
+      Role: "USER", // By default
     };
 
-    const requestOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestData),
-      credentials: "include", // Include cookies in the requests
-    };
+    // Send the POST request to the backend
+    const response = await sendFetchRequest(
+      "auth/Register",
+      "POST",
+      setIsLoading,
+      undefined,
+      undefined,
+      requestData,
+      true
+    );
 
-    try {
-      // Make a POST request to the API server (backend)
-      const apiURL = "http://localhost:5296/api/auth/Register"; // API URL for user registration
-      const response = await fetch(apiURL, requestOptions);
+    // Handle the response from the backend
+    if (response && response.message) {
+      setSuccess(true);
 
-      if (!response.ok) {
-        const errorData = await response.text(); // Use .text() first
-        try {
-          const jsonError = JSON.parse(errorData); // Try to parse JSON
-
-          // Check for specific error message when user already exists
-          if (
-            jsonError.message ===
-            "A user with the given username, email, or phone already exists."
-          ) {
-            setError(
-              "User already exists. Please try with a different username, email, or phone."
-            );
-          } else {
-            setError(jsonError.message || "Registration failed!");
-          }
-        } catch {
-          setError("An unexpected error occurred.");
-        }
-      } else {
-        setSuccess(true);
-        setError(""); // Clear any previous errors
-
-        // Redirect to login page after a short delay to show the success message
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000); // 2 seconds delay
-
-        console.log("Registration successful!"); // Log success message
-      }
-    } catch (error) {
-      console.error("There was an error!", error);
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000); // 2 seconds delay
     }
   };
 
@@ -153,7 +125,6 @@ export default function SignUp() {
           Registration successful! Redirecting...
         </p>
       )}
-      {error && <p className="error-message">{error}</p>}
     </div>
   );
 }

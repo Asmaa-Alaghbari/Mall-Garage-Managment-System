@@ -1,197 +1,117 @@
 import React, { useState, useEffect } from "react";
-import { highlightText, paginate, pagination, calculateIndex } from "../Utils";
+import BeatLoader from "react-spinners/BeatLoader";
 import AddParkingSpot from "./AddParkingSpot";
-import "../style.css";
+import {
+  calculateIndex,
+  fetchCurrentUser,
+  highlightText,
+  notifyError,
+  notifySuccess,
+  pagination,
+  sendFetchRequest,
+} from "../Utils/Utils";
 
-export default function ParkingSpots({ userRole }) {
+export default function ParkingSpots() {
   const [parkingSpots, setParkingSpots] = useState([]); // Store parking spots from the API
-  const [showAddForm, setShowAddForm] = useState(false); // Show/hide the add form
-  const [selectedSpot, setSelectedSpot] = useState(null); // Store selected spot for updating
-  const [showUpdateForm, setShowUpdateForm] = useState(false); // Show/hide the update form
+  const [paginatedData, setPaginatedData] = useState(); // Store parking spots from the API
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState("USER");
   const [currentPage, setCurrentPage] = useState(1); // Current page for pagination
   const [itemsPerPage] = useState(5); // Number of items per page for pagination
-  const [searchTerm, setSearchTerm] = useState(""); // Search term for filtering
-  const [statusFilter, setStatusFilter] = useState("all"); // Filter by status
-  const [sizeFilter, setSizeFilter] = useState("all"); // Filter by size
-  const [sectionFilter, setSectionFilter] = useState("all"); // Filter by type
-  const [sortType, setSortType] = useState("parkingSpotId"); // Sort by parking spot ID by default
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [showUpdateForm, setShowUpdateForm] = useState(false); // Show/hide the update form
+  const [showAddForm, setShowAddForm] = useState(false); // Show/hide the add form
+  const [selectedSpot, setSelectedSpot] = useState(null); // Set selected spot
+  const [totalPages, setTotalPages] = useState(0);
+  const [searchFormData, setSearchFormData] = useState({
+    text: "",
+    status: "",
+    size: "",
+    section: "",
+    sortByProperty: "",
+  });
 
+  // Fetch parking spots and current user on component mount
   useEffect(() => {
-    if (!showAddForm && !showUpdateForm) {
+    const fetchData = () => {
       fetchParkingSpots();
+      fetchCurrentUser(undefined, setIsLoading, setError, setUserRole);
+    };
+
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchFormData, currentPage]); // Re-fetch parking spots only when the form is closed
+
+  // Update the parking spots state with the paginated data
+  useEffect(() => {
+    if (error && error != null) {
+      notifyError(error);
     }
-  }, [showAddForm, showUpdateForm]); // Re-fetch parking spots only when the form is closed
 
-  // Fetch parking spots from the server
-  const fetchParkingSpots = () => {
-    setIsLoading(true);
-    // Fetch only if no forms are displayed
-    fetch("http://localhost:5296/api/parkingspots/GetAllParkingSpots", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch parking spots");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setParkingSpots(data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching parking spots:", error);
-        setError(error.message);
-        setIsLoading(false);
-      });
-  };
+    if (paginatedData) {
+      setParkingSpots(paginatedData.data);
+      setTotalPages(paginatedData.totalPages);
+    }
+  }, [error, paginatedData]);
 
-  // Handle the success of adding a new parking spot
-  const handleAddSuccess = (newSpot) => {
-    setParkingSpots([...parkingSpots, newSpot]); // Add the new spot to the list
-    setShowAddForm(false); // Close the add form
-  };
-
-  // Handle the success of updating a parking spot
-  const handleUpdateSuccess = (updatedSpot) => {
-    const updatedSpots = parkingSpots.map((spot) =>
-      spot.parkingSpotId === updatedSpot.parkingSpotId ? updatedSpot : spot
+  // Fetch parking spots from the API
+  const fetchParkingSpots = async () => {
+    await sendFetchRequest(
+      `parkingspots/searchpaginated?pageNumber=${currentPage}&pageSize=${itemsPerPage}`,
+      "POST",
+      setIsLoading,
+      setError,
+      setPaginatedData,
+      searchFormData
     );
-    setParkingSpots(updatedSpots);
-    setShowUpdateForm(false);
   };
 
-  // Delete a parking spot by ID and update the list
-  const handleDelete = (parkingSpotId) => {
-    // Attempt to delete the parking spot from the server
-    fetch(
-      `http://localhost:5296/api/parkingspots/DeleteParkingSpot?parkingSpotId=${parkingSpotId}`,
-      {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  // Handle search input change
+  const handleSearchInputChange = async (e) => {
+    setCurrentPage(1);
+
+    setSearchFormData((prevSearchFormData) => ({
+      ...prevSearchFormData,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  // Delete a parking spot
+  const handleDelete = async (parkingSpotId) => {
+    if (window.confirm("Are you sure you want to delete this parking spot?")) {
+      const response = await sendFetchRequest(
+        `parkingspots/DeleteParkingSpot/?parkingSpotId=${parkingSpotId}`,
+        "DELETE",
+        setIsLoading,
+        setError
+      );
+
+      if (response && response.message) {
+        notifySuccess(response.message);
+        await fetchParkingSpots();
       }
-    )
-      .then((response) => {
-        if (!response.ok) {
-          // If the user is not authorized or the server responds with an error
-          if (response.status === 403) {
-            throw new Error(
-              "You do not have permission to delete parking spots."
-            );
-          }
-          return response.json().then((data) => {
-            throw new Error(data.message || "Failed to delete parking spot.");
-          });
-        }
-        return response.json(); // Might return some success message or empty
-      })
-      .then(() => {
-        // Only ask for confirmation if the user is authorized and server responded okay
-        if (
-          window.confirm("Are you sure you want to delete this parking spot?")
-        ) {
-          setParkingSpots(
-            parkingSpots.filter((spot) => spot.parkingSpotId !== parkingSpotId)
-          );
-          alert("Parking spot deleted successfully!");
-        }
-      })
-      .catch((error) => {
-        alert(error.message);
-        console.error("Delete error:", error);
-      });
+    }
   };
 
-  // Handle the change in the current page
+  // Handle add parking spot success
+  const handleAddParkingSpotSuccess = () => {
+    fetchParkingSpots();
+    setShowUpdateForm(false);
+    setShowAddForm(false);
+  };
+
+  // Handle page change
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
-
-  // Handle the change in the search input
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Handle the change in the status filter
-  const handleStatusChange = (e) => {
-    setStatusFilter(e.target.value);
-  };
-
-  // Handle the change in the size filter
-  const handleSizeChange = (e) => {
-    setSizeFilter(e.target.value);
-  };
-
-  const handleSectionChange = (e) => {
-    setSectionFilter(e.target.value);
-  };
-
-  // Filter parking spots based on search term (case-insensitive)
-  const filteredParkingSpots = parkingSpots.filter((spot) => {
-    return (
-      (spot.parkingSpotId ?? "").toString().includes(searchTerm) ||
-      spot.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      spot.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (spot.isOccupied ? "Occupied" : "Available")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      spot.size.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-
-  // Filter parking spots based on status, size, and section
-  const filteredAndSortedParkingSpots = filteredParkingSpots
-    .filter((spot) => {
-      if (statusFilter === "all") return true;
-      return spot.isOccupied === (statusFilter === "occupied");
-    })
-    .filter((spot) => {
-      if (sizeFilter === "all") return true;
-      return spot.size === sizeFilter;
-    })
-    .filter((spot) => {
-      if (sectionFilter === "all") return true;
-      return spot.section === sectionFilter;
-    });
-
-  // Sort the parking spots based on the sort type
-  let sortedParkingSpots = [...filteredAndSortedParkingSpots];
-
-  const sortFunctions = {
-    parkingSpotId: (a, b) => a.parkingSpotId - b.parkingSpotId,
-    number: (a, b) => a.number - b.number,
-    section: (a, b) => a.section.localeCompare(b.section),
-    status: (a, b) =>
-      a.isOccupied === b.isOccupied ? 0 : a.isOccupied ? -1 : 1,
-    size: (a, b) => a.size.localeCompare(b.size),
-  };
-
-  // Sort the parking spots based on the sort type
-  if (sortType && sortFunctions[sortType]) {
-    sortedParkingSpots = sortedParkingSpots.sort(sortFunctions[sortType]);
-  }
-
-  // Paginate the sorted parking spots
-  const paginatedParkingSpots = paginate(
-    sortedParkingSpots,
-    currentPage,
-    itemsPerPage
-  );
-  const totalPages = Math.ceil(filteredParkingSpots.length / itemsPerPage);
-
-  if (isLoading) return <div>Loading parking spots...</div>;
-  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="container">
       <h1>Parking Spots</h1>
 
-      {/* Add and Update forms */}
       {showAddForm && (
         <AddParkingSpot
-          onAddSuccess={handleAddSuccess}
+          onAddSuccess={() => handleAddParkingSpotSuccess()}
           onClose={() => setShowAddForm(false)}
         />
       )}
@@ -200,65 +120,76 @@ export default function ParkingSpots({ userRole }) {
       {showUpdateForm && selectedSpot && (
         <AddParkingSpot
           parkingSpotData={selectedSpot} // Pass the selected spot data
-          onAddSuccess={handleUpdateSuccess} // Use handleUpdateSuccess for updates
+          onAddSuccess={() => handleAddParkingSpotSuccess()} // Use handleUpdateSuccess for updates
           onClose={() => setShowUpdateForm(false)} // Close the form
         />
       )}
+
       {!showAddForm && !showUpdateForm && (
-        <>
-          {/* Search and Filters */}
+        <div>
           <div className="search-filter">
             <input
               type="text"
               placeholder="Search..."
-              value={searchTerm}
-              onChange={handleSearchChange}
+              value={searchFormData.text}
+              name="text"
+              onChange={handleSearchInputChange}
             />
 
             {/* Filter by status  */}
-            <select value={statusFilter} onChange={handleStatusChange}>
+            <select
+              value={searchFormData.status}
+              onChange={handleSearchInputChange}
+              name="status"
+            >
               <option value="all">All Status</option>
-              <option value="occupied">Occupied</option>
               <option value="available">Available</option>
+              <option value="occupied">Occupied</option>
             </select>
 
             {/* Filter by section */}
-            <select value={sectionFilter} onChange={handleSectionChange}>
+            <select
+              value={searchFormData.section}
+              onChange={handleSearchInputChange}
+              name="section"
+            >
               <option value="all">All Section</option>
               <option value="Compact Cars">Compact Cars</option>
-              <option value="Standard Cars">Standard Cars</option>
+              <option value="Disabled Parking">Disabled Parking</option>
               <option value="Large Vehicles">Large Vehicles</option>
               <option value="Motorcycles">Motorcycles</option>
-              <option value="Disabled Parking">Disabled Parking</option>
+              <option value="Standard Cars">Standard Cars</option>
             </select>
 
             {/* Filter by size */}
-            <select value={sizeFilter} onChange={handleSizeChange}>
+            <select
+              value={searchFormData.size}
+              onChange={handleSearchInputChange}
+              name="size"
+            >
               <option value="all">All Sizes</option>
               <option value="Small">Small</option>
               <option value="Medium">Medium</option>
               <option value="Large">Large</option>
             </select>
 
-            {/*  Sort by number, section, status, size */}
             <select
-              value={sortType}
-              onChange={(e) => setSortType(e.target.value)}
+              value={searchFormData.sortByProperty}
+              onChange={handleSearchInputChange}
+              name="sortByProperty"
             >
               <option value="">Sort by...</option>
-              <option value="number">Number</option>
-              <option value="section">Section</option>
-              <option value="status">Status</option>
-              <option value="size">Size</option>
+              <option value="Number">Number</option>
+              <option value="Section">Section</option>
+              <option value="Size">Size</option>
             </select>
           </div>
 
-          {/* Table */}
           <table className="parking-spots-table">
             <thead>
               <tr>
                 <th>No.</th>
-                <th>Spot ID</th>
+                {userRole === "ADMIN" && <th>Spot ID</th>}
                 <th>Number</th>
                 <th>Section</th>
                 <th>Status</th>
@@ -267,66 +198,109 @@ export default function ParkingSpots({ userRole }) {
               </tr>
             </thead>
             <tbody>
-              {paginatedParkingSpots.map((spot, index) => (
-                <tr key={spot.parkingSpotId}>
-                  <td>
-                    {highlightText(
-                      calculateIndex(
-                        index,
-                        currentPage,
-                        itemsPerPage
-                      ).toString(),
-                      searchTerm
-                    )}
+              {/* Display loading spinner when fetching data from the API */}
+              {isLoading && (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        display: "inline-block",
+                        marginTop: "40px",
+                      }}
+                    >
+                      <BeatLoader
+                        color="#000000"
+                        loading={isLoading}
+                        aria-label="Loading Spinner"
+                        data-testid="loader"
+                      />
+                    </div>
                   </td>
-                  <td>
-                    {highlightText(
-                      (spot.parkingSpotId ?? "").toString(),
-                      searchTerm
-                    )}
-                  </td>
-                  <td>{highlightText(spot.number ?? "", searchTerm)}</td>
-                  <td>{highlightText(spot.section ?? "", searchTerm)}</td>
-                  <td>
-                    {highlightText(
-                      spot.isOccupied ? "Occupied" : "Available",
-                      searchTerm
-                    )}
-                  </td>
-                  <td>{highlightText(spot.size ?? "", searchTerm)}</td>
-
-                  {userRole === "ADMIN" && (
-                    <td>
-                      <button
-                        onClick={() => {
-                          setSelectedSpot(spot);
-                          setShowUpdateForm(true);
-                        }}
-                        style={{ marginRight: "10px" }}
-                      >
-                        Update
-                      </button>
-                      <button onClick={() => handleDelete(spot.parkingSpotId)}>
-                        Delete
-                      </button>
-                    </td>
-                  )}
                 </tr>
-              ))}
+              )}
+
+              {/* Display parking spots */}
+              {!isLoading &&
+                parkingSpots &&
+                parkingSpots
+                  .slice()
+                  .sort((a, b) => a.number - b.number) // Sort by the "number" property
+                  .map((spot, index) => (
+                    <tr key={spot.parkingSpotId}>
+                      <td>
+                        {highlightText(
+                          calculateIndex(
+                            index,
+                            currentPage,
+                            itemsPerPage
+                          ).toString(),
+                          searchFormData.text
+                        )}
+                      </td>
+                      {userRole === "ADMIN" && (
+                        <td>
+                          {highlightText(
+                            (spot.parkingSpotId ?? "").toString(),
+                            searchFormData.text
+                          )}
+                        </td>
+                      )}
+                      <td>
+                        {highlightText(
+                          (spot.number ?? "").toString(),
+                          searchFormData.text
+                        )}
+                      </td>
+                      <td>
+                        {highlightText(spot.section ?? "", searchFormData.text)}
+                      </td>
+                      <td>
+                        {highlightText(
+                          spot.isOccupied ? "Occupied" : "Available",
+                          searchFormData.text
+                        )}
+                      </td>
+                      <td>
+                        {highlightText(spot.size ?? "", searchFormData.text)}
+                      </td>
+
+                      {userRole === "ADMIN" && (
+                        <td>
+                          <button
+                            onClick={() => {
+                              setSelectedSpot(spot);
+                              setShowUpdateForm(true);
+                            }}
+                            style={{
+                              marginRight: "10px",
+                            }}
+                          >
+                            Update
+                          </button>
+                          <button
+                            onClick={() => handleDelete(spot.parkingSpotId)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
             </tbody>
           </table>
 
-          {/* Pagination Controls */}
+          {/* Pagination */}
           <div className="pagination">
             {pagination(totalPages, currentPage, handlePageChange)}
           </div>
 
+          {/* Add New Parking Spot */}
           {userRole === "ADMIN" && (
             <button onClick={() => setShowAddForm(true)}>
               Add New Parking Spot
             </button>
           )}
-        </>
+        </div>
       )}
     </div>
   );

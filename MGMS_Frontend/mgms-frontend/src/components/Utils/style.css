@@ -46,6 +46,12 @@
     background-color: #0056b3;
 }
 
+.container button:disabled {
+    background-color: #ccc;
+    color: #666; 
+    cursor: not-allowed;
+}
+
 .container form {
     display: flex;
     flex-direction: column;
@@ -121,11 +127,13 @@
     margin: 5px 15px 5px 5px;
 }
 
-.msg-textarea {
-    text-align: left;
-    display: block;
+.container textarea {
     width: 90%;
+    height: 100px;
+    text-align: left;
     margin: 0 auto;
+    display: block;
+
 }
 
 .msg-container textarea {
@@ -233,6 +241,11 @@
 
 .dark-mode .pagination .ellipsis {
     color: #ccc;
+}
+
+.dark-mode .multi-select {
+    color: #777;
+    background-color: #777;
 }
 
 .star-icon {

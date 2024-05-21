@@ -1,89 +1,99 @@
 import React, { useState, useEffect } from "react";
-import { highlightText, paginate, pagination, calculateIndex } from "../Utils";
+import BeatLoader from "react-spinners/BeatLoader";
 import AddUser from "./AddUser";
-import "../style.css";
+import {
+  calculateIndex,
+  highlightText,
+  notifySuccess,
+  pagination,
+  sendFetchRequest,
+  sendNotification,
+} from "../Utils/Utils";
+import "../Utils/style.css";
 
+// Display a list of all users with the ability to promote/demote and delete users
 export default function UsersList() {
   const [users, setUsers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(""); // Search
-  const [filterByRole, setFilterByRole] = useState("all"); // Filter
-  const [sortBy, setSortBy] = useState("userId"); // Sort
-  const [currentPage, setCurrentPage] = useState(1); // Pagination
-  const [itemsPerPage] = useState(5); // Pagination
   const [isLoading, setIsLoading] = useState(true);
+  const [paginatedData, setPaginatedData] = useState(); // Store parking spots from the API
+  const [currentPage, setCurrentPage] = useState(1); // Pagination
   const [showAddForm, setShowAddForm] = useState(false); // Show/hide the add form
-  const [error, setError] = useState(null);
+  const [totalPages, setTotalPages] = useState(0); // Total number of pages
+  const [searchFormData, setSearchFormData] = useState({
+    // Search form data
+    text: "",
+    role: "",
+    sortByProperty: "",
+  });
+  const itemsPerPage = 5; // Number of items per page
 
+  // Fetch users from the API on component mount
   useEffect(() => {
-    if (!showAddForm) {
-      loadUsers();
+    fetchUsers(); // Fetch users from the API
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchFormData, currentPage]);
+
+  // Update the users and total pages when the paginated data changes
+  useEffect(() => {
+    if (paginatedData) {
+      setUsers(paginatedData.data);
+      setTotalPages(paginatedData.totalPages);
     }
-  }, [showAddForm]);
+  }, [paginatedData]);
 
   // Handle adding a new user to the list of users
-  const addUser = (newUser) => {
-    setUsers([...users, newUser]); // Add the new user to the list
-    setShowAddForm(false); // Close the add form
+  const addUser = () => {
+    fetchUsers();
+    setShowAddForm(false);
   };
 
-  // Fetch all users from the backend
-  const loadUsers = () => {
-    setIsLoading(true);
-
-    fetch("http://localhost:5296/api/auth/GetAll", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
-      .then((response) => {
-        console.log("Response:", response);
-        if (!response.ok) {
-          throw new Error("Failed to fetch users");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Data:", data);
-        setUsers(data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching users:", error);
-        setError(error.message);
-        setIsLoading(false);
-      });
-  };
-
-  // Delete a user by userId
-  const deleteUser = (userId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this user?"
+  // Fetch users from the API
+  const fetchUsers = async () => {
+    await sendFetchRequest(
+      `auth/searchpaginated?pageNumber=${currentPage}&pageSize=${itemsPerPage}`,
+      "POST",
+      setIsLoading,
+      undefined,
+      setPaginatedData,
+      searchFormData
     );
-    if (confirmDelete) {
-      fetch(`http://localhost:5296/api/auth/Delete?UserId=${userId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Failed to delete user");
-          }
-          return response.json();
-        })
-        .then(() => {
-          loadUsers();
-        })
-        .catch((error) => {
-          console.error("Error deleting user:", error);
-          setError(error.message);
-        });
+  };
+
+  // Update a user's role
+  const updateUserRole = async (userId, newRole) => {
+    const response = await sendFetchRequest(
+      `auth/UpdateRole/?UserId=${userId}`,
+      "PUT",
+      setIsLoading,
+      undefined,
+      undefined,
+      { userId: userId, role: newRole }
+    );
+
+    if (response && response.message) {
+      notifySuccess(response.message);
+      sendNotification(
+        userId,
+        undefined,
+        `Your role has been changed to: ${newRole}!`,
+        setIsLoading
+      );
+
+      await fetchUsers();
     }
   };
 
   // Toggle a user's role between ADMIN and USER
   const toggleUserRole = (userId, currentRole) => {
+    // Check if the user is trying to demote themselves and they have the ADMIN role
+    if (
+      userId === parseInt(sessionStorage.getItem("userId")) &&
+      currentRole === "ADMIN"
+    ) {
+      alert("You cannot demote yourself from the Admin role!");
+      return;
+    }
+
     const newRole = currentRole === "ADMIN" ? "USER" : "ADMIN";
     const actionLabel =
       currentRole === "ADMIN" ? "Demote to User" : "Promote to Admin";
@@ -95,74 +105,37 @@ export default function UsersList() {
     }
   };
 
-  // Update a user's role by userId
-  const updateUserRole = (userId, newRole) => {
-    fetch(`http://localhost:5296/api/auth/UpdateRole`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({ userId, role: newRole }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to update user role");
-        }
-        return response.json();
-      })
-      .then(() => {
-        loadUsers();
-      })
-      .catch((error) => {
-        console.error("Error updating user role:", error);
-        setError(error.message);
-      });
+  // Handle search input change
+  const handleSearchInputChange = async (e) => {
+    setCurrentPage(1);
+
+    setSearchFormData((prevSearchFormData) => ({
+      ...prevSearchFormData,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  // Filter users by role and search term
-  const filteredUsers = users.filter((user) => {
-    const searchTermLower = searchTerm.toLowerCase();
+  // Handle deleting a user
+  const handleDelete = async (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      // Check if the user is trying to delete themselves and they have the ADMIN role
+      if (userId === parseInt(sessionStorage.getItem("userId"))) {
+        alert("You cannot delete yourself!");
+        return;
+      }
 
-    const roleMatch =
-      filterByRole === "all" ||
-      user.role.toLowerCase() === filterByRole.toLowerCase();
+      const response = await sendFetchRequest(
+        `auth/Delete/?UserId=${userId}`,
+        "DELETE",
+        setIsLoading
+      );
 
-    const matchesSearchTerm =
-      user.userId.toString().toLowerCase().includes(searchTermLower) ||
-      user.username.toLowerCase().includes(searchTermLower) ||
-      user.email.toLowerCase().includes(searchTermLower) ||
-      user.phone.toString().toLowerCase().includes(searchTermLower) ||
-      (user.profile?.address &&
-        user.profile.address.toLowerCase().includes(searchTermLower));
-
-    return roleMatch && matchesSearchTerm;
-  });
-
-  // Sort users by chosen criteria
-  const sortedUsers = [...filteredUsers].sort((a, b) => {
-    if (sortBy === "userId") {
-      return a.userId - b.userId;
+      if (response && response.message) {
+        notifySuccess(response.message);
+        await fetchUsers();
+      }
     }
-    if (sortBy === "username") {
-      return a.username.localeCompare(b.username);
-    }
-    if (sortBy === "email") {
-      return a.email.localeCompare(b.email);
-    }
-    if (sortBy === "role") {
-      return a.role.localeCompare(b.role);
-    }
-    // Default sort by userId in ascending order
-    return a.userId - b.userId;
-  });
-
-  // Paginate users
-  const paginatedUsers = paginate(sortedUsers, currentPage, itemsPerPage);
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-
-  if (isLoading) return <div>Loading users...</div>;
-  if (error) return <div>Error: {error}</div>;
+  };
 
   return (
     <div className="container">
@@ -178,28 +151,34 @@ export default function UsersList() {
           <div className="search-sort">
             <input
               type="text"
+              name="text"
               placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchFormData.text}
+              onChange={handleSearchInputChange}
             />
 
             {/* Filter by role */}
             <select
-              value={filterByRole}
-              onChange={(e) => setFilterByRole(e.target.value)}
+              value={searchFormData.role}
+              name="role"
+              onChange={handleSearchInputChange}
             >
-              <option value="all">Filter by Role</option>
+              <option value="">Filter by Role</option>
               <option value="admin">Admin</option>
               <option value="user">User</option>
             </select>
 
             {/* Sort by */}
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-              <option value="userId">Sort by</option>
-              <option value="userId">User ID</option>
-              <option value="username">Username</option>
-              <option value="email">Email</option>
-              <option value="role">Role</option>
+            <select
+              name="sortByProperty"
+              value={searchFormData.sortByProperty}
+              onChange={handleSearchInputChange}
+            >
+              <option value="">Sort by</option>
+              <option value="UserId">User ID</option>
+              <option value="Username">Username</option>
+              <option value="Email">Email</option>
+              <option value="Role">Role</option>
             </select>
           </div>
 
@@ -217,37 +196,80 @@ export default function UsersList() {
               </tr>
             </thead>
             <tbody>
-              {paginatedUsers.map((user, index) => (
-                <tr key={user.userId}>
-                  <td>
-                    {highlightText(
-                      calculateIndex(
-                        index,
-                        currentPage,
-                        itemsPerPage
-                      ).toString(),
-                      searchTerm
-                    )}
-                  </td>
-                  <td>{highlightText(user.userId.toString(), searchTerm)}</td>{" "}
-                  <td>{highlightText(user.username, searchTerm)}</td>
-                  <td>{highlightText(user.email, searchTerm)}</td>
-                  <td>{highlightText(user.phone.toString(), searchTerm)}</td>
-                  <td>{highlightText(user.role, searchTerm)}</td>
-                  <td>
-                    <button
-                      onClick={() => toggleUserRole(user.userId, user.role)}
+              {isLoading && (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        display: "inline-block",
+                        marginTop: "40px",
+                      }}
                     >
-                      {user.role === "ADMIN"
-                        ? "Demote to User"
-                        : "Promote to Admin"}
-                    </button>
-                    <button onClick={() => deleteUser(user.userId)}>
-                      Delete
-                    </button>
+                      <BeatLoader
+                        color="#000000"
+                        loading={isLoading}
+                        aria-label="Loading Spinner"
+                        data-testid="loader"
+                      />
+                    </div>
                   </td>
                 </tr>
-              ))}
+              )}
+              {!isLoading &&
+                users &&
+                users.map((user, index) => (
+                  <tr key={user.userId}>
+                    <td>
+                      {highlightText(
+                        calculateIndex(
+                          index,
+                          currentPage,
+                          itemsPerPage
+                        ).toString(),
+                        searchFormData.text
+                      )}
+                    </td>
+                    <td>
+                      {highlightText(
+                        user.userId.toString(),
+                        searchFormData.text
+                      )}
+                    </td>
+                    <td>{highlightText(user.username, searchFormData.text)}</td>
+                    <td>{highlightText(user.email, searchFormData.text)}</td>
+                    <td>
+                      {highlightText(
+                        user.phone.toString(),
+                        searchFormData.text
+                      )}
+                    </td>
+                    <td>{highlightText(user.role, searchFormData.text)}</td>
+                    <td>
+                      <button
+                        onClick={() => toggleUserRole(user.userId, user.role)}
+                        disabled={
+                          user.userId ===
+                            parseInt(sessionStorage.getItem("userId")) &&
+                          user.role === "ADMIN"
+                        }
+                      >
+                        {user.role === "ADMIN"
+                          ? "Demote to User"
+                          : "Promote to Admin"}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user.userId)}
+                        disabled={
+                          user.userId ===
+                            parseInt(sessionStorage.getItem("userId")) &&
+                          user.role === "ADMIN"
+                        }
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
 

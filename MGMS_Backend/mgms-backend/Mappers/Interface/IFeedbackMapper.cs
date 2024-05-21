@@ -13,4 +13,3 @@ namespace mgms_backend.Mappers.Interface
         public IList<Feedback>? ToCollectionModel(IList<FeedbackDto>? dto); // Convert list of FeedbackDto to list of Feedback
     }
 }
-

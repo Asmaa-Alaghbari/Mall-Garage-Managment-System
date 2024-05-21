@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { fetchCurrentUser } from "../Utils";
+import {
+  fetchCurrentUser,
+  notifyError,
+  notifySuccess,
+  sendFetchRequest,
+} from "../Utils/Utils";
 
 export default function AddFeedback({ onAddSuccess, onClose }) {
   const [feedback, setFeedback] = useState({
-    userId: "",
+    userId: 0,
     rating: 5, // default value
     feedbackType: "General", // default value
     isAnonymous: false, // default value
     feedbackMessage: "",
   });
+  const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [, setError] = useState(null);
 
+  // Handle form input changes (controlled component)
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target; // Destructure the event target
 
@@ -22,60 +27,39 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
     }));
   };
 
-  // Fetch the current user data from the backend
+  // Fetch the current user data when the component is mounted
   useEffect(() => {
-    const loadData = async () => {
-      await fetchCurrentUser(setFeedback, setIsLoading, setError, () => {});
-    };
-
-    loadData();
+    fetchCurrentUser(setCurrentUser, setIsLoading);
   }, []);
 
-  const handleSubmit = (e) => {
+  // Handle form submission (POST request) to the API server (backend)
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
 
     if (!feedback.feedbackMessage.trim()) {
-      setError("Message field cannot be empty.");
+      notifyError("Message field cannot be empty.");
       return;
     }
 
-    // Map feedbackMessage to Message
     const updatedFeedback = {
       ...feedback,
       Message: feedback.feedbackMessage,
+      userId: currentUser.userId,
     };
 
-    fetch("http://localhost:5296/api/feedbacks/AddFeedback", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify(updatedFeedback),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          return response.json().then((data) => {
-            throw new Error(data.message || "Failed to add feedback.");
-          });
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setMessage("Feedback added successfully!");
-        onAddSuccess(data); // Update the list of feedbacks
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        if (error.errors && error.errors.Message) {
-          setMessage(`Message: ${error.errors.Message.join(", ")}`);
-        } else {
-          setMessage(error.message);
-        }
-        setIsLoading(false);
-      });
+    const response = await sendFetchRequest(
+      "feedbacks/AddFeedback",
+      "POST",
+      setIsLoading,
+      undefined,
+      undefined,
+      updatedFeedback
+    );
+
+    if (response && response.message) {
+      onAddSuccess();
+      notifySuccess(response.message);
+    }
   };
 
   // Update the rating value in the feedback state
@@ -186,17 +170,6 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
           </button>
         </div>
       </form>
-      {message && (
-        <p
-          className={
-            message.includes("successfully")
-              ? "message-success"
-              : "message-error"
-          }
-        >
-          {message}
-        </p>
-      )}
     </div>
   );
 }

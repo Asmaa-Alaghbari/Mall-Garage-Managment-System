@@ -15,6 +15,7 @@ namespace mgms_backend.Entities.Reservations
         public int UserId { get; set; }
         [ForeignKey("ParkingSpot")] // Data annotation for the foreign key
         public int ParkingSpotId { get; set; }
+        public int ParkingSpotNumber { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public string Status { get; set; }

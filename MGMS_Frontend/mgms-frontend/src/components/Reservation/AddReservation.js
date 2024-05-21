@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { fetchCurrentUser } from "../Utils";
+import {
+  fetchCurrentUser,
+  formatDateToISOWithoutOffset,
+  notifyError,
+  notifySuccess,
+  sendFetchRequest,
+  sendNotification,
+  sendNotificationToRole,
+} from "../Utils/Utils";
+import Select from "react-select";
 
 export default function AddReservation({
   onAddSuccess, // Callback function to handle successful reservation addition
@@ -11,42 +20,80 @@ export default function AddReservation({
   // Initialize the reservation state with user ID pre-populated if user data is available
   const [reservation, setReservation] = useState({
     userId: "", // Pre-populate the user ID if user data is available
-    parkingSpotId: "",
+    parkingSpotNumber: 0,
     startTime: "",
     endTime: "",
     status: "Pending", // Default status is "Pending" for new reservations
+    serviceIds: [],
   });
   const [userRole, setUserRole] = useState(""); // State to hold user role
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [, setError] = useState(null);
+  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [availableServiceOptions, setAvailableServiceOptions] = useState([]);
 
+  // Fetch the current user and available services on component mount
   useEffect(() => {
-    fetchCurrentUser(setReservation, setIsLoading, setError, setUserRole);
+    fetchCurrentUser(setReservation, setIsLoading, undefined, setUserRole);
+    fetchAvailableServices();
   }, []);
 
+  // Update the reservation state with the reservation data and available service options
   useEffect(() => {
-    console.log("Reservation data:", reservationData);
-
-    if (isUpdate && reservationData) {
+    if (isUpdate && reservationData && availableServiceOptions) {
       updateReservation(reservationData);
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isUpdate, reservationData]);
+  }, [isUpdate, reservationData, availableServiceOptions]);
+
+  // Fetch available services from the API
+  const fetchAvailableServices = async () => {
+    const response = await sendFetchRequest(
+      `services/searchpaginated`,
+      "POST",
+      setIsLoading
+    );
+
+    if (response && response.length !== 0) {
+      const options = response.map((item) => ({
+        value: item.serviceId.toString(), // Convert id to string if needed
+        label: `${item.name} - ${item.price}$`,
+      }));
+
+      setAvailableServiceOptions(options);
+    }
+  };
 
   // Update the reservation state with the reservation data
   const updateReservation = (data) => {
+    console.log("reservation data:", new Date(data.startTime));
+
     const updatedReservation = {
       ...reservation,
       ...data,
-      startTime: data.startTime
-        ? new Date(data.startTime).toISOString().slice(0, 16)
-        : "", // Format startTime
-      endTime: data.endTime
-        ? new Date(data.endTime).toISOString().slice(0, 16)
-        : "", // Format endTime
     };
+    updatedReservation.startTime = data.startTime
+      ? formatDateToISOWithoutOffset(new Date(data.startTime))
+      : ""; // Convert Date to ISO string with UTC+3 offset
 
+    updatedReservation.endTime = data.endTime
+      ? formatDateToISOWithoutOffset(new Date(data.endTime))
+      : ""; // Convert Date to ISO string with UTC+3 offset
+
+    const updatedSelectedOptions = [];
+    data.serviceIds.forEach((serviceId) => {
+      const service = availableServiceOptions.find(
+        (service) => service.value === serviceId.toString()
+      );
+      if (service) {
+        updatedSelectedOptions.push({
+          value: service.value,
+          label: service.label,
+        });
+      }
+    });
+
+    setSelectedOptions(updatedSelectedOptions);
     setReservation(updatedReservation);
   };
 
@@ -70,7 +117,6 @@ export default function AddReservation({
 
       // Format the UTC date to match datetime-local format: YYYY-MM-DDTHH:mm
       const formattedDate = utcDate.toISOString().slice(0, 16);
-      console.log("Formatted date:", formattedDate); // Log the formatted date
 
       // Update the reservation state with the UTC date
       setReservation((prev) => ({
@@ -86,7 +132,8 @@ export default function AddReservation({
     }
   };
 
-  const handleSubmit = (e) => {
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validate start time and end time
@@ -95,65 +142,72 @@ export default function AddReservation({
     const currentTime = new Date().getTime();
 
     if (startTime >= endTime) {
-      setMessage("Start time must be before end time.");
+      notifyError("Start time must be before end time.");
       return;
     }
 
     if (startTime < currentTime || endTime < currentTime) {
-      setMessage("Reservation date and time cannot be in the past.");
+      notifyError("Reservation date and time cannot be in the past.");
       return;
     }
 
-    setIsLoading(true);
+    // Prepare the reservation data to be sent to the backend
+    if (selectedOptions.length !== 0) {
+      reservation.serviceIds = selectedOptions.map((item) => item.value);
+    }
 
-    const apiUrl = isUpdate
-      ? `http://localhost:5296/api/reservations/UpdateReservation?reservationId=${reservationData.reservationId}`
-      : "http://localhost:5296/api/reservations/AddReservation";
+    // Convert the reservation data to the correct format
+    const apiEndpoint = reservationData
+      ? `reservations/UpdateReservation?reservationId=${reservationData.reservationId}`
+      : "reservations/AddReservation";
 
-    fetch(apiUrl, {
-      method: isUpdate ? "PUT" : "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify(reservation),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          const contentType = response.headers.get("content-type");
-          if (contentType && contentType.indexOf("application/json") !== -1) {
-            return response.json().then((data) => {
-              throw new Error(data.message || "Failed to create reservation");
-            });
-          } else {
-            return response.text().then((text) => {
-              console.error("Server Error Response:", text);
-              if (text === "Parking spot doesn't exist.") {
-                throw new Error("Parking spot doesn't exist.");
-              } else {
-                throw new Error("Unexpected response from server");
-              }
-            });
-          }
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (isUpdate) {
-          onUpdateSuccess(data);
-          setMessage("Reservation updated successfully!");
-        } else {
-          onAddSuccess(data);
-          setMessage("Reservation added successfully!");
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
-        setMessage(error.message);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    const response = await sendFetchRequest(
+      apiEndpoint,
+      reservationData ? "PUT" : "POST",
+      setIsLoading,
+      undefined,
+      undefined,
+      reservation
+    );
+
+    if (response && response.message) {
+      notifySuccess(response.message);
+
+      if (!reservationData && response.data) {
+        // Send notification to user for new reservation
+        sendNotification(
+          reservation.userId,
+          response.data.reservationId,
+          `You have created a new reservation for parking spot with number ${reservation.parkingSpotNumber}.`,
+          setIsLoading
+        );
+
+        // Send notification to admin role for new reservation
+        sendNotificationToRole(
+          "ADMIN",
+          response.data.reservationId,
+          `(ADMINS ONLY) A new reservation for parking spot with number ${reservation.parkingSpotNumber} has been created.`,
+          setIsLoading
+        );
+      }
+
+      // Send notification to user for updated reservation
+      if (reservationData && reservationData.status !== reservation.status) {
+        sendNotification(
+          reservationData.userId,
+          response.data.reservationId,
+          `Reservation with Id ${reservationData.reservationId} has changed status: ${reservationData.status} -> ${reservation.status}.`,
+          setIsLoading
+        );
+      }
+
+      onAddSuccess();
+    }
+  };
+
+  // Handle service select change
+  const handleServiceSelectChange = (selected) => {
+    setSelectedOptions(selected);
   };
 
   return (
@@ -170,11 +224,11 @@ export default function AddReservation({
           hidden // Hide the user ID field from the form
         />
         <label>
-          Parking Spot ID:
+          Parking Spot Number:
           <input
-            type="text"
-            name="parkingSpotId"
-            value={reservation.parkingSpotId}
+            type="number"
+            name="parkingSpotNumber"
+            value={reservation.parkingSpotNumber}
             onChange={handleChange}
             required
           />
@@ -217,8 +271,19 @@ export default function AddReservation({
             </select>
           </label>
         )}
+        <label>
+          Select desired services:
+          <div className="multi-select">
+            <Select
+              options={availableServiceOptions}
+              isMulti
+              value={selectedOptions}
+              onChange={handleServiceSelectChange}
+            />
+          </div>
+        </label>
         <div className="button-container">
-          <button type="submit" disabled={isLoading || message}>
+          <button type="submit" disabled={isLoading}>
             {isLoading
               ? "Updating..."
               : isUpdate
@@ -230,17 +295,6 @@ export default function AddReservation({
           </button>
         </div>
       </form>
-      {message && (
-        <p
-          className={
-            message.includes("successfully")
-              ? "message-success"
-              : "message-error"
-          }
-        >
-          {message}
-        </p>
-      )}
     </div>
   );
 }

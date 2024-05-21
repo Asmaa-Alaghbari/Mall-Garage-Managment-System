@@ -1,119 +1,120 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import BeatLoader from "react-spinners/BeatLoader";
+import AddFeedback from "./AddFeedback";
 import {
+  calculateIndex,
   formatDateTime,
   highlightText,
-  ShowMessageModel,
-  paginate,
+  notifyError,
+  notifySuccess,
   pagination,
-  calculateIndex,
-} from "../Utils";
-import AddFeedback from "./AddFeedback";
-import "../style.css";
+  sendFetchRequest,
+  ShowMessageModel,
+} from "../Utils/Utils";
+import "../Utils/style.css";
 
 export default function Feedback() {
   const [feedbacks, setFeedbacks] = useState([]); // Store feedbacks from the API
+  const [paginatedData, setPaginatedData] = useState(); // Store parking spots from the API
   const [showAddForm, setShowAddForm] = useState(false); // Show/hide the add form
   const [currentPage, setCurrentPage] = useState(1); // Pagination: current page
-  const [itemsPerPage] = useState(5); // Pagination: items per page
-  const [searchTerm, setSearchTerm] = useState(""); // Search
-  const [filterBy, setFilterBy] = useState("all"); // Filter
-  const [filterByRating, setFilterByRating] = useState(""); // Filter by rating
-  const [filterByDate, setFilterByDate] = useState(""); // Filter by date
-  const [sortBy, setSortBy] = useState("userId"); // Sort
   const [modalOpen, setModalOpen] = useState(false); // Modal visibility
   const [modalMessage, setModalMessage] = useState(""); // Modal message
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [totalPages, setTotalPages] = useState(0); // Pagination: total pages
   const location = useLocation(); // Get the current location to trigger useEffect
   const navigate = useNavigate(); // Redirect the user to the login page if needed
+  const itemsPerPage = 5; // Number of items per page for pagination
+  const [searchFormData, setSearchFormData] = useState({
+    // Form data for searching feedbacks
+    text: "",
+    type: "",
+    rating: 0,
+    date: null,
+    userId: 0,
+    sortByProperty: "",
+  });
 
+  // Fetch feedbacks when the page is loaded
   useEffect(() => {
-    setIsLoading(true);
+    if (!sessionStorage.getItem("userId")) {
+      navigate("/login");
 
-    const userId = localStorage.getItem("userId");
-    console.log("Using userId:", userId); // Debugging statement
-
-    // Check if userId is available
-    if (!userId) {
-      setError("User ID is missing or invalid. Please log in again.");
-      setIsLoading(false);
-      navigate("/login"); // Redirect to login or show a re-login prompt
       return;
     }
 
-    // Define the URL based on the user role (ADMIN or USER)
-    const url =
-      localStorage.getItem("role") === "ADMIN"
-        ? "http://localhost:5296/api/feedbacks/GetAllFeedbacks"
-        : `http://localhost:5296/api/feedbacks/GetFeedbackByUserId?userId=${userId}`;
+    fetchFeedbacks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchFormData, currentPage, navigate, location]); // Re-fetch parking spots only when the form is closed
 
-    // Fetch feedbacks from the server
-    fetch(url, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch feedbacks");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Received data:", data); // Debugging statement
+  // Update the feedbacks when the data is fetched
+  useEffect(() => {
+    if (error && error != null) {
+      notifyError(error);
+    }
 
-        if (Array.isArray(data)) {
-          setFeedbacks(data);
-        } else if (data.emptyFeedbackList) {
-          setFeedbacks(data.emptyFeedbackList);
-        } else {
-          throw new Error("Invalid data format");
-        }
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching feedbacks:", error);
-        setError(error.message);
-        setIsLoading(false);
-      });
-  }, [location, navigate]); // Fetch feedbacks once when the component mounts
+    // Update the feedbacks and total pages when the data is fetched
+    if (paginatedData) {
+      setFeedbacks(paginatedData.data);
+      setTotalPages(paginatedData.totalPages);
+    }
+  }, [error, paginatedData]);
+
+  // Fetch feedbacks from the API
+  const fetchFeedbacks = async () => {
+    if (sessionStorage.getItem("role") !== "ADMIN") {
+      searchFormData.userId = sessionStorage.getItem("userId");
+    }
+
+    await sendFetchRequest(
+      `feedbacks/searchpaginated?pageNumber=${currentPage}&pageSize=${itemsPerPage}`,
+      "POST",
+      setIsLoading,
+      setError,
+      setPaginatedData,
+      searchFormData
+    );
+  };
 
   // Add a new feedback
-  const handleAddSuccess = (newFeedback) => {
-    setFeedbacks([...feedbacks, newFeedback]); // Add the new feedback to the list
+  const handleAddSuccess = () => {
+    fetchFeedbacks();
     setShowAddForm(false); // Close the add form
   };
 
+  // Handle search input change
+  const handleSearchInputChange = async (e) => {
+    setCurrentPage(1);
+
+    if (e.target.name === "date" && e.target.value === "") {
+      setSearchFormData((prevSearchFormData) => ({
+        ...prevSearchFormData,
+        date: null,
+      }));
+    } else {
+      setSearchFormData((prevSearchFormData) => ({
+        ...prevSearchFormData,
+        [e.target.name]: e.target.value,
+      }));
+    }
+  };
+
   // Delete a feedback
-  const handleDelete = (feedbackId) => {
-    // Ask the user to confirm the deletion
+  const handleDelete = async (feedbackId) => {
     if (window.confirm("Are you sure you want to delete this feedback?")) {
-      fetch(
-        `http://localhost:5296/api/feedbacks/DeleteFeedback?feedbackId=${feedbackId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      )
-        .then((response) => {
-          if (!response.ok) {
-            // If the server responds with an error, throw an error
-            return response.json().then((data) => {
-              throw new Error(data.message || "Failed to delete feedback");
-            });
-          }
-          // If delete was successful, filter out the deleted feedback
-          setFeedbacks(
-            feedbacks.filter((feedback) => feedback.feedbackId !== feedbackId)
-          );
-          alert("Feedback deleted successfully!");
-        })
-        .catch((error) => {
-          console.error("Delete error:", error);
-          alert(error.message);
-        });
+      const response = await sendFetchRequest(
+        `feedbacks/DeleteFeedback/?feedbackId=${feedbackId}`,
+        "DELETE",
+        setIsLoading,
+        setError
+      );
+
+      if (response && response.message) {
+        notifySuccess(response.message);
+        await fetchFeedbacks();
+      }
     }
   };
 
@@ -122,77 +123,6 @@ export default function Feedback() {
     setModalMessage(message); // Set the message to be displayed in the modal
     setModalOpen(true); // Open the modal
   };
-
-  // Filter feedbacks
-  const filteredFeedbacks = feedbacks.filter((feedback) => {
-    const searchTermLower = searchTerm.toLowerCase();
-    const filterByLower = filterBy.toLowerCase();
-    const feedbackTypeLower = feedback.feedbackType
-      ? feedback.feedbackType.toLowerCase()
-      : "";
-    const messageLower = feedback.message ? feedback.message.toLowerCase() : "";
-    const userId = feedback.userId ? feedback.userId.toString() : "";
-    const dateTimeStr = feedback.dateTime
-      ? formatDateTime(feedback.dateTime).toLowerCase()
-      : "";
-
-    const ratingMatch =
-      filterByRating === "" || feedback.rating.toString() === filterByRating;
-    const typeMatch =
-      filterByLower === "all" || filterByLower === feedbackTypeLower;
-    const dateMatch =
-      filterByDate === "" ||
-      new Date(feedback.dateTime).toISOString().split("T")[0] === filterByDate;
-    const timeMatch = filterByDate === "" || dateTimeStr.includes(filterByDate);
-
-    const calculatedIndex = calculateIndex(
-      feedbacks.indexOf(feedback),
-      currentPage,
-      itemsPerPage
-    ).toString();
-
-    // Include the messageLower in the search condition
-    return (
-      (searchTermLower === "" ||
-        calculatedIndex.includes(searchTermLower) ||
-        userId.includes(searchTermLower) ||
-        feedback.rating.toString().includes(searchTermLower) ||
-        feedbackTypeLower.includes(searchTermLower) ||
-        messageLower.includes(searchTermLower) ||
-        dateTimeStr.includes(searchTermLower)) &&
-      ratingMatch &&
-      typeMatch &&
-      dateMatch &&
-      timeMatch
-    );
-  });
-
-  // Sorting feedbacks
-  const sortedFeedbacks = [...filteredFeedbacks].sort((a, b) => {
-    if (sortBy === "dateTime") {
-      return new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime(); // Sorting by dateTime in ascending order
-    }
-    if (sortBy === "rating") {
-      return a.rating - b.rating; // Sorting by rating in ascending order
-    }
-    if (sortBy === "feedbackType") {
-      return a.feedbackType.localeCompare(b.feedbackType);
-    }
-
-    // Default sort by userId in ascending order
-    return a.userId - b.userId;
-  });
-
-  // Pagination
-  const paginatedFeedbacks = paginate(
-    sortedFeedbacks,
-    currentPage,
-    itemsPerPage
-  );
-  const totalPages = Math.ceil(filteredFeedbacks.length / itemsPerPage);
-
-  if (isLoading) return <div>Loading feedbacks...</div>;
-  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="container">
@@ -205,159 +135,168 @@ export default function Feedback() {
       )}
       {!showAddForm && (
         <>
-          {feedbacks && feedbacks.length === 0 ? (
-            <div className="no-feedbacks">
-              <p>No feedbacks found for this user, do you want to add one?</p>
-              <button onClick={() => setShowAddForm(true)}>
-                Add New Feedback
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Search  */}
-              <div className="search-sort">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+          {/* Search  */}
+          <div className="search-sort">
+            <input
+              type="text"
+              name="text"
+              placeholder="Search..."
+              value={searchFormData.text}
+              onChange={handleSearchInputChange}
+            />
 
-                {/* Filter */}
-                <select
-                  value={filterBy}
-                  onChange={(e) => setFilterBy(e.target.value)}
-                >
-                  <option value="all">Filter by Type</option>
-                  <option value="Feature Request">Feature Request</option>
-                  <option value="Bug Report">Bug Report</option>
-                  <option value="General">General</option>
-                </select>
+            {/* Filter */}
+            <select
+              value={searchFormData.type}
+              name="type"
+              onChange={handleSearchInputChange}
+            >
+              <option value="">Filter by Type</option>
+              <option value="Feature Request">Feature Request</option>
+              <option value="Bug Report">Bug Report</option>
+              <option value="General">General</option>
+            </select>
 
-                {/* Filter by Rating */}
-                <select
-                  value={filterByRating}
-                  onChange={(e) => setFilterByRating(e.target.value)}
-                >
-                  <option value="">Filter by Rating</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                </select>
+            {/* Filter by Rating */}
+            <select
+              value={searchFormData.rating}
+              name="rating"
+              onChange={handleSearchInputChange}
+            >
+              <option value="0">Filter by Rating</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
 
-                {/* Filter by Date */}
-                <input
-                  type="date"
-                  placeholder="Filter by Date"
-                  value={filterByDate}
-                  onChange={(e) => setFilterByDate(e.target.value)}
-                />
+            {/* Filter by Date */}
+            <input
+              type="date"
+              name="date"
+              placeholder="Filter by Date"
+              value={searchFormData.date}
+              onChange={handleSearchInputChange}
+            />
 
-                {/* Sort */}
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                >
-                  <option value="all">Sort by</option>
-                  <option value="dateTime">Date</option>
-                  <option value="rating">Rating</option>
-                  <option value="feedbackType">Type</option>
-                </select>
-              </div>
+            {/* Sort */}
+            <select
+              value={searchFormData.sortByProperty}
+              name="sortByProperty"
+              onChange={handleSearchInputChange}
+            >
+              <option value="">Sort by</option>
+              <option value="dateTime">Date</option>
+              <option value="rating">Rating</option>
+              <option value="feedbackType">Type</option>
+            </select>
+          </div>
 
-              {/* Feedback table */}
-              <table className="feedback-table">
-                <thead>
-                  <tr>
-                    <th>No.</th>
-                    {localStorage.getItem("role") === "ADMIN" && (
-                      <th>User ID</th>
+          {/* Feedback table */}
+          <table className="feedback-table">
+            <thead>
+              <tr>
+                <th>No.</th>
+                {sessionStorage.getItem("role") === "ADMIN" && <th>User ID</th>}
+                <th>Rating</th>
+                <th>Type</th>
+                <th>Date Time</th>
+                <th>Message</th>
+                {sessionStorage.getItem("role") === "ADMIN" && <th>Actions</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading && (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        display: "inline-block",
+                        marginTop: "40px",
+                      }}
+                    >
+                      <BeatLoader
+                        color="#000000"
+                        loading={isLoading}
+                        aria-label="Loading Spinner"
+                        data-testid="loader"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {!isLoading &&
+                feedbacks &&
+                feedbacks.map((feedback, index) => (
+                  <tr key={feedback.feedbackId}>
+                    <td>
+                      {highlightText(
+                        calculateIndex(
+                          index,
+                          currentPage,
+                          itemsPerPage
+                        ).toString(),
+                        searchFormData.text
+                      )}
+                    </td>
+                    {sessionStorage.getItem("role") === "ADMIN" && (
+                      <td>
+                        {highlightText(
+                          feedback.userId ? feedback.userId.toString() : "",
+                          searchFormData.text
+                        )}
+                      </td>
                     )}
-                    <th>Rating</th>
-                    <th>Type</th>
-                    <th>Date Time</th>
-                    <th>Message</th>
-                    {localStorage.getItem("role") === "ADMIN" && (
-                      <th>Actions</th>
+                    <td>
+                      {highlightText(
+                        feedback.rating ? feedback.rating.toString() : "",
+                        searchFormData.text
+                      )}
+                    </td>
+                    <td>
+                      {highlightText(
+                        feedback.feedbackType ? feedback.feedbackType : "",
+                        searchFormData.text
+                      )}
+                    </td>
+                    <td>
+                      {highlightText(
+                        feedback.dateTime
+                          ? formatDateTime(feedback.dateTime)
+                          : "",
+                        searchFormData.text
+                      )}
+                    </td>
+                    <td>
+                      {highlightText(
+                        <button
+                          onClick={() => handleShowMessage(feedback.message)}
+                        >
+                          Show Message
+                        </button>
+                      )}
+                    </td>
+                    {sessionStorage.getItem("role") === "ADMIN" && (
+                      <td>
+                        <button
+                          onClick={() => handleDelete(feedback.feedbackId)}
+                        >
+                          Delete
+                        </button>
+                      </td>
                     )}
                   </tr>
-                </thead>
-                <tbody>
-                  {paginatedFeedbacks.map((feedback, index) => (
-                    <tr key={feedback.feedbackId}>
-                      <td>
-                        {highlightText(
-                          calculateIndex(
-                            index,
-                            currentPage,
-                            itemsPerPage
-                          ).toString(),
-                          searchTerm
-                        )}
-                      </td>
-                      {localStorage.getItem("role") === "ADMIN" && (
-                        <td>
-                          {highlightText(
-                            feedback.userId ? feedback.userId.toString() : "",
-                            searchTerm
-                          )}
-                        </td>
-                      )}
-                      <td>
-                        {highlightText(
-                          feedback.rating ? feedback.rating.toString() : "",
-                          searchTerm
-                        )}
-                      </td>
-                      <td>
-                        {highlightText(
-                          feedback.feedbackType ? feedback.feedbackType : "",
-                          searchTerm
-                        )}
-                      </td>
-                      <td>
-                        {highlightText(
-                          feedback.dateTime
-                            ? formatDateTime(feedback.dateTime)
-                            : "",
-                          searchTerm
-                        )}
-                      </td>
-                      <td>
-                        {highlightText(
-                          <button
-                            onClick={() => handleShowMessage(feedback.message)}
-                          >
-                            Show Message
-                          </button>
-                        )}
-                      </td>
-                      {localStorage.getItem("role") === "ADMIN" && (
-                        <td>
-                          <button
-                            onClick={() => handleDelete(feedback.feedbackId)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                ))}
+            </tbody>
+          </table>
 
-              {/* Pagination */}
-              <div className="pagination">
-                {pagination(totalPages, currentPage, setCurrentPage)}
-              </div>
+          {/* Pagination */}
+          <div className="pagination">
+            {pagination(totalPages, currentPage, setCurrentPage)}
+          </div>
 
-              <button onClick={() => setShowAddForm(true)}>
-                Add New Feedback
-              </button>
-            </>
-          )}
+          <button onClick={() => setShowAddForm(true)}>Add New Feedback</button>
         </>
       )}
 

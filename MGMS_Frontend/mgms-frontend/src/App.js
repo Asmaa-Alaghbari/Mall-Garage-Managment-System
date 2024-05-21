@@ -5,11 +5,13 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
+import "react-toastify/dist/ReactToastify.min.css";
+import { ToastContainer } from "react-toastify";
 import Login from "./components/Auth/Login";
 import SignUp from "./components/Auth/SignUp";
-import Home from "./components/Home";
-import Navbar from "./components/Navbar";
-import Profile from "./components/Profile";
+import Home from "./components/Home/Home";
+import Navbar from "./components/Navbar/Navbar";
+import Profile from "./components/Profile/Profile";
 import Reservations from "./components/Reservation/Reservations";
 import AddReservation from "./components/Reservation/AddReservation";
 import ParkingSpots from "./components/ParkingSpot/ParkingSpots";
@@ -18,10 +20,11 @@ import Payment from "./components/Payment/Payment";
 import AddPayment from "./components/Payment/AddPayment";
 import Feedback from "./components/Feedback/Feedback";
 import AddFeedback from "./components/Feedback/AddFeedback";
-import Settings from "./components/Settings";
+import Settings from "./components/Settings/Settings";
 import UsersList from "./components/Auth/UserList";
 import AddUser from "./components/Auth/AddUser";
-
+import Service from "./components/Services/Service";
+import Notification from "./components/Notification/Notification";
 import "./App.css";
 
 export default function App() {
@@ -29,11 +32,11 @@ export default function App() {
 
   useEffect(() => {
     // Check if the user is logged in by verifying the token or other credentials
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     setIsLoggedIn(!!token); // Set the login state based on the token's presence
 
     // Check for token expiration
-    const tokenExpiration = localStorage.getItem("tokenExpiration");
+    const tokenExpiration = sessionStorage.getItem("tokenExpiration");
     const currentTime = new Date().getTime();
     if (tokenExpiration && currentTime > tokenExpiration) {
       // Token expired, log out the user
@@ -43,14 +46,15 @@ export default function App() {
 
   // Function to handle logout
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("tokenExpiration");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("tokenExpiration");
     setIsLoggedIn(false);
   };
 
   return (
     <div className="App">
       <Router>
+        <ToastContainer />
         {isLoggedIn && <Navbar setIsLoggedIn={setIsLoggedIn} />}
         <Routes>
           <Route
@@ -127,6 +131,18 @@ export default function App() {
                 <Navigate to="/login" />
               )
             }
+          />
+          <Route
+            path="/services"
+            element={isLoggedIn ? <Service /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/services/add"
+            element={isLoggedIn ? <Service /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/notifications"
+            element={isLoggedIn ? <Notification /> : <Navigate to="/login" />}
           />
           <Route path="*" element={<h1>Not Found</h1>} />
         </Routes>

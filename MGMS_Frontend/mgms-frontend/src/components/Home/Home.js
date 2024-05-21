@@ -1,27 +1,45 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { fetchCurrentUser } from "./Utils";
+import { Link } from "react-router-dom";
+import {
+  fetchCurrentUser,
+  notifyError,
+  sendFetchRequest,
+} from "../Utils/Utils";
 import "./Home.css";
 
 export default function Home() {
   const [user, setUser] = useState(null);
-  const [recentReservations] = useState([]);
-  const [parkingSpotSummary, setParkingSpotSummary] = useState({
-    available: 0,
-    occupied: 0,
-    total: 0,
-  });
-  const [userStatistics, setUserStatistics] = useState({
-    totalUsersRole: 0,
-    totalAdminsRole: 0,
-    totalUsers: 0,
-  });
   const [feedbackStatistics, setFeedbackStatistics] = useState({
     totalFeedbacks: 0,
     totalPositiveFeedbacks: 0,
     totalNegativeFeedbacks: 0,
     totalAnonymousFeedbacks: 0,
     averageRating: 0,
+  });
+  const [notificationsStatistics, setNotificationsStatistics] = useState({
+    total: 0,
+    unread: 0,
+  });
+  const [parkingSpotSummary, setParkingSpotSummary] = useState({
+    available: 0,
+    occupied: 0,
+    total: 0,
+  });
+  const [reservationStatistics, setReservationStatistics] = useState({
+    totalReservations: 0,
+    totalActiveReservations: 0,
+    totalApprovedReservations: 0,
+    totalCompletedReservations: 0,
+    totalCancelledReservations: 0,
+    totalPendingReservations: 0,
+  });
+  const [servicesStatistics, setServicesStatistics] = useState({
+    total: 0,
+  });
+  const [userStatistics, setUserStatistics] = useState({
+    totalUsersRole: 0,
+    totalAdminsRole: 0,
+    totalUsers: 0,
   });
   const [, setUserRole] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,90 +48,85 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const currentYear = new Date().getFullYear(); // Get the current year
-  const location = useLocation();
 
-  // Fetch other pages data
+  // Handle side effects after error is updated
   useEffect(() => {
-    setIsLoading(true);
-
-    // Fetch user data
-    fetchCurrentUser(setUser, setIsLoading, setError, setUserRole);
-
-    if (user?.role === "ADMIN") {
-      // Fetch user statistics
-      fetch("http://localhost:5296/api/auth/GetUserStatistics", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => {
-          if (!response.ok) {
-            if (response.status === 403) {
-              throw new Error(
-                "Forbidden: You are not authorized to view this resource."
-              );
-            }
-            throw new Error(
-              `Failed to fetch user statistics: ${response.statusText}`
-            );
-          }
-          return response.json();
-        })
-        .then((data) => {
-          setUserStatistics(data);
-        })
-        .catch((error) => {
-          console.error("Error fetching user statistics:", error);
-          setError(error.message);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-
-      // Fetch feedback statistics
-      fetch("http://localhost:5296/api/Feedbacks/GetFeedbackStatistics", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Failed to fetch feedback statistics");
-          }
-          return response.json();
-        })
-        .then((data) => {
-          setFeedbackStatistics(data);
-        })
-        .catch((error) => {
-          console.error("Error fetching feedback statistics:", error);
-          setError(error.toString());
-        });
+    if (error && error !== null) {
+      if (!error.message) {
+        notifyError("Failed to fetch from server!");
+      } else {
+        notifyError(error.message);
+      }
     }
+  }, [error]);
 
-    // Fetch the parking spot summary (available, occupied, total)
-    fetch("http://localhost:5296/api/parkingspots/GetParkingSpotSummary", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch parking spots summary");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setParkingSpotSummary(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching parking spot summary:", error);
-        setError(error.toString());
-      });
-  }, [location, user?.id, user?.role]);
+  // Fetch API data from the backend and set the state
+  useEffect(() => {
+    if (user && user !== null) {
+      if (user?.role === "ADMIN") {
+        // Fetch user statistics
+        sendFetchRequest(
+          "auth/GetUserStatistics",
+          "GET",
+          setIsLoading,
+          setError,
+          setUserStatistics
+        );
+
+        // Fetch feedback statistics
+        sendFetchRequest(
+          "Feedbacks/GetFeedbackStatistics",
+          "GET",
+          setIsLoading,
+          setError,
+          setFeedbackStatistics
+        );
+      }
+
+      // Fetch notifications statistics
+      sendFetchRequest(
+        `notifications/GetNotificationsStatistics?userId=${
+          user?.role === "ADMIN" ? 0 : user?.userId || 0
+        }`,
+        "GET",
+        setIsLoading,
+        setError,
+        setNotificationsStatistics
+      );
+
+      // Fetch parking spot summary
+      sendFetchRequest(
+        "parkingspots/GetParkingSpotSummary",
+        "GET",
+        setIsLoading,
+        setError,
+        setParkingSpotSummary
+      );
+
+      // Fetch reservations statistics
+      sendFetchRequest(
+        `reservations/GetReservationStatistics`,
+        "GET",
+        setIsLoading,
+        setError,
+        setReservationStatistics
+      );
+
+      // Fetch services statistics
+      sendFetchRequest(
+        "services/GetServicesStatistics",
+        "GET",
+        setIsLoading,
+        setError,
+        setServicesStatistics
+      );
+    }
+  }, [user]);
+
+  // Fetch the current user data from the backend and set the user state
+  useEffect(() => {
+    fetchCurrentUser(setUser, setIsLoading, setError, setUserRole);
+  }, []);
 
   // Handle search input change and filter matching routes
   const handleSearch = (e) => {
@@ -128,12 +141,15 @@ export default function Home() {
 
     // Search for matching routes
     const matchingRoutes = [
-      { path: "/profile", name: "Profile" },
-      { path: "/reservations", name: "Reservations" },
-      { path: "/parking-spots", name: "ParkingSpots" },
-      { path: "/payments", name: "Payment" },
       { path: "/feedbacks", name: "Feedback" },
+      { path: "/notifications", name: "Notifications" },
+      { path: "/parking-spots", name: "ParkingSpots" },
+      { path: "/profile", name: "Profile" },
+      { path: "/payments", name: "Payment" },
+      { path: "/reservations", name: "Reservations" },
+      { path: "/services", name: "Services" },
       { path: "/settings", name: "Settings" },
+      { path: "/users", name: "Users" },
     ].filter((route) => route.name.toLowerCase().includes(term));
 
     setSearchResults(matchingRoutes);
@@ -219,34 +235,10 @@ export default function Home() {
             </li>
           </ul>
         </section>
-        <section className="card">
-          <h2 className="card-header">My Reservations</h2>
-          <ul className="card-body">
-            {recentReservations.length > 0 ? (
-              recentReservations.map((reservation) => (
-                <li key={reservation.id}>
-                  <Link
-                    to={`/reservations/${reservation.id}`}
-                    className="nav-link"
-                  >
-                    {reservation.parkingSpot} - {reservation.date}
-                  </Link>
-                </li>
-              ))
-            ) : (
-              <li>No recent reservations found.</li>
-            )}
-            <li>
-              <Link to="/reservations" className="nav-link">
-                View All Reservations
-              </Link>
-            </li>
-          </ul>
-        </section>
+
         <section className="card">
           <h2 className="card-header">Parking Spots</h2>
           <ul className="card-body">
-            {error && <li className="error">Error: {error}</li>}
             {isLoading ? (
               <li>Loading parking spots summary...</li>
             ) : (
@@ -263,6 +255,50 @@ export default function Home() {
             </li>
           </ul>
         </section>
+
+        {user?.role === "ADMIN" && (
+          <section className="card">
+            <h2 className="card-header">Reservations Statistics</h2>
+            <ul className="card-body">
+              {isLoading ? (
+                <li>Loading recent reservations...</li>
+              ) : (
+                <>
+                  <li>
+                    Total Active Reservations:{" "}
+                    {reservationStatistics.totalActiveReservations}
+                  </li>
+                  <li>
+                    Total Approved Reservations:{" "}
+                    {reservationStatistics.totalApprovedReservations}
+                  </li>
+                  <li>
+                    Total Completed Reservations:{" "}
+                    {reservationStatistics.totalCompletedReservations}
+                  </li>
+                  <li>
+                    Total Cancelled Reservations:{" "}
+                    {reservationStatistics.totalCancelledReservations}
+                  </li>
+                  <li>
+                    Total Pending Reservations:{" "}
+                    {reservationStatistics.totalPendingReservations}
+                  </li>
+                  <li>
+                    Total Reservations:{" "}
+                    {reservationStatistics.totalReservations}
+                  </li>
+                </>
+              )}
+              <li>
+                <Link to="/reservations" className="nav-link">
+                  View All Reservations
+                </Link>
+              </li>
+            </ul>
+          </section>
+        )}
+
         {user?.role === "USER" && (
           <section className="card">
             <h2 className="card-header">Payments</h2>
@@ -273,13 +309,39 @@ export default function Home() {
                 </Link>
               </li>
               <li>
-                <Link to="/payments/add" className="nav-link"> Add Payment</Link>
+                <Link to="/payments/add" className="nav-link">
+                  {" "}
+                  Add Payment
+                </Link>
               </li>
             </ul>
           </section>
         )}
 
+        <section className="card">
+          <h2 className="card-header">Services Statistics</h2>
+          <ul className="card-body">
+            <li>Total Services: {servicesStatistics.total}</li>
+            <li>
+              <Link to="/services" className="nav-link">
+                View All Services
+              </Link>
+            </li>
+          </ul>
+        </section>
 
+        <section className="card">
+          <h2 className="card-header">Notifications Statistics</h2>
+          <ul className="card-body">
+            <li>Total Notifications: {notificationsStatistics.total}</li>
+            <li>Unread Notifications: {notificationsStatistics.unread}</li>
+            <li>
+              <Link to="/notifications" className="nav-link">
+                View All Notifications
+              </Link>
+            </li>
+          </ul>
+        </section>
 
         {/* Display user statistics for admin users */}
         {user?.role === "ADMIN" && (
@@ -317,7 +379,12 @@ export default function Home() {
                 {feedbackStatistics.totalAnonymousFeedbacks}
               </li>
               <li>
-                Average Rating: {feedbackStatistics.averageRating.toFixed(2)}
+                Average Rating: {feedbackStatistics.averageRating?.toFixed(2)}
+              </li>
+              <li>
+                <Link to="/feedbacks" className="nav-link">
+                  View All Feedbacks
+                </Link>
               </li>
             </ul>
           </section>

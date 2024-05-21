@@ -7,6 +7,7 @@ namespace mgms_backend.Repositories.Interface
     {
         Task<IEnumerable<User>> GetAllUsersAsync(); // Get all users from the database
         Task<IEnumerable<User>> SearchAsync(UserSearchCriteria? searchCriteria); // Search for users based on search criteria
+        Task<IList<User>> GetUsersByRoleAsync(string role); // Get users by role from the database
         Task<User> AddUserAsync(User user); // Add a new user to the database
         Task<User> GetUserByIdAsync(int userId); // Get a user by id from the database
         Task<User> GetUserByUsernameOrEmailAsync(string usernameOrEmail); // Get a user by username or email from the database

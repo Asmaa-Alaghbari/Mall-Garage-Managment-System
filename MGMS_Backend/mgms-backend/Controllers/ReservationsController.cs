@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using mgms_backend.DTO.ReservationDTO;
+using mgms_backend.Exceptions;
 using mgms_backend.Helpers;
 using mgms_backend.Mappers.Interface;
 using mgms_backend.Repositories.Interface;
-using mgms_backend.Exceptions;
-using mgms_backend.DTO.ReservationDTO;
 
 namespace mgms_backend.Controllers
 {
@@ -106,6 +106,35 @@ namespace mgms_backend.Controllers
             return Ok(_reservationMapper.ToCollectionDto(reservations));
         }
 
+        // GET: api/GetReservationStatistics: Get Reservation Statistics
+        [HttpGet("GetReservationStatistics")]
+        [Authorize]
+        public async Task<ActionResult> GetReservationStatistics()
+        {
+            var reservations = await _reservationRepository.GetAllReservationsAsync();
+            if (reservations == null || !reservations.Any())
+            {
+                return Ok(new { message = "No reservations found!" });
+            }
+
+            var totalReservations = reservations.Count();
+            var totalActiveReservations = reservations.Count(f => f.Status == "Active");
+            var totalApprovedReservations = reservations.Count(f => f.Status == "Approved");
+            var totalCancelledReservations = reservations.Count(f => f.Status == "Cancelled");
+            var totalCompletedReservations = reservations.Count(f => f.Status == "Completed");
+            var totalPendingReservations = reservations.Count(f => f.Status == "Pending");
+
+            return Ok(new
+            {
+                totalReservations,
+                totalActiveReservations,
+                totalApprovedReservations,
+                totalCancelledReservations,
+                totalCompletedReservations,
+                totalPendingReservations
+            });
+        }
+
         // POST: api/AddReservation: Add a new reservation
         [HttpPost("AddReservation")]
         [Authorize]
@@ -180,7 +209,8 @@ namespace mgms_backend.Controllers
         // PUT: api/UpdateReservation: Update an existing reservation
         [HttpPut("UpdateReservation")]
         [Authorize]
-        public async Task<IActionResult> UpdateReservation(int reservationId, [FromBody] ReservationDto updateReservationDto)
+        public async Task<IActionResult> UpdateReservation(int reservationId, [
+            FromBody] ReservationDto updateReservationDto)
         {
             // Convert DateTime to UTC if necessary to avoid timezone issues when storing in the database
             updateReservationDto.StartTime = updateReservationDto.StartTime.ToUniversalTime();

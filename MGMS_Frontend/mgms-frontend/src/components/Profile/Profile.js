@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchCurrentUser } from "./Utils";
+import {
+  fetchCurrentUser,
+  notifyError,
+  notifySuccess,
+  sendFetchRequest,
+} from "../Utils/Utils";
 import "./Profile.css";
 
 export default function Profile() {
@@ -21,7 +26,7 @@ export default function Profile() {
     profilePictureUrl: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [, setErrorMessage] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
@@ -32,57 +37,27 @@ export default function Profile() {
     fetchUserProfile(setProfileInfo, setIsLoading, setErrorMessage);
   }, []);
 
-  const fetchUserProfile = async (setProfileInfo, setIsLoading, setError) => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No token found");
-      }
+  // Fetch the user's profile data from the backend
+  const fetchUserProfile = async () => {
+    await sendFetchRequest(
+      "auth/GetUserProfile",
+      "GET",
+      setIsLoading,
+      setErrorMessage,
+      setProfileInfo
+    );
+  };
 
-      const response = await fetch(
-        "http://localhost:5296/api/auth/GetUserProfile",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch user's profle: ${response.statusText}`
-        );
-      }
-
-      const userData = await response.json();
-      console.log("Fetched user's profile data:", userData);
-
-      if (userData.userId) {
-        setProfileInfo((prev) => ({
-          ...prev,
-          address: userData.address,
-          city: userData.city,
-          state: userData.state,
-          zipCode: userData.zipCode,
-          country: userData.country,
-          profilePictureUrl: userData.profilePictureUrl,
-        }));
-      } else {
-        throw new Error("UserId not found in user's profile data");
-      }
-    } catch (err) {
-      console.error("Fetch user's profile error:", err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+  // Handle changes in the user's information
+  const handleUserInfoChange = (e) => {
+    if (e.target.name === "password") {
+      setPassword(e.target.value);
+    } else {
+      setUserInfo({ ...userInfo, [e.target.name]: e.target.value });
     }
   };
 
-  const handleUserInfoChange = (e) => {
-    setUserInfo({ ...userInfo, [e.target.name]: e.target.value });
-  };
-
+  // Handle changes in the user's profile information
   const handleProfileInfoChange = (e) => {
     setProfileInfo({ ...profileInfo, [e.target.name]: e.target.value });
   };
@@ -90,74 +65,50 @@ export default function Profile() {
   // Handle form submission and update the user's profile
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
+    const token = sessionStorage.getItem("token");
+    const userId = sessionStorage.getItem("userId");
 
     // Validate user ID and token
     if (!userId || !token) {
-      setErrorMessage("User ID or token not found. Please login again.");
-      setIsLoading(false);
+      notifyError("User ID or token not found! Please log in again!");
       return;
     }
 
-    try {
-      // Update user info
-      const userResponse = await fetch(
-        `http://localhost:5296/api/auth/Update/${userId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            ...userInfo,
-          }),
-        }
+    if (!password || password === "") {
+      notifyError("Please insert your password!");
+      return;
+    }
+
+    userInfo.password = password;
+
+    const userResponse = await sendFetchRequest(
+      `auth/Update?userId=${userId}`,
+      "PUT",
+      setIsLoading,
+      setErrorMessage,
+      undefined,
+      userInfo
+    );
+
+    // If the user update is successful, update the user's profile
+    if (userResponse && userResponse.success) {
+      const profileResponse = await sendFetchRequest(
+        `auth/UpdateUserProfile`,
+        "PUT",
+        setIsLoading,
+        setErrorMessage,
+        undefined,
+        profileInfo
       );
 
-      // Check if response body is empty
-      const userResult =
-        userResponse.status !== 204 ? await userResponse.json() : {};
+      // If the profile update is successful, notify the user and update the user's data
+      if (profileResponse && profileResponse.message) {
+        notifySuccess(profileResponse.message);
 
-      if (!userResponse.ok) {
-        const errorMessage = userResult.message || "Unknown error";
-        throw new Error(`Could not update user info. ${errorMessage}`);
+        fetchCurrentUser(setUserInfo, setIsLoading, setErrorMessage, () => {});
+        fetchUserProfile();
       }
-
-      // Update user profile
-      const profileResponse = await fetch(
-        "http://localhost:5296/api/auth/UpdateUserProfile",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(profileInfo),
-        }
-      );
-
-      // Check if response body is empty
-      const profileResult =
-        profileResponse.status !== 204 ? await profileResponse.json() : {};
-
-      if (!profileResponse.ok) {
-        const errorMessage = profileResult.message || "Unknown error";
-        throw new Error(`Could not update profile. ${errorMessage}`);
-      }
-
-      alert("Profile updated successfully!");
-      navigate("/profile");
-    } catch (error) {
-      console.error("Update error:", error);
-      setErrorMessage(
-        error.message || "Could not update user info. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -169,7 +120,6 @@ export default function Profile() {
   return (
     <div className="profile-form-container">
       <h1>Profile</h1>
-      {errorMessage && <div className="error-message">{errorMessage}</div>}
       <form onSubmit={handleSubmit}>
         <input
           type="text"
@@ -190,7 +140,7 @@ export default function Profile() {
           name="username"
           placeholder="Username"
           value={userInfo.username || ""}
-          onChange={handleUserInfoChange}
+          disabled
         />
         <input
           type="email"
@@ -198,13 +148,6 @@ export default function Profile() {
           placeholder="Email"
           value={userInfo.email || ""}
           onChange={handleUserInfoChange}
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
         />
         <input
           type="tel"
@@ -254,6 +197,13 @@ export default function Profile() {
           placeholder="Profile Picture URL"
           value={profileInfo.profilePictureUrl || ""}
           onChange={handleProfileInfoChange}
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Input password to save changes..."
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
         <div className="button-container">
           <button type="submit" onClick={handleSubmit} disabled={isLoading}>

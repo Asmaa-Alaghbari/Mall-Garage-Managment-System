@@ -5,8 +5,10 @@
     {
         public int NotificationId { get; set; }
         public int UserId { get; set; }
-        public string Message { get; set; }
-        public DateTime DateTime { get; set; } = DateTime.UtcNow;
+        public int? ReservationId { get; set; }
         public bool IsRead { get; set; }
+        public string Message { get; set; }
+        public string? TimeLeftToReservation { get; set; }
+        public DateTime DateTime { get; set; } = DateTime.UtcNow;
     }
 }

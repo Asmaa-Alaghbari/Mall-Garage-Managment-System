@@ -1,70 +1,91 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { confirmLogout, fetchCurrentUser } from "./Utils";
+import { confirmLogout, notifySuccess, sendFetchRequest } from "../Utils/Utils";
 import "./Settings.css";
 
+// Settings page for the user
 export default function Settings({ setIsLoggedIn }) {
   const navigate = useNavigate();
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [, setError] = useState("");
   const [settings, setSettings] = useState({
     userId: "",
     darkMode: false,
     receiveNotifications: false,
-    role: "",
   });
 
   // Fetch the current user data from the backend and set the settings
   useEffect(() => {
-    fetchCurrentUser(setSettings, setIsLoading, setError);
-  }, []);
+    let isMounted = true;
 
-  const updateSettings = async (settings) => {
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
+    const fetchData = async () => {
+      await loadUserSettings();
+    };
 
-    const response = await fetch(
-      `http://localhost:5296/api/settings/UpdateSettings?userId=${userId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(settings), // Send settings object directly
+    fetchData();
+
+    return () => {
+      // Perform the settings fetch when the component is about to unmount
+      if (isMounted) {
+        saveSettingsBeforeUnmount();
+      }
+      isMounted = false;
+    };
+  }, [settings.userId]);
+
+  // Fetch the user's settings from the backend
+  const loadUserSettings = async () => {
+    const userId = sessionStorage.getItem("userId");
+
+    await sendFetchRequest(
+      `settings/GetSettingsByUserId?userId=${userId}`,
+      "GET",
+      setIsLoading,
+      undefined,
+      setSettings
+    );
+  };
+
+  // Save the user's settings to the backend
+  const saveSettingsBeforeUnmount = async () => {
+    const userId = sessionStorage.getItem("userId");
+
+    await sendFetchRequest(
+      `settings/GetSettingsByUserId?userId=${userId}`,
+      "GET",
+      setIsLoading,
+      undefined,
+      (data) => {
+        if (data.darkMode) {
+          document.body.classList.add("dark-mode");
+        } else {
+          document.body.classList.remove("dark-mode");
+        }
       }
     );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage = errorData?.message || "Failed to update settings";
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json().catch(() => null);
-
-    if (!data) {
-      throw new Error("Empty response received from server");
-    }
-
-    console.log("API Response:", data);
   };
 
+  // Save the user's settings to the backend
   const handleSaveSettings = async () => {
-    setIsLoading(true);
-    try {
-      await updateSettings(settings); // Pass settings object
-      setIsLoading(false);
-      setSuccessMessage("Settings saved successfully!"); // Set success message
-    } catch (error) {
-      console.error("Error saving settings:", error);
-      setError(error.message || "Failed to save settings");
-      setIsLoading(false);
-      setSuccessMessage(""); // Clear success message
+    const userId = sessionStorage.getItem("userId");
+    settings.userId = userId;
+
+    const response = await sendFetchRequest(
+      `settings/UpdateSettings?userId=${userId}`,
+      "PUT",
+      setIsLoading,
+      setError,
+      undefined,
+      settings
+    );
+
+    if (response && response.message) {
+      notifySuccess(response.message);
     }
   };
 
+  // Toggle dark mode
   const handleDarkModeToggle = () => {
     const newDarkMode = !settings.darkMode;
     setSettings((prev) => ({ ...prev, darkMode: newDarkMode }));
@@ -77,6 +98,7 @@ export default function Settings({ setIsLoggedIn }) {
     }
   };
 
+  // Toggle notifications
   const handleNotificationsToggle = () => {
     const newNotifications = !settings.receiveNotifications;
     setSettings((prev) => ({
@@ -141,5 +163,3 @@ export default function Settings({ setIsLoggedIn }) {
     </div>
   );
 }
-
-// I want to add another button appear only for ADMIN role, to navigate to UserList page

@@ -2,6 +2,7 @@
 using mgms_backend.Entities.Reservations;
 using mgms_backend.Mappers.Interface;
 using Riok.Mapperly.Abstractions;
+using Reservation = mgms_backend.Entities.Reservations.Reservation;
 
 namespace mgms_backend.Mappers.Implementation
 {
@@ -33,6 +34,16 @@ namespace mgms_backend.Mappers.Implementation
                 ServiceId = x
             }).ToList();
             return reservationModel;
+        }
+
+        // Maps a collection of Reservation DTOs to a collection of Reservation entities and adds the service IDs to the Reservation entities
+        [UserMapping(Default = true)]
+        public ReservationDto? MapToDto(Reservation? model)
+        {
+            var reservationDto = ToDto(model);
+            reservationDto.ServiceIds = model.Services.Select(x => x.ServiceId).ToArray();
+
+            return reservationDto;
         }
 
         // Maps a collection of Reservation entities to a collection of Reservation DTOs and adds the service IDs to the Reservation DTOs

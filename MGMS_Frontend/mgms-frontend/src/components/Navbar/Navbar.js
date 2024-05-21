@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { fetchCurrentUser, confirmLogout } from "./Utils";
+import { fetchCurrentUser, confirmLogout } from "../Utils/Utils";
 import "./Navbar.css";
 import {
-  FaCalendarAlt, // Calendar icon
-  FaParking, // Parking icon
-  FaDollarSign, // Dollar icon
-  FaUser, // User icon
-  FaComments, // Comments icon
-  FaSignOutAlt, // Sign out icon
   FaBars, // Hamburger icon
-  FaUsersCog, // Users icon
+  FaBell, // Bell icon
+  FaCalendarAlt, // Calendar icon
   FaCog, // Setting icon
+  FaComments, // Comments icon
+  FaDollarSign, // Dollar icon
   FaHome, // Home icon
+  FaParking, // Parking icon
+  FaSignOutAlt, // Sign out icon
+  FaUser, // User icon
+  FaUsersCog, // Users icon
+  FaWrench, // Wrench icon
 } from "react-icons/fa"; // Importing icons
 
 // Navigation bar component
@@ -37,10 +39,9 @@ export default function Navbar({ setIsLoggedIn }) {
     setIsOpen(false); // Close the navbar
   };
 
+  // Fetch the current user data from the backend and set the user role
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
-
-    // Fetch the current user data from the backend and set the user role
     fetchCurrentUser(setUserRole, setIsLoading, setError, setUserRole);
 
     return () => {
@@ -64,21 +65,33 @@ export default function Navbar({ setIsLoggedIn }) {
             closeNavbar={() => setIsOpen(false)}
           />
           <NavItem
-            to="/reservations"
-            label="Reservations"
-            icon={<FaCalendarAlt className="nav-icon" />}
-            closeNavbar={() => setIsOpen(false)}
-          />
-          <NavItem
             to="/parking-spots"
             label="Parking Spots"
             icon={<FaParking className="nav-icon" />}
             closeNavbar={() => setIsOpen(false)}
           />
           <NavItem
+            to="/reservations"
+            label="Reservations"
+            icon={<FaCalendarAlt className="nav-icon" />}
+            closeNavbar={() => setIsOpen(false)}
+          />
+          <NavItem
+            to="/services"
+            label="Services"
+            icon={<FaWrench className="nav-icon" />}
+            closeNavbar={() => setIsOpen(false)}
+          />
+          <NavItem
             to="/payments"
             label="Payments"
             icon={<FaDollarSign className="nav-icon" />}
+            closeNavbar={() => setIsOpen(false)}
+          />
+          <NavItem
+            to="/notifications"
+            label="Notifications"
+            icon={<FaBell className="nav-icon" />}
             closeNavbar={() => setIsOpen(false)}
           />
           <NavItem

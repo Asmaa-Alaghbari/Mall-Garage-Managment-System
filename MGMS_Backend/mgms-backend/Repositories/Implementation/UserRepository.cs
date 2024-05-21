@@ -59,6 +59,12 @@ namespace mgms_backend.Repositories.Implementation
             return await query.ToListAsync(); // Execute the query and return the results
         }
 
+        // Get users by role from the database
+        public async Task<IList<User>> GetUsersByRoleAsync(string role)
+        {
+            return await _context.Users.Where(u => u.Role == role).ToListAsync();
+        }
+
         // Add a new user to the database
         public async Task<User> AddUserAsync(User user)
         {
@@ -126,4 +132,3 @@ namespace mgms_backend.Repositories.Implementation
         }
     }
 }
-

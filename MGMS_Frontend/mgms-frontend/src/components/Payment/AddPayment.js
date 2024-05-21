@@ -1,92 +1,82 @@
 import React, { useState, useEffect } from "react";
-import { fetchCurrentUser } from "../Utils";
+import {
+  fetchCurrentUser,
+  sendFetchRequest,
+  notifyError,
+  notifySuccess,
+} from "../Utils/Utils";
 
-export default function AddPayment({
-  onAddSuccess,
-  onClose,
-  paymentData,
-}) {
+// Add new payment or update existing payment
+export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
   const [payment, setPayment] = useState(
     paymentData || {
-      paymentId: "",
-      reservationId: "",
-      userId: "",
-      amount: "",
+      paymentId: 0,
+      reservationId: 0,
+      userId: 0,
+      amount: 0,
       paymentMethod: "",
     }
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [, setError] = useState(null);
+  const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
 
+  // Fetch the current user on component mount
   useEffect(() => {
-    fetchCurrentUser(setPayment, setIsLoading, setError, () => {});
+    fetchCurrentUser(setUser, setIsLoading, setError);
   }, []);
 
+  // Update the payment state with the payment data
+  useEffect(() => {
+    if (error && error !== null) {
+      notifyError(error);
+    }
+  }, [error]);
+
+  // Update the payment state with the payment data
   const handleChange = (e) => {
-    console.log("Current payment state:", payment);
     const { name, value } = e.target;
     setPayment((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitting payment data:", payment);
-    setIsLoading(true);
 
-    if (!payment.userId || !payment.reservationId) {
-      console.error("userId or reservationId is missing:", payment);
-      return;
-    }
+    // if (payment && !payment.userId || !payment.reservationId) {
+    // 	notifyError("userId or reservationId is missing!");
+    // 	return;
+    // }
 
     // Prepare the payment data to be sent to the backend
-    const paymentData = {
-      paymentId: payment.paymentId, // Keep as string
-      reservationId: parseInt(payment.reservationId, 10), // Convert to number, base 10
-      userId: parseInt(payment.userId, 10), // Convert to number, base 10
-      amount: parseFloat(payment.amount), // Convert to float
-      paymentMethod: payment.paymentMethod, // Keep as string
-      dateTime: new Date().toISOString(), // Add current date and time
-    };
+    // const paymentData = {
+    // 	paymentId: payment.paymentId, // Keep as string
+    // 	reservationId: parseInt(payment.reservationId, 10), // Convert to number, base 10
+    // 	userId: parseInt(payment.userId, 10), // Convert to number, base 10
+    // 	amount: parseFloat(payment.amount), // Convert to float
+    // 	paymentMethod: payment.paymentMethod, // Keep as string
+    // 	dateTime: new Date().toISOString(), // Add current date and time
+    // };
 
-    const apiUrl = paymentData.paymentId
-      ? `http://localhost:5296/api/Payments/UpdatePayment?paymentId=${paymentData.paymentId}`
-      : "http://localhost:5296/api/Payments/AddPayment";
+    payment.userId = user.userId;
 
-    const fetchMethod = paymentData.paymentId ? "PUT" : "POST";
+    const apiEndpoint = paymentData
+      ? `Payments/UpdatePayment?paymentId=${paymentData.paymentId}`
+      : "Payments/AddPayment";
 
-    fetch(apiUrl, {
-      method: fetchMethod,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify(paymentData),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(
-            paymentData.paymentId
-              ? "Failed to update payment"
-              : "Failed to add payment"
-          );
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setMessage(
-          paymentData.paymentId
-            ? "Payment updated successfully!"
-            : "Payment added successfully!"
-        );
-        onAddSuccess(data);
-      })
-      .catch((error) => {
-        setMessage(error.message);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    const response = await sendFetchRequest(
+      apiEndpoint,
+      paymentData ? "PUT" : "POST",
+      setIsLoading,
+      setError,
+      undefined,
+      payment
+    );
+
+    if (response && response.message) {
+      onAddSuccess();
+      notifySuccess(response.message);
+    }
   };
 
   return (
@@ -153,17 +143,6 @@ export default function AddPayment({
           </button>
         </div>
       </form>
-      {message && (
-        <p
-          className={
-            message.includes("successfully")
-              ? "message-success"
-              : "message-error"
-          }
-        >
-          {message}
-        </p>
-      )}
     </div>
   );
 }

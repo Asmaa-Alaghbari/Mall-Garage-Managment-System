@@ -1,16 +1,16 @@
-using Microsoft.EntityFrameworkCore; // For DbContext and UseNpgsql method 
-using Microsoft.OpenApi.Models;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore; // For DbContext and UseNpgsql method 
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using mgms_backend.Data;
+using mgms_backend.Exceptions;
+using mgms_backend.Helpers;
 using mgms_backend.Mappers.Implementation;
 using mgms_backend.Mappers.Interface;
 using mgms_backend.Repositories;
 using mgms_backend.Repositories.Implementation;
 using mgms_backend.Repositories.Interface;
-using mgms_backend.Exceptions;
-using mgms_backend.Helpers;
 
 namespace mgms_backend
 {
@@ -22,7 +22,8 @@ namespace mgms_backend
 
             // Add DbContext and configure it to use PostgreSQL
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+                .UseLazyLoadingProxies());
 
             // Add HttpContextAccessor
             builder.Services.AddHttpContextAccessor();
@@ -44,7 +45,7 @@ namespace mgms_backend
             builder.Services.AddScoped<IParkingSpotMapper, ParkingSpotMapper>(); // Parking spot mapper
             builder.Services.AddScoped<IPaymentMapper, PaymentMapper>(); // Payment mapper
             builder.Services.AddScoped<IReservationMapper, ReservationMapper>(); // Reservation mapper
-            builder.Services.AddScoped<IServiceCollection, ServiceCollection>(); // Service collection mapper
+            builder.Services.AddScoped<IServiceMapper, ServiceMapper>(); // Service mapper
             builder.Services.AddScoped<IUserMapper, UserMapper>(); // User mapper
             builder.Services.AddScoped<IUserHelper, UserHelper>(); // User helper
 
@@ -96,6 +97,7 @@ namespace mgms_backend
                     Type = SecuritySchemeType.Http,
                     Scheme = "bearer"
                 });
+
                 // Add security requirements for JWT token
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement()
                 {

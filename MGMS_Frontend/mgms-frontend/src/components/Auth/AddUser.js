@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { sendFetchRequest, notifySuccess } from "../Utils/Utils";
 
+// Handle adding a new user to the list of users
 export default function AddUser({ onAddSuccess, onClose, userData }) {
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState(
     userData || {
       firstName: "",
@@ -12,19 +15,8 @@ export default function AddUser({ onAddSuccess, onClose, userData }) {
       role: "USER", // Default role set to User
     }
   );
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState(null);
 
-  // Close the form after showing the success message
-  useEffect(() => {
-    if (message === "User added successfully!") {
-      const timer = setTimeout(() => {
-        onClose(); // Close the form automatically after 3 seconds
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [message, onClose]);
-
+  // Handle form input changes (controlled component)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -33,34 +25,23 @@ export default function AddUser({ onAddSuccess, onClose, userData }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // Handle form submission (POST request) to the API server (backend)
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    fetch("http://localhost:5296/api/auth/AddUser", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify(formData),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to add user");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setMessage("User added successfully!");
-        onAddSuccess(data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error adding user:", error);
-        setMessage(error.message);
-        setIsLoading(false);
-      });
+    const response = await sendFetchRequest(
+      "auth/AddUser",
+      "POST",
+      setIsLoading,
+      undefined, // setError
+      undefined, // setResponse
+      formData
+    );
+
+    if (response && response.message) {
+      onAddSuccess();
+      notifySuccess(response.message);
+    }
   };
 
   return (
@@ -157,17 +138,6 @@ export default function AddUser({ onAddSuccess, onClose, userData }) {
           </button>
         </div>
       </form>
-      {message && (
-        <p
-          className={
-            message.includes("successfully")
-              ? "message-success"
-              : "message-error"
-          }
-        >
-          {message}
-        </p>
-      )}
     </div>
   );
 }

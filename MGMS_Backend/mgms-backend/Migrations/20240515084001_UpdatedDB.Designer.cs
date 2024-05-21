@@ -12,20 +12,20 @@ using mgms_backend.Data;
 namespace mgms_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240424131757_ProfileUpdated2")]
-    partial class ProfileUpdated2
+    [Migration("20240515084001_UpdatedDB")]
+    partial class UpdatedDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.3")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("mgms_backend.Models.Feedback", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Feedbacks.Feedback", b =>
                 {
                     b.Property<int>("FeedbackId")
                         .ValueGeneratedOnAdd()
@@ -60,7 +60,7 @@ namespace mgms_backend.Migrations
                     b.ToTable("Feedbacks");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Notification", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Notifications.Notification", b =>
                 {
                     b.Property<int>("NotificationId")
                         .ValueGeneratedOnAdd()
@@ -88,7 +88,7 @@ namespace mgms_backend.Migrations
                     b.ToTable("Notifications");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.ParkingSpot", b =>
+            modelBuilder.Entity("mgms_backend.Entities.ParkingSpots.ParkingSpot", b =>
                 {
                     b.Property<int>("ParkingSpotId")
                         .ValueGeneratedOnAdd()
@@ -99,9 +99,8 @@ namespace mgms_backend.Migrations
                     b.Property<bool>("IsOccupied")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Number")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Section")
                         .IsRequired()
@@ -116,7 +115,7 @@ namespace mgms_backend.Migrations
                     b.ToTable("ParkingSpots");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Payment", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Payments.Payment", b =>
                 {
                     b.Property<int>("PaymentId")
                         .ValueGeneratedOnAdd()
@@ -150,53 +149,7 @@ namespace mgms_backend.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Profile", b =>
-                {
-                    b.Property<int>("ProfileId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProfileId"));
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProfilePictureUrl")
-                        .HasColumnType("text");
-
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ZipCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("ProfileId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("Profiles");
-                });
-
-            modelBuilder.Entity("mgms_backend.Models.Reservation", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Reservations.Reservation", b =>
                 {
                     b.Property<int>("ReservationId")
                         .ValueGeneratedOnAdd()
@@ -229,7 +182,7 @@ namespace mgms_backend.Migrations
                     b.ToTable("Reservations");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.ReservationService", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Reservations.ReservationService", b =>
                 {
                     b.Property<int>("ReservationId")
                         .HasColumnType("integer");
@@ -244,7 +197,7 @@ namespace mgms_backend.Migrations
                     b.ToTable("ReservationServices");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Service", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Services.Service", b =>
                 {
                     b.Property<int>("ServiceId")
                         .ValueGeneratedOnAdd()
@@ -268,7 +221,7 @@ namespace mgms_backend.Migrations
                     b.ToTable("Services");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Settings", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Settings", b =>
                 {
                     b.Property<int>("SettingsId")
                         .ValueGeneratedOnAdd()
@@ -287,13 +240,53 @@ namespace mgms_backend.Migrations
 
                     b.HasKey("SettingsId");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("Settings");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.User", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Users.Profile", b =>
+                {
+                    b.Property<int>("ProfileId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProfileId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ZipCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("ProfileId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Profiles");
+                });
+
+            modelBuilder.Entity("mgms_backend.Entities.Users.User", b =>
                 {
                     b.Property<int>("UserId")
                         .ValueGeneratedOnAdd()
@@ -337,10 +330,10 @@ namespace mgms_backend.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Feedback", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Feedbacks.Feedback", b =>
                 {
-                    b.HasOne("mgms_backend.Models.User", "User")
-                        .WithMany("Feedbacks")
+                    b.HasOne("mgms_backend.Entities.Users.User", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -348,27 +341,27 @@ namespace mgms_backend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Notification", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Notifications.Notification", b =>
                 {
-                    b.HasOne("mgms_backend.Models.User", "User")
-                        .WithMany("Notifications")
+                    b.HasOne("mgms_backend.Entities.Users.User", "Users")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Payment", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Payments.Payment", b =>
                 {
-                    b.HasOne("mgms_backend.Models.Reservation", "Reservation")
+                    b.HasOne("mgms_backend.Entities.Reservations.Reservation", "Reservation")
                         .WithMany("Payments")
                         .HasForeignKey("ReservationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("mgms_backend.Models.User", "User")
-                        .WithMany("Payments")
+                    b.HasOne("mgms_backend.Entities.Users.User", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -378,27 +371,16 @@ namespace mgms_backend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Profile", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Reservations.Reservation", b =>
                 {
-                    b.HasOne("mgms_backend.Models.User", "User")
-                        .WithOne("Profile")
-                        .HasForeignKey("mgms_backend.Models.Profile", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("mgms_backend.Models.Reservation", b =>
-                {
-                    b.HasOne("mgms_backend.Models.ParkingSpot", "ParkingSpot")
-                        .WithMany("Reservations")
+                    b.HasOne("mgms_backend.Entities.ParkingSpots.ParkingSpot", "ParkingSpot")
+                        .WithMany()
                         .HasForeignKey("ParkingSpotId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("mgms_backend.Models.User", "User")
-                        .WithMany("Reservations")
+                    b.HasOne("mgms_backend.Entities.Users.User", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -408,16 +390,16 @@ namespace mgms_backend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.ReservationService", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Reservations.ReservationService", b =>
                 {
-                    b.HasOne("mgms_backend.Models.Reservation", "Reservation")
-                        .WithMany("ReservationServices")
+                    b.HasOne("mgms_backend.Entities.Reservations.Reservation", "Reservation")
+                        .WithMany("Services")
                         .HasForeignKey("ReservationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("mgms_backend.Models.Service", "Service")
-                        .WithMany("ReservationServices")
+                    b.HasOne("mgms_backend.Entities.Services.Service", "Service")
+                        .WithMany("Reservations")
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -427,49 +409,38 @@ namespace mgms_backend.Migrations
                     b.Navigation("Service");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Settings", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Settings", b =>
                 {
-                    b.HasOne("mgms_backend.Models.User", "User")
-                        .WithOne("Settings")
-                        .HasForeignKey("mgms_backend.Models.Settings", "UserId")
+                    b.HasOne("mgms_backend.Entities.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.ParkingSpot", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Users.Profile", b =>
                 {
-                    b.Navigation("Reservations");
+                    b.HasOne("mgms_backend.Entities.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Reservation", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Reservations.Reservation", b =>
                 {
                     b.Navigation("Payments");
 
-                    b.Navigation("ReservationServices");
+                    b.Navigation("Services");
                 });
 
-            modelBuilder.Entity("mgms_backend.Models.Service", b =>
+            modelBuilder.Entity("mgms_backend.Entities.Services.Service", b =>
                 {
-                    b.Navigation("ReservationServices");
-                });
-
-            modelBuilder.Entity("mgms_backend.Models.User", b =>
-                {
-                    b.Navigation("Feedbacks");
-
-                    b.Navigation("Notifications");
-
-                    b.Navigation("Payments");
-
-                    b.Navigation("Profile")
-                        .IsRequired();
-
                     b.Navigation("Reservations");
-
-                    b.Navigation("Settings")
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

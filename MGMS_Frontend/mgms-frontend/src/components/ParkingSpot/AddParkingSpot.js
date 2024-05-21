@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { notifyError, notifySuccess, sendFetchRequest } from "../Utils/Utils";
 
+// Add new parking spot or update existing parking spot
 export default function AddParkingSpot({
   onAddSuccess,
   onClose,
@@ -7,25 +9,23 @@ export default function AddParkingSpot({
 }) {
   const [parkingSpot, setParkingSpot] = useState(
     parkingSpotData || {
-      number: "",
+      number: 0,
       section: "",
       isOccupied: false, // Default value is not occupied
       size: "", // Small, Medium, Large
     }
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [apiError, setApiError] = useState(undefined);
 
-  // Close the form after showing the success message
+  // Display error message if API request fails
   useEffect(() => {
-    if (message === "Parking spot added successfully!") {
-      const timer = setTimeout(() => {
-        onClose(); // Close the form automatically after 3 seconds
-      }, 3000);
-      return () => clearTimeout(timer);
+    if (apiError && apiError !== null) {
+      notifyError(apiError);
     }
-  }, [message, onClose]);
+  }, [apiError]);
 
+  // Update the parking spot state with the parking spot data
   const handleChange = (e) => {
     const { name, value, checked, type } = e.target;
     setParkingSpot((prev) => ({
@@ -55,47 +55,26 @@ export default function AddParkingSpot({
     }
   };
 
-  const handleSubmit = (e) => {
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    const apiEndpoint = parkingSpotData
+      ? `parkingspots/UpdateParkingSpot?parkingSpotId=${parkingSpotData.parkingSpotId}`
+      : "parkingspots/AddParkingSpot";
 
-    const apiUrl = parkingSpotData
-      ? `http://localhost:5296/api/parkingspots/UpdateParkingSpot?parkingSpotId=${parkingSpotData.parkingSpotId}`
-      : "http://localhost:5296/api/parkingspots/AddParkingSpot";
+    const response = await sendFetchRequest(
+      apiEndpoint,
+      parkingSpotData ? "PUT" : "POST",
+      setIsLoading,
+      setApiError,
+      undefined,
+      parkingSpot
+    );
 
-    fetch(apiUrl, {
-      method: parkingSpotData ? "PUT" : "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify(parkingSpot),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          // Handle different types of errors based on status codes
-          if (response.status === 403) {
-            throw new Error("You do not have permission to add parking spots.");
-          }
-          return response.json().then((data) => {
-            // Handle custom error messages from the API
-            throw new Error(data.message || "Failed to add parking spot.");
-          });
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setMessage(
-          `Parking spot ${parkingSpotData ? "updated" : "added"} successfully!`
-        );
-        onAddSuccess(data); // Update the list of parking spots
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        setMessage(error.message);
-        setIsLoading(false);
-      });
+    if (response && response.message) {
+      onAddSuccess();
+      notifySuccess(response.message);
+    }
   };
 
   return (
@@ -106,7 +85,7 @@ export default function AddParkingSpot({
           <label>
             Number:
             <input
-              type="text"
+              type="number"
               name="number"
               value={parkingSpot.number}
               onChange={handleChange}
@@ -119,7 +98,7 @@ export default function AddParkingSpot({
             Section:
             <select
               name="section"
-              value={parkingSpot.status}
+              value={parkingSpot.section}
               onChange={handleChange}
               required
             >
@@ -183,17 +162,6 @@ export default function AddParkingSpot({
           </button>
         </div>
       </form>
-      {message && (
-        <p
-          className={
-            message.includes("successfully")
-              ? "message-success"
-              : "message-error"
-          }
-        >
-          {message}
-        </p>
-      )}
     </div>
   );
 }

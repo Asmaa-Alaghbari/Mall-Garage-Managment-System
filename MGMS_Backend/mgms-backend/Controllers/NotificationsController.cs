@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using mgms_backend.DTO.NotificationDTO;
 using mgms_backend.Entities.Notifications;
+using mgms_backend.Entities.Reservations;
 using mgms_backend.Exceptions;
 using mgms_backend.Helpers;
 using mgms_backend.Mappers.Interface;
@@ -14,19 +16,29 @@ namespace mgms_backend.Controllers
     [Authorize] // Secure the controller with JWT authentication
     public class NotificationsController : ControllerBase
     {
-        private readonly INotificationRepository _notificationRepository;
         private readonly INotificationMapper _notificationMapper;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IReservationRepository _reservationRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IUserHelper _userHelper;
 
-        public NotificationsController(INotificationRepository notificationRepository, INotificationMapper notificationMapper, IUserHelper userHelper)
+        public NotificationsController(
+            INotificationMapper notificationMapper,
+            INotificationRepository notificationRepository,
+            IReservationRepository reservationRepository,
+            IUserRepository userRepository,
+            IUserHelper userHelper)
         {
-            _notificationRepository = notificationRepository;
             _notificationMapper = notificationMapper;
+            _notificationRepository = notificationRepository;
+            _reservationRepository = reservationRepository;
+            _userRepository = userRepository;
             _userHelper = userHelper;
         }
 
         // GET: api/GetNotificationsStatistics: Get the statistics of notifications
         [HttpGet("GetNotificationsStatistics")]
+        [Authorize]
         public async Task<IActionResult> GetNotificationsStatistics([FromQuery] int userId = 0)
         {
             IList<Notification> notifications;
@@ -50,6 +62,7 @@ namespace mgms_backend.Controllers
 
         // POST: api/AddNotification: Add a new notification
         [HttpPost("AddNotification")]
+        [Authorize]
         public async Task<IActionResult> CreateNotification([FromBody] NotificationDto notificationDto)
         {
             var newNotification = _notificationMapper.ToModel(notificationDto);
@@ -60,13 +73,67 @@ namespace mgms_backend.Controllers
                 throw new ServerValidationException("The notification must be assigned to a user!");
             }
 
+            // Check if the reservation exists for the notification 
+            if (notificationDto.ReservationId.HasValue)
+            {
+                var reservation = _reservationRepository.GetReservationByIdAsync(notificationDto.ReservationId.Value);
+
+                if (ReferenceEquals(null, reservation) && notificationDto.ReservationId != 0)
+                {
+                    throw new ServerValidationException("The reservation for this notification does not exist!");
+                }
+            }
+
+            newNotification.NotificationId = 0;
             await _notificationRepository.AddAsync(newNotification);
 
-            return Ok(new { message = $"Service with Id {newNotification.NotificationId} created successfully!" });
+            return Ok(new
+            {
+                message = $"Notification with Id {newNotification.NotificationId} created successfully!"
+            });
+        }
+
+        // POST: api/AddNotificationForRole: Add a new notification for a role
+        [HttpPost("AddNotificationForRole")]
+        public async Task<IActionResult> CreateNotificationForRole([FromQuery] string role, [FromBody] NotificationDto notificationDto)
+        {
+            var newNotification = _notificationMapper.ToModel(notificationDto);
+            var users = await _userRepository.GetUsersByRoleAsync(role);
+            Reservation? reservation = null;
+
+            // Check if the notification is assigned to a user
+            if (notificationDto.ReservationId.HasValue)
+            {
+                reservation = await _reservationRepository.GetReservationByIdAsync(notificationDto.ReservationId.Value);
+            }
+
+            // Check if the role exists
+            if (users.IsNullOrEmpty())
+            {
+                return Ok();
+            }
+
+            // Check if the reservation exists for the notification
+            if (ReferenceEquals(null, reservation) && notificationDto.ReservationId != 0)
+            {
+                throw new ServerValidationException("The reservation for this notification does not exist!");
+            }
+
+            // Add the notification for each user in the role
+            foreach (var user in users)
+            {
+                newNotification.NotificationId = 0;
+                newNotification.UserId = user.UserId;
+
+                await _notificationRepository.AddAsync(newNotification);
+            }
+
+            return Ok(new { message = $"Notifications sent to role \"{role}\"." });
         }
 
         // POST: api/AddNotification: Add a new notification
         [HttpPost("DeleteNotification")]
+        [Authorize]
         public async Task<IActionResult> DeleteNotification([FromQuery] int notificationId)
         {
             var notification = await _notificationRepository.GetByNotificationIdAsync(notificationId);
@@ -98,23 +165,28 @@ namespace mgms_backend.Controllers
             return Ok(new { TotalPages = totalPages, Data = _notificationMapper.ToCollectionDto(paginatedData) });
         }
 
-        // PUT: api/MarkAsRead: Mark a notification as read
-        [HttpPut("MarkAsRead")]
+        // PUT: api/MarkAsReadOrUnread: Mark a notification as read or unread
+        [HttpPut("MarkAsReadOrUnread")]
         [Authorize]
-        public async Task<IActionResult> MarkAsRead([FromQuery] int notificationId)
+        public async Task<IActionResult> MarkAsReadOrUnread([FromQuery] int notificationId)
         {
             var notification = await _notificationRepository.GetByNotificationIdAsync(notificationId);
 
             // Check if the notification exists
-            if (ReferenceEquals(null, notification))
+            if (notification == null)
             {
                 throw new EntityNotFoundException($"Notification with Id {notificationId} was not found!");
             }
 
-            notification.IsRead = true;
+            // Toggle the IsRead property
+            notification.IsRead = !notification.IsRead;
             await _notificationRepository.UpdateAsync(notification);
 
-            return Ok(new { Message = $"Notification with Id {notificationId} was marked as read!" });
+            string message = notification.IsRead ?
+                             $"Notification with Id {notificationId} was marked as read!" :
+                             $"Notification with Id {notificationId} was marked as unread!";
+
+            return Ok(new { Message = message });
         }
     }
 }

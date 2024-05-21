@@ -1,173 +1,171 @@
 import React, { useState, useEffect } from "react";
+import BeatLoader from "react-spinners/BeatLoader";
+import { useLocation } from "react-router-dom";
+import AddReservation from "./AddReservation";
 import {
+  calculateDuration,
+  calculateIndex,
+  fetchCurrentUser,
   formatDateTime,
   highlightText,
-  paginate,
+  notifySuccess,
   pagination,
-  calculateIndex,
-} from "../Utils";
-import AddReservation from "./AddReservation";
-import "../style.css";
+  sendFetchRequest,
+  ShowMessageModel,
+} from "../Utils/Utils";
+import "../Utils/style.css";
 
 export default function Reservations() {
   const [reservations, setReservations] = useState([]);
+  const [paginatedData, setPaginatedData] = useState([]); // Store parking spots from the API
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // Search
-  const [statusFilter, setStatusFilter] = useState("all"); // Filter
-  const [dateFilter, setDateFilter] = useState(""); // Date filter
-  const [sortType, setSortType] = useState("reservationId"); // Sort by reservation ID by default
   const [currentPage, setCurrentPage] = useState(1); // Pagination
+  const [totalPages, setTotalPages] = useState(1); // Pagination
   const [itemsPerPage] = useState(5); // Display 5 items per page
+  const [startTime, setModalStartTime] = useState("");
+  const [endTime, setModalEndTime] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [singleReservation, setSingleReservation] = useState(null); // Store a single reservation
+  const [searchFormData, setSearchFormData] = useState({
+    text: "",
+    status: "",
+    date: null,
+    sortByProperty: "",
+  });
+  const location = useLocation(); // Get the current location
+  const searchParams = new URLSearchParams(location.search); // Get the URL search params
+  const onlyShowReservationId = searchParams.get("id"); // Get the reservation ID from the URL
 
+  // Fetch reservations and current user on component mount
   useEffect(() => {
-    if (!showAddForm && !showUpdateForm) {
+    const fetchData = () => {
       fetchReservations();
-    }
-  }, [showAddForm, showUpdateForm]);
+      fetchCurrentUser(setUser, setIsLoading, setError);
+    };
 
-  const fetchReservations = () => {
-    setIsLoading(true);
-    fetch("http://localhost:5296/api/reservations/GetAllReservations", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch reservations");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setReservations(data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching reservations:", error);
-        setError(error.message);
-        setIsLoading(false);
-      });
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchFormData, currentPage]); // Re-fetch parking spots only when the form is closed
+
+  // Fetch a single reservation with the given ID
+  useEffect(() => {
+    if (paginatedData) {
+      setReservations(paginatedData.data);
+      setTotalPages(paginatedData.totalPages);
+    }
+
+    // If onlyShowReservationId is set, fetch the reservation with the given ID
+    if (singleReservation && singleReservation !== null) {
+      setReservations([]);
+
+      setReservations((prevReservations) => [
+        ...prevReservations,
+        singleReservation,
+      ]);
+    }
+  }, [error, paginatedData, singleReservation]);
+
+  // Fetch reservations from the API and update the state
+  const fetchReservations = async () => {
+    // If onlyShowReservationId is set, fetch the reservation with the given ID
+    if (onlyShowReservationId && onlyShowReservationId !== 0) {
+      setReservations([]);
+
+      await sendFetchRequest(
+        `reservations/GetReservationById?reservationId=${onlyShowReservationId}`,
+        "GET",
+        setIsLoading,
+        setError,
+        setSingleReservation
+      );
+    }
+
+    // Fetch all reservations
+    await sendFetchRequest(
+      `reservations/searchpaginated?pageNumber=${currentPage}&pageSize=${itemsPerPage}`,
+      "POST",
+      setIsLoading,
+      setError,
+      setPaginatedData,
+      searchFormData
+    );
   };
 
-  const handleAddSuccess = (newReservation) => {
-    setReservations([...reservations, newReservation]);
+  // Handle search input change
+  const handleSearchInputChange = async (e) => {
+    setCurrentPage(1);
+
+    if (e.target.name === "date" && e.target.value === "") {
+      setSearchFormData((prevSearchFormData) => ({
+        ...prevSearchFormData,
+        date: null,
+      }));
+    } else {
+      setSearchFormData((prevSearchFormData) => ({
+        ...prevSearchFormData,
+        [e.target.name]: e.target.value,
+      }));
+    }
+  };
+
+  // Handle page change
+  const handleSuccess = () => {
+    const response = fetchReservations();
+
+    if (response && response.message) {
+      notifySuccess(response.message);
+    }
+
+    setShowUpdateForm(false);
     setShowAddForm(false);
   };
 
-  const handleUpdateSuccess = (updatedReservation) => {
-    const updatedReservations = reservations.map((reservation) =>
-      reservation.reservationId === updatedReservation.reservationId
-        ? updatedReservation
-        : reservation
-    );
-    setReservations(updatedReservations);
-    setShowUpdateForm(false);
-  };
-
-  const handleDelete = (reservationId) => {
-    // Ask the user to confirm the deletion
+  // Delete reservation by ID
+  const handleDelete = async (reservationId) => {
     if (window.confirm("Are you sure you want to delete this reservation?")) {
-      fetch(
-        `http://localhost:5296/api/reservations/DeleteReservation?reservationId=${reservationId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      )
-        .then((response) => {
-          if (!response.ok) {
-            // If the server responds with an error, throw an error
-            return response.json().then((data) => {
-              throw new Error(data.message || "Failed to delete reservation");
-            });
-          }
-          // If delete was successful, filter out the deleted reservation
-          setReservations(
-            reservations.filter(
-              (reservation) => reservation.reservationId !== reservationId
-            )
-          );
-          alert("Reservation deleted successfully!");
-        })
-        .catch((error) => {
-          console.error("Delete error:", error);
-          alert(error.message);
-        });
+      const response = await sendFetchRequest(
+        `reservations/DeleteReservation/?reservationId=${reservationId}`,
+        "DELETE",
+        setIsLoading,
+        setError
+      );
+
+      if (response && response.message) {
+        notifySuccess(response.message);
+        await fetchReservations();
+      }
     }
   };
 
-  // Filter reservations based on search term and status
-  const filteredReservations = reservations.filter((reservation) => {
-    // Check if the date and time match the filter
-    const isDateMatch = dateFilter
-      ? reservation.startTime.includes(dateFilter) ||
-        reservation.endTime.includes(dateFilter)
-      : true;
-
-    // Check if the reservationId, start time, or end time includes the search term
-    const isSearchMatch =
-      (reservation.reservationId &&
-        reservation.reservationId.toString().includes(searchTerm)) ||
-      (reservation.startTime && reservation.startTime.includes(searchTerm)) ||
-      (reservation.endTime && reservation.endTime.includes(searchTerm)) ||
-      (reservation.status && reservation.status.includes(searchTerm));
-
-    // Check if the status matches the filter or filter is set to 'all'
-    const isStatusMatch =
-      statusFilter === "all" ||
-      reservation.status.toLowerCase() === statusFilter.toLowerCase();
-
-    return isSearchMatch && isStatusMatch && isDateMatch;
-  });
-
-  // Sort reservations
-  let sortedReservations = [...filteredReservations];
-
-  if (sortType === "reservationId") {
-    sortedReservations = sortedReservations.sort(
-      (a, b) => a.reservationId - b.reservationId
-    );
-  } else if (sortType === "startTime") {
-    sortedReservations = sortedReservations.sort((a, b) =>
-      a.startTime.localeCompare(b.startTime)
-    );
-  } else if (sortType === "endTime") {
-    sortedReservations = sortedReservations.sort((a, b) =>
-      a.endTime.localeCompare(b.endTime)
-    );
-  }
-
-  // Pagination
-  const paginatedReservations = paginate(
-    sortedReservations,
-    currentPage,
-    itemsPerPage
-  );
-  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
-
-  if (isLoading) return <div>Loading reservations...</div>;
-  if (error) return <div>Error: {error}</div>;
+  // Show a modal with the given message
+  const handleShowMessage = (startTime, endTime) => {
+    setModalStartTime(startTime);
+    setModalEndTime(endTime);
+    setModalOpen(true); // Open the modal
+  };
 
   return (
     <div className="container">
       <h1>Reservations</h1>
       {showAddForm && (
         <AddReservation
-          onAddSuccess={handleAddSuccess}
-          onUpdateSuccess={handleUpdateSuccess}
+          onAddSuccess={() => handleSuccess(false)}
           onClose={() => {
             setShowAddForm(false);
             setSelectedReservation(null);
           }}
           isUpdate={false}
+          onClick={() => setShowAddForm(true)}
         />
       )}
       {showUpdateForm && selectedReservation && (
         <AddReservation
-          onAddSuccess={handleAddSuccess}
-          onUpdateSuccess={handleUpdateSuccess}
+          onAddSuccess={() => handleSuccess(true)}
           onClose={() => {
             setShowUpdateForm(false);
             setSelectedReservation(null);
@@ -183,16 +181,18 @@ export default function Reservations() {
             <input
               type="text"
               placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchFormData.text}
+              name="text"
+              onChange={handleSearchInputChange}
             />
 
             {/* Filter by status */}
             <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              value={searchFormData.status}
+              name="status"
+              onChange={handleSearchInputChange}
             >
-              <option value="all">All Statuses</option>
+              <option value="">All Statuses</option>
               <option value="active">Active</option>
               <option value="approved">Approved</option>
               <option value="cancelled">Cancelled</option>
@@ -201,22 +201,24 @@ export default function Reservations() {
             </select>
 
             {/* Filter by date */}
-            <input
+            {/* <input
               type="date"
               placeholder="Date..."
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            />
+              value={searchFormData.date}
+              name="date"
+              onChange={handleSearchInputChange}
+            /> */}
 
             {/* Sort by reservationId, startTime, or endTime */}
             <select
-              value={sortType}
-              onChange={(e) => setSortType(e.target.value)}
+              value={searchFormData.sortByProperty}
+              onChange={handleSearchInputChange}
+              name="sortByProperty"
             >
               <option value="">Sort by...</option>
-              <option value="reservationId">Reservation ID</option>
-              <option value="startTime">Start Time</option>
-              <option value="endTime">End Time</option>
+              <option value="ReservationId">Reservation ID</option>
+              <option value="StartTime">Start Time</option>
+              <option value="EndTime">End Time</option>
             </select>
           </div>
 
@@ -225,63 +227,110 @@ export default function Reservations() {
             <thead>
               <tr>
                 <th>No.</th>
-                <th>Reservation ID</th>
-                <th>Start Time</th>
-                <th>End Time</th>
+                {user && user.role === "ADMIN" && <th>Reservation ID</th>}
+                <th>Parking spot number</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th>Duration</th>
+                <th>Time Details</th>
+                {user && user.role === "ADMIN" && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
-              {paginatedReservations.map((reservation, index) => (
-                <tr key={reservation.reservationId}>
-                  <td>
-                    {highlightText(
-                      calculateIndex(
-                        index,
-                        currentPage,
-                        itemsPerPage
-                      ).toString(),
-                      searchTerm
-                    )}
-                  </td>
-                  <td>
-                    {highlightText(
-                      reservation.reservationId.toString(),
-                      searchTerm
-                    )}
-                  </td>
-                  <td>
-                    {highlightText(
-                      formatDateTime(reservation.startTime),
-                      searchTerm
-                    )}
-                  </td>
-                  <td>
-                    {highlightText(
-                      formatDateTime(reservation.endTime),
-                      searchTerm
-                    )}
-                  </td>
-                  <td>{highlightText(reservation.status, searchTerm)}</td>
-
-                  <td>
-                    <button
-                      onClick={() => {
-                        setSelectedReservation(reservation);
-                        setShowUpdateForm(true);
+              {isLoading && (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        display: "inline-block",
+                        marginTop: "40px",
                       }}
                     >
-                      Update
-                    </button>
-                    <button
-                      onClick={() => handleDelete(reservation.reservationId)}
-                    >
-                      Delete
-                    </button>
+                      <BeatLoader
+                        color="#000000"
+                        loading={isLoading}
+                        aria-label="Loading Spinner"
+                        data-testid="loader"
+                      />
+                    </div>
                   </td>
                 </tr>
-              ))}
+              )}
+              {!isLoading &&
+                reservations &&
+                reservations.map((reservation, index) => (
+                  <tr key={reservation.reservationId}>
+                    <td>
+                      {highlightText(
+                        calculateIndex(
+                          index,
+                          currentPage,
+                          itemsPerPage
+                        ).toString(),
+                        searchFormData.text
+                      )}
+                    </td>
+                    {user && user.role === "ADMIN" && (
+                      <td>
+                        {highlightText(
+                          reservation.reservationId.toString(),
+                          searchFormData.text
+                        )}
+                      </td>
+                    )}
+                    <td>
+                      {highlightText(
+                        reservation.parkingSpotNumber.toString(),
+                        searchFormData.text
+                      )}
+                    </td>
+                    <td>
+                      {highlightText(reservation.status, searchFormData.text)}
+                    </td>
+                    <td>
+                      {highlightText(
+                        calculateDuration(
+                          reservation.startTime,
+                          reservation.endTime
+                        ),
+                        searchFormData.text
+                      )}
+                    </td>
+                    <td>
+                      {highlightText(
+                        <button
+                          onClick={() =>
+                            handleShowMessage(
+                              formatDateTime(reservation.startTime),
+                              formatDateTime(reservation.endTime)
+                            )
+                          }
+                        >
+                          Display Time Details
+                        </button>
+                      )}
+                    </td>
+
+                    {user && user.role === "ADMIN" && (
+                      <td>
+                        <button
+                          onClick={() => {
+                            setSelectedReservation(reservation);
+                            setShowUpdateForm(true);
+                          }}
+                        >
+                          Update
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDelete(reservation.reservationId)
+                          }
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
             </tbody>
           </table>
 
@@ -293,6 +342,12 @@ export default function Reservations() {
           <button onClick={() => setShowAddForm(true)}>Add Reservation</button>
         </>
       )}
+      {/* Modal to display feedback message */}
+      <ShowMessageModel isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+        <h4>Time Details</h4>
+        <p>Start time: {startTime}</p>
+        <p>End time: {endTime}</p>
+      </ShowMessageModel>
     </div>
   );
 }
