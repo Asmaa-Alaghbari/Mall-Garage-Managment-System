@@ -48,8 +48,15 @@
 
 .container button:disabled {
     background-color: #ccc;
-    color: #666; 
+    color: #666;
     cursor: not-allowed;
+}
+
+.view-toggle-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px;
 }
 
 .container form {

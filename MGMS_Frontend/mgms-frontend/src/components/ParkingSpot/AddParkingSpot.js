@@ -83,7 +83,7 @@ export default function AddParkingSpot({
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            Number:
+            Parking Spot Number:
             <input
               type="number"
               name="number"

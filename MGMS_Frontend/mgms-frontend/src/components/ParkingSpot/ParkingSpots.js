@@ -1,6 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import BeatLoader from "react-spinners/BeatLoader";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import {
+  FaExpand,
+  FaSearchPlus,
+  FaSearchMinus,
+  FaUndoAlt,
+} from "react-icons/fa";
 import AddParkingSpot from "./AddParkingSpot";
+import ParkingSpotMap from "../Data/ParkingSpotMap.svg";
 import {
   calculateIndex,
   fetchCurrentUser,
@@ -10,6 +18,7 @@ import {
   pagination,
   sendFetchRequest,
 } from "../Utils/Utils";
+import "./ParkingSpotMap.css";
 
 export default function ParkingSpots() {
   const [parkingSpots, setParkingSpots] = useState([]); // Store parking spots from the API
@@ -22,7 +31,8 @@ export default function ParkingSpots() {
   const [showUpdateForm, setShowUpdateForm] = useState(false); // Show/hide the update form
   const [showAddForm, setShowAddForm] = useState(false); // Show/hide the add form
   const [selectedSpot, setSelectedSpot] = useState(null); // Set selected spot
-  const [totalPages, setTotalPages] = useState(0);
+  const [totalPages, setTotalPages] = useState(0); // Total number of pages for pagination
+  const [currentView, setCurrentView] = useState("table"); // Manage the current view
   const [searchFormData, setSearchFormData] = useState({
     text: "",
     status: "",
@@ -30,6 +40,7 @@ export default function ParkingSpots() {
     section: "",
     sortByProperty: "",
   });
+  const mapContainerRef = useRef(null); // Reference for the map container
 
   // Fetch parking spots and current user on component mount
   useEffect(() => {
@@ -105,6 +116,23 @@ export default function ParkingSpots() {
     setCurrentPage(pageNumber);
   };
 
+  // Handle fullscreen button click for the map view
+  const handleFullscreen = () => {
+    const elem = mapContainerRef.current;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      // Firefox
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+      // Chrome, Safari and Opera
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      // IE/Edge
+      elem.msRequestFullscreen();
+    }
+  };
+
   return (
     <div className="container">
       <h1>Parking Spots</h1>
@@ -125,7 +153,8 @@ export default function ParkingSpots() {
         />
       )}
 
-      {!showAddForm && !showUpdateForm && (
+      {/* Search filter and table view */}
+      {!showAddForm && !showUpdateForm && currentView === "table" && (
         <div>
           <div className="search-filter">
             <input
@@ -190,7 +219,7 @@ export default function ParkingSpots() {
               <tr>
                 <th>No.</th>
                 {userRole === "ADMIN" && <th>Spot ID</th>}
-                <th>Number</th>
+                <th>PS Number</th>
                 <th>Section</th>
                 <th>Status</th>
                 <th>Size</th>
@@ -300,6 +329,93 @@ export default function ParkingSpots() {
               Add New Parking Spot
             </button>
           )}
+        </div>
+      )}
+
+      {/* View toggle buttons for table and map views */}
+      <div className="view-toggle-buttons">
+        <button onClick={() => setCurrentView("table")}>Table View</button>
+        <button onClick={() => setCurrentView("map")}>Map View</button>
+      </div>
+
+      {/* Display the map view when the current view is "map" */}
+      {currentView === "map" && (
+        <div className="map-view">
+          <div className="map-container" ref={mapContainerRef}>
+            <TransformWrapper>
+              {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+                <>
+                  <div className="tools">
+                    <button onClick={handleFullscreen} title="Fullscreen">
+                      <FaExpand size={15} />
+                    </button>
+                    <button onClick={() => zoomIn()} title="Zoom In">
+                      <FaSearchPlus size={15} />
+                    </button>
+                    <button onClick={() => zoomOut()} title="Zoom Out">
+                      <FaSearchMinus size={15} />
+                    </button>
+                    <button onClick={() => resetTransform()} title="Reset">
+                      <FaUndoAlt size={15} />
+                    </button>
+                  </div>
+                  <TransformComponent>
+                    <img
+                      src={ParkingSpotMap}
+                      alt="Parking Spot Map"
+                      style={{ width: "95%", height: "auto" }}
+                    />
+                  </TransformComponent>
+                </>
+              )}
+            </TransformWrapper>
+          </div>
+
+          {/* Map Details Table  */}
+          <div className="map-details">
+            <table className="map-details-table">
+              <thead>
+                <tr>
+                  <th>Label</th>
+                  <th>Type</th>
+                  <th>Dimensions (cm)</th>
+                  <th>Size</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ backgroundColor: "#534145" }}>
+                  <td>C</td>
+                  <td>Compact Cars</td>
+                  <td>400x600</td>
+                  <td>Small</td>
+                </tr>
+                <tr style={{ backgroundColor: "#9E6752" }}>
+                  <td>M</td>
+                  <td>Motorcycles</td>
+                  <td>400x600</td>
+                  <td>Small</td>
+                </tr>
+                <tr style={{ backgroundColor: "#FED7A5" }}>
+                  <td>S</td>
+                  <td>Standard Cars</td>
+                  <td>600x1000</td>
+                  <td>Medium</td>
+                </tr>
+                <tr style={{ backgroundColor: "#73766A" }}>
+                  <td>D</td>
+                  <td>Disabled Parking</td>
+                  <td>800x1200</td>
+                  <td>Large</td>
+                </tr>
+                <tr style={{ backgroundColor: "#2D4354" }}>
+                  <td>L</td>
+                  <td>Large Vehicles</td>
+                  <td>800x1200</td>
+                  <td>Large</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
