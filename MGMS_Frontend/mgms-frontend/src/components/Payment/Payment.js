@@ -186,7 +186,7 @@ export default function Payment() {
           </div>
 
           {/* Payment table */}
-          <table className="payment-table">
+          <table className="report-table">
             <thead>
               <tr>
                 <th>No.</th>

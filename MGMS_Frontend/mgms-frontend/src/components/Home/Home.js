@@ -1,11 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { Bar, Pie } from "react-chartjs-2";
 import {
   fetchCurrentUser,
   notifyError,
   sendFetchRequest,
 } from "../Utils/Utils";
 import "./Home.css";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -45,8 +67,9 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [quote, setQuote] = useState("");
   const currentYear = new Date().getFullYear(); // Get the current year
 
   // Handle side effects after error is updated
@@ -128,6 +151,28 @@ export default function Home() {
     fetchCurrentUser(setUser, setIsLoading, setError, setUserRole);
   }, []);
 
+  // Fetch the quote of the day
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+    const savedQuote = localStorage.getItem("quote");
+    const savedQuoteDate = localStorage.getItem("quoteDate");
+
+    if (savedQuote && savedQuoteDate === today) {
+      setQuote(savedQuote);
+    } else {
+      axios
+        .get("https://api.quotable.io/random")
+        .then((response) => {
+          setQuote(response.data.content);
+          localStorage.setItem("quote", response.data.content);
+          localStorage.setItem("quoteDate", today);
+        })
+        .catch((error) => {
+          console.error("Error fetching the quote of the day: ", error);
+        });
+    }
+  }, []);
+
   // Handle search input change and filter matching routes
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
@@ -168,10 +213,73 @@ export default function Home() {
     }
   };
 
+  // Data for Parking Spot Summary Chart
+  const parkingSpotData = {
+    labels: ["Available", "Occupied"],
+    datasets: [
+      {
+        label: "Parking Spots",
+        data: [parkingSpotSummary.available, parkingSpotSummary.occupied],
+        backgroundColor: ["#4caf50", "#f44336"],
+      },
+    ],
+  };
+
+  // Data for Reservation Statistics Chart
+  const reservationData = {
+    labels: ["Active", "Approved", "Completed", "Cancelled", "Pending"],
+    datasets: [
+      {
+        label: "Reservations",
+        data: [
+          reservationStatistics.totalActiveReservations,
+          reservationStatistics.totalApprovedReservations,
+          reservationStatistics.totalCompletedReservations,
+          reservationStatistics.totalCancelledReservations,
+          reservationStatistics.totalPendingReservations,
+        ],
+        backgroundColor: [
+          "#42a5f5",
+          "#66bb6a",
+          "#ffa726",
+          "#ef5350",
+          "#ab47bc",
+        ],
+      },
+    ],
+  };
+
+  // Data for User Statistics Chart
+  const userData = {
+    labels: ["Users", "Admins"],
+    datasets: [
+      {
+        label: "Users",
+        data: [userStatistics.totalUsersRole, userStatistics.totalAdminsRole],
+        backgroundColor: ["#42a5f5", "#ab47bc"],
+      },
+    ],
+  };
+
+  // Data for Feedback Statistics Chart
+  const feedbackData = {
+    labels: ["Positive", "Negative", "Anonymous"],
+    datasets: [
+      {
+        label: "Feedbacks",
+        data: [
+          feedbackStatistics.totalPositiveFeedbacks,
+          feedbackStatistics.totalNegativeFeedbacks,
+          feedbackStatistics.totalAnonymousFeedbacks,
+        ],
+        backgroundColor: ["#66bb6a", "#ef5350", "#ffa726"],
+      },
+    ],
+  };
+
   return (
     <div className="home-container">
       <header className="header">
-        {/* Search bar */}
         <div className="search-container">
           <div className="search-input">
             <input
@@ -184,6 +292,8 @@ export default function Home() {
             />
             <i className="fa fa-search search-icon"></i>
           </div>
+
+          {/* Display search results if search is open */}
           {isSearchOpen && (
             <section className="search-results">
               <ul className="card-body">
@@ -191,7 +301,7 @@ export default function Home() {
                   <li key={route.path} className="result-item">
                     <Link
                       to={route.path}
-                      onClick={() => setIsSearchOpen(false)}
+                      onMouseDown={() => setIsSearchOpen(false)}
                     >
                       {route.name}
                     </Link>
@@ -206,14 +316,21 @@ export default function Home() {
         </div>
 
         <h1>
-          Welcome,{" "}
+          Hello,{" "}
           {user &&
             user.username &&
             user.username.charAt(0).toUpperCase() + user.username.slice(1)}
-          !
+          ! Welcome to Your Ultimate Parking Command Center!
         </h1>
-        <p>Your dashboard for managing parking spaces.</p>
+        <p>
+          Step into the hub of seamless parking management! At MGMS, we're not
+          just about spaces and spots; we're about ensuring your experience is
+          smooth and worry-free. Dive into your dashboard, where efficiency
+          meets convenience, and let us take care of the rest. Enjoy the ease of
+          managing your parking needs with just a few clicks!
+        </p>
       </header>
+
       <main className="main-content">
         <section className="card">
           <h2 className="card-header">My Account</h2>
@@ -238,64 +355,27 @@ export default function Home() {
 
         <section className="card">
           <h2 className="card-header">Parking Spots</h2>
-          <ul className="card-body">
-            {isLoading ? (
-              <li>Loading parking spots summary...</li>
-            ) : (
-              <>
-                <li>Available: {parkingSpotSummary.available || 0}</li>
-                <li>Occupied: {parkingSpotSummary.occupied || 0}</li>
-                <li>Total: {parkingSpotSummary.total || 0}</li>
-              </>
-            )}
+          <div className="card-body">
+            <Pie data={parkingSpotData} />
             <li>
               <Link to="/parking-spots" className="nav-link">
                 View All Parking Spots
               </Link>
             </li>
-          </ul>
+          </div>
         </section>
 
         {user?.role === "ADMIN" && (
           <section className="card">
             <h2 className="card-header">Reservations Statistics</h2>
-            <ul className="card-body">
-              {isLoading ? (
-                <li>Loading recent reservations...</li>
-              ) : (
-                <>
-                  <li>
-                    Total Active Reservations:{" "}
-                    {reservationStatistics.totalActiveReservations}
-                  </li>
-                  <li>
-                    Total Approved Reservations:{" "}
-                    {reservationStatistics.totalApprovedReservations}
-                  </li>
-                  <li>
-                    Total Completed Reservations:{" "}
-                    {reservationStatistics.totalCompletedReservations}
-                  </li>
-                  <li>
-                    Total Cancelled Reservations:{" "}
-                    {reservationStatistics.totalCancelledReservations}
-                  </li>
-                  <li>
-                    Total Pending Reservations:{" "}
-                    {reservationStatistics.totalPendingReservations}
-                  </li>
-                  <li>
-                    Total Reservations:{" "}
-                    {reservationStatistics.totalReservations}
-                  </li>
-                </>
-              )}
+            <div className="card-body">
+              <Bar data={reservationData} />
               <li>
                 <Link to="/reservations" className="nav-link">
                   View All Reservations
                 </Link>
               </li>
-            </ul>
+            </div>
           </section>
         )}
 
@@ -310,7 +390,6 @@ export default function Home() {
               </li>
               <li>
                 <Link to="/payments/add" className="nav-link">
-                  {" "}
                   Add Payment
                 </Link>
               </li>
@@ -343,55 +422,44 @@ export default function Home() {
           </ul>
         </section>
 
-        {/* Display user statistics for admin users */}
         {user?.role === "ADMIN" && (
-          <section className="card">
-            <h2 className="card-header">User Statistics</h2>
-            <ul className="card-body">
-              <li>Total Users: {userStatistics.totalUsersRole}</li>
-              <li>Total Admins: {userStatistics.totalAdminsRole}</li>
-              <li>Total Users: {userStatistics.totalUsers}</li>
-              <li>
-                <Link to="/users" className="nav-link">
-                  View All Users
-                </Link>
-              </li>
-            </ul>
-          </section>
-        )}
+          <>
+            <section className="card">
+              <h2 className="card-header">User Statistics</h2>
+              <div className="card-body">
+                <Pie data={userData} />
+                <li>
+                  <Link to="/users" className="nav-link">
+                    View All Users
+                  </Link>
+                </li>
+              </div>
+            </section>
 
-        {/* Display feedback statistics for admin users */}
-        {user?.role === "ADMIN" && (
-          <section className="card">
-            <h2 className="card-header">Feedback Statistics</h2>
-            <ul className="card-body">
-              <li>Total Feedbacks: {feedbackStatistics.totalFeedbacks}</li>
-              <li>
-                Total Positive Feedbacks:{" "}
-                {feedbackStatistics.totalPositiveFeedbacks}
-              </li>
-              <li>
-                Total Negative Feedbacks:{" "}
-                {feedbackStatistics.totalNegativeFeedbacks}
-              </li>
-              <li>
-                Total Anonymous Feedbacks:{" "}
-                {feedbackStatistics.totalAnonymousFeedbacks}
-              </li>
-              <li>
-                Average Rating: {feedbackStatistics.averageRating?.toFixed(2)}
-              </li>
-              <li>
-                <Link to="/feedbacks" className="nav-link">
-                  View All Feedbacks
-                </Link>
-              </li>
-            </ul>
-          </section>
+            <section className="card">
+              <h2 className="card-header">Feedback Statistics</h2>
+              <div className="card-body">
+                <Pie data={feedbackData} />
+                <li>
+                  <Link to="/feedbacks" className="nav-link">
+                    View All Feedbacks
+                  </Link>
+                </li>
+              </div>
+            </section>
+          </>
         )}
       </main>
 
-      {/* Footer */}
+      {/*  Display the quote of the day */}
+      <section className="quote-weather-news">
+        <div className="quote">
+          <h3>Quote of the Day</h3>
+          <blockquote className="quote-text">"{quote}"</blockquote>
+        </div>
+      </section>
+
+      {/* Footer section for the CopyWrite */}
       <footer className="footer">
         <p>&copy; {currentYear} MGMS Company</p>
       </footer>

@@ -295,64 +295,49 @@ export const pagination = (totalPages, currentPage, setCurrentPage) => {
       return null;
     }
 
-    // If total pages are less than or equal to 5, display all page numbers
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(
-          <button
-            key={i}
-            onClick={() => setCurrentPage(i)}
-            className={currentPage === i ? "active" : ""}
-          >
-            {i}
-          </button>
-        );
-      }
-    } else {
-      if (currentPage > 1) {
-        pages.push(
-          <button key="first" onClick={() => setCurrentPage(1)}>
-            {"<<"}
-          </button>
-        );
-        pages.push(
-          <button key="prev" onClick={() => setCurrentPage(currentPage - 1)}>
-            {"<"}
-          </button>
-        );
-      }
+    // Add first and previous buttons
+    if (currentPage > 1) {
+      pages.push(
+        <button key="first" onClick={() => setCurrentPage(1)}>
+          {"<<"}
+        </button>
+      );
+      pages.push(
+        <button key="prev" onClick={() => setCurrentPage(currentPage - 1)}>
+          {"<"}
+        </button>
+      );
+    }
 
-      // Display the two pages before and after the current page
-      for (
-        let i = currentPage - 1;
-        i <= currentPage + 1 && i <= totalPages;
-        i++
-      ) {
-        if (i > 0) {
-          pages.push(
-            <button
-              key={i}
-              onClick={() => setCurrentPage(i)}
-              className={currentPage === i ? "active" : ""}
-            >
-              {i}
-            </button>
-          );
-        }
-      }
+    // Determine the range of page numbers to display
+    const startPage = Math.max(1, currentPage - 1);
+    const endPage = Math.min(totalPages, currentPage + 1);
 
-      if (currentPage < totalPages) {
-        pages.push(
-          <button key="next" onClick={() => setCurrentPage(currentPage + 1)}>
-            {">"}
-          </button>
-        );
-        pages.push(
-          <button key="last" onClick={() => setCurrentPage(totalPages)}>
-            {">>"}
-          </button>
-        );
-      }
+    // Display the page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i)}
+          className={currentPage === i ? "active" : ""}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    // Add next and last buttons
+    if (currentPage < totalPages) {
+      pages.push(
+        <button key="next" onClick={() => setCurrentPage(currentPage + 1)}>
+          {">"}
+        </button>
+      );
+      pages.push(
+        <button key="last" onClick={() => setCurrentPage(totalPages)}>
+          {">>"}
+        </button>
+      );
     }
 
     return pages;

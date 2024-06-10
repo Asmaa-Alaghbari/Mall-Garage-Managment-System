@@ -186,7 +186,7 @@ export default function Notification() {
         </div>
 
         {/* Reservation table */}
-        <table className="reservation-table">
+        <table className="report-table">
           <thead>
             <tr>
               <th>No.</th>

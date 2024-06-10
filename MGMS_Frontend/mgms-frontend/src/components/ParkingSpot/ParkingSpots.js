@@ -208,13 +208,14 @@ export default function ParkingSpots() {
               name="sortByProperty"
             >
               <option value="">Sort by...</option>
-              <option value="Number">Number</option>
+              <option value="ParkingSpotNumber">PS Number</option>
               <option value="Section">Section</option>
               <option value="Size">Size</option>
             </select>
           </div>
 
-          <table className="parking-spots-table">
+          {/* Display the parking spots in a table */}
+          <table className="report-table">
             <thead>
               <tr>
                 <th>No.</th>
@@ -276,7 +277,7 @@ export default function ParkingSpots() {
                       )}
                       <td>
                         {highlightText(
-                          (spot.number ?? "").toString(),
+                          (spot.parkingSpotNumber ?? "").toString(),
                           searchFormData.text
                         )}
                       </td>

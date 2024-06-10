@@ -148,7 +148,7 @@ export default function UsersList() {
       {!showAddForm && (
         <div>
           {/* Search */}
-          <div className="search-sort">
+          <div className="search-filter">
             <input
               type="text"
               name="text"
@@ -183,7 +183,7 @@ export default function UsersList() {
           </div>
 
           {/* Users table */}
-          <table className="users-table">
+          <table className="report-table">
             <thead>
               <tr>
                 <th>No.</th>

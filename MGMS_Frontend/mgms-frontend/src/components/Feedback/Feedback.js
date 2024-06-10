@@ -136,7 +136,7 @@ export default function Feedback() {
       {!showAddForm && (
         <>
           {/* Search  */}
-          <div className="search-sort">
+          <div className="search-filter">
             <input
               type="text"
               name="text"
@@ -194,7 +194,7 @@ export default function Feedback() {
           </div>
 
           {/* Feedback table */}
-          <table className="feedback-table">
+          <table className="report-table">
             <thead>
               <tr>
                 <th>No.</th>
@@ -296,7 +296,9 @@ export default function Feedback() {
             {pagination(totalPages, currentPage, setCurrentPage)}
           </div>
 
-          <button onClick={() => setShowAddForm(true)}>Add New Feedback</button>
+          <button className="add-button" onClick={() => setShowAddForm(true)}>
+            Add New Feedback
+          </button>
         </>
       )}
 

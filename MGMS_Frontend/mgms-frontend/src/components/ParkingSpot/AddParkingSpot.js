@@ -104,10 +104,10 @@ export default function AddParkingSpot({
             >
               <option value="">Select Section</option>
               <option value="Compact Cars">Compact Cars</option>
-              <option value="Standard Cars">Standard Cars</option>
+              <option value="Disabled Parking">Disabled Parking</option>
               <option value="Large Vehicles">Large Vehicles</option>
               <option value="Motorcycles">Motorcycles</option>
-              <option value="Disabled Parking">Disabled Parking</option>
+              <option value="Standard Cars">Standard Cars</option>
             </select>
           </label>
         </div>

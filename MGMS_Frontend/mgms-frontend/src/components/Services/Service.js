@@ -147,7 +147,7 @@ export default function Service() {
             </select>
           </div>
 
-          <table className="parking-spots-table">
+          <table className="report-table">
             <thead>
               <tr>
                 <th>No.</th>

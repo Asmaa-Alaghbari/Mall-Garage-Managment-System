@@ -113,24 +113,52 @@ export default function Settings({ setIsLoggedIn }) {
 
       {/* Dark Mode Toggle */}
       <div className="setting-item">
-        <button onClick={handleDarkModeToggle}>
-          {settings.darkMode ? "Light Mode" : "Dark Mode"}
-        </button>
+        <span>
+          <i className="fas fa-moon"></i> Dark Mode
+        </span>
+        <label className="switch">
+          <input
+            type="checkbox"
+            checked={settings.darkMode}
+            onChange={handleDarkModeToggle}
+          />
+          <span className="slider">
+            <i className="fas fa-sun sun-icon"></i>
+            <i className="fas fa-moon moon-icon"></i>
+          </span>
+        </label>
       </div>
 
       {/* Notifications Toggle */}
       <div className="setting-item">
-        <button onClick={handleNotificationsToggle}>
-          {settings.receiveNotifications
-            ? "Disable Notifications"
-            : "Enable Notifications"}
-        </button>
+        <span>
+          <i className="fas fa-bell"></i> Notifications
+        </span>
+        <label className="switch">
+          <input
+            type="checkbox"
+            checked={settings.receiveNotifications}
+            onChange={handleNotificationsToggle}
+          />
+          <span className="slider">
+            <i className="fas fa-bell bell-on-icon"></i>
+            <i className="fas fa-bell-slash bell-off-icon"></i>
+          </span>
+        </label>
       </div>
 
-      {/* Save Button */}
-      <div className="setting-item">
+      {/* Save and Log Out Buttons */}
+      <div className="setting-item button-item">
         <button onClick={handleSaveSettings} disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save Settings"}
+          <i className="fas fa-save"></i>
+          {isLoading ? " Saving..." : " Save Settings"}
+        </button>
+        <button
+          className="logout-btn"
+          onClick={() => confirmLogout({ setIsLoggedIn, navigate })}
+        >
+          <i className="fas fa-sign-out-alt"></i>
+          Log Out
         </button>
       </div>
 
@@ -138,28 +166,8 @@ export default function Settings({ setIsLoggedIn }) {
       {successMessage && (
         <div className="success-message">{successMessage}</div>
       )}
-
-      {/* View Profile */}
-      <div className="setting-item">
-        <button onClick={() => navigate("/profile")}>View Profile</button>
-      </div>
-
-      {/* Navigate to UserList for ADMIN */}
-      {settings.role === "ADMIN" && (
-        <div className="setting-item">
-          <button onClick={() => navigate("/users")}>View Users List</button>
-        </div>
-      )}
-
-      {/* Log Out */}
-      <div className="setting-item">
-        <button
-          className="logout-btn"
-          onClick={() => confirmLogout({ setIsLoggedIn, navigate })}
-        >
-          Log Out
-        </button>
-      </div>
     </div>
   );
 }
+
+
