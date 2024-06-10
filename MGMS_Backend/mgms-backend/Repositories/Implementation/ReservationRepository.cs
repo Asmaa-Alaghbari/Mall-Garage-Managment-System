@@ -62,7 +62,7 @@ namespace mgms_backend.Repositories.Implementation
             {
                 query = query.Where(x =>
                     x.ReservationId.ToString().Contains(searchCriteria.Text) ||
-                    x.ParkingSpot.Number.ToString().Contains(searchCriteria.Text) ||
+                    x.ParkingSpot.ParkingSpotNumber.ToString().Contains(searchCriteria.Text) ||
                     x.StartTime.ToString().Contains(searchCriteria.Text) ||
                     x.EndTime.ToString().Contains(searchCriteria.Text) ||
                     x.Status.ToLower().Contains(searchCriteria.Text.ToLower()));

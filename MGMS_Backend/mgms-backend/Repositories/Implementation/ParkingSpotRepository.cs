@@ -31,7 +31,7 @@ namespace mgms_backend.Repositories.Implementation
         // Get a parking spot by number from the database
         public async Task<ParkingSpot> GetParkingSpotByNumberAsync(int number)
         {
-            return await _context.ParkingSpots.FirstOrDefaultAsync(ps => ps.Number == number);
+            return await _context.ParkingSpots.FirstOrDefaultAsync(ps => ps.ParkingSpotNumber == number);
 
         }
 
@@ -55,7 +55,7 @@ namespace mgms_backend.Repositories.Implementation
             {
                 query = query.Where(x =>
                     x.ParkingSpotId.ToString().Contains(searchCriteria.Text) ||
-                    x.Number.ToString().Contains(searchCriteria.Text) ||
+                    x.ParkingSpotNumber.ToString().Contains(searchCriteria.Text) ||
                     x.Section.ToLower().Contains(searchCriteria.Text.ToLower()) ||
                     x.Size.ToLower().Contains(searchCriteria.Text.ToLower()));
             }

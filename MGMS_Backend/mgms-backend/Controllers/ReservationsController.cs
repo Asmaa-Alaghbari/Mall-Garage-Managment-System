@@ -74,7 +74,7 @@ namespace mgms_backend.Controllers
             {
                 ReservationId = r.ReservationId,
                 UserId = r.UserId,
-                ParkingSpotNumber = r.ParkingSpot.Number,
+                ParkingSpotNumber = r.ParkingSpot.ParkingSpotNumber,
                 StartTime = r.StartTime,
                 EndTime = r.EndTime,
                 Status = r.Status

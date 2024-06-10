@@ -88,10 +88,10 @@ namespace mgms_backend.Controllers
             var newParkingSpot = _parkingSpotMapper.ToModel(parkingSpotDto);
 
             // Check if another spot has the same number and is not the current spot
-            var existingSpot = await _parkingSpotRepository.GetParkingSpotByNumberAsync(parkingSpotDto.Number);
+            var existingSpot = await _parkingSpotRepository.GetParkingSpotByNumberAsync(parkingSpotDto.ParkingSpotNumber);
             if (existingSpot != null && existingSpot.ParkingSpotId != newParkingSpot.ParkingSpotId)
             {
-                throw new ServerValidationException($"Another spot with number {parkingSpotDto.Number} already exists.");
+                throw new ServerValidationException($"Another spot with number {parkingSpotDto.ParkingSpotNumber} already exists.");
             }
 
             var addedParkingSpot = await _parkingSpotRepository.AddParkingSpotAsync(newParkingSpot);
@@ -129,14 +129,14 @@ namespace mgms_backend.Controllers
             }
 
             // Check if another spot has the same number and is not the current spot
-            var existingSpot = await _parkingSpotRepository.GetParkingSpotByNumberAsync(parkingSpotDto.Number);
+            var existingSpot = await _parkingSpotRepository.GetParkingSpotByNumberAsync(parkingSpotDto.ParkingSpotNumber);
             if (existingSpot != null && existingSpot.ParkingSpotId != parkingSpotId)
             {
-                throw new ServerValidationException($"Another spot with number {parkingSpotDto.Number} already exists.");
+                throw new ServerValidationException($"Another spot with number {parkingSpotDto.ParkingSpotNumber} already exists.");
             }
 
             // Update the parking spot with the new values
-            parkingSpotToUpdate.Number = parkingSpotDto.Number;
+            parkingSpotToUpdate.ParkingSpotNumber = parkingSpotDto.ParkingSpotNumber;
             parkingSpotToUpdate.Section = parkingSpotDto.Section;
             parkingSpotToUpdate.IsOccupied = parkingSpotDto.IsOccupied;
             parkingSpotToUpdate.Size = parkingSpotDto.Size;

@@ -4,7 +4,7 @@
     public class ParkingSpotSearchCriteriaDto
     {
         public string? Text { get; set; }
-        public string? Number { get; set; }
+        public string? ParkingSpotNumber { get; set; }
         public string? Section { get; set; }
         public string? Size { get; set; }
         public string? Status { get; set; }
