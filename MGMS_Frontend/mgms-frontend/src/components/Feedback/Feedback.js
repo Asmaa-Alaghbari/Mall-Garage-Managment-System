@@ -279,7 +279,7 @@ export default function Feedback() {
                     </td>
                     {sessionStorage.getItem("role") === "ADMIN" && (
                       <td>
-                        <button
+                        <button className="delete-button"
                           onClick={() => handleDelete(feedback.feedbackId)}
                         >
                           Delete

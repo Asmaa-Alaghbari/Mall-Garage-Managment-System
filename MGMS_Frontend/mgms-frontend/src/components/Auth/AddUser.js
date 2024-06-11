@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { sendFetchRequest, notifySuccess } from "../Utils/Utils";
+import "../Utils/AddStyle.css";
 
 // Handle adding a new user to the list of users
 export default function AddUser({ onAddSuccess, onClose, userData }) {
@@ -45,91 +46,88 @@ export default function AddUser({ onAddSuccess, onClose, userData }) {
   };
 
   return (
-    <div className="container">
+    <div className="general-container">
       <h2>Add New User</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>
-            First Name:
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              required
-            />
-          </label>
+      <form onSubmit={handleSubmit} className="form-container">
+        <div className="form-group">
+          <label>First Name:</label>
+          <input
+            type="text"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            required
+            className="input-field"
+          />
         </div>
-        <div>
-          <label>
-            Last Name:
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              required
-            />
-          </label>
+        <div className="form-group">
+          <label>Last Name:</label>
+          <input
+            type="text"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            required
+            className="input-field"
+          />
         </div>
-        <div>
-          <label>
-            Username:
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-            />
-          </label>
+        <div className="form-group">
+          <label>Username:</label>
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+            className="input-field"
+          />
         </div>
-        <div>
-          <label>
-            Email:
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </label>
+        <div className="form-group">
+          <label>Email:</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="input-field"
+          />
         </div>
-        <div>
-          <label>
-            Password:
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </label>
+        <div className="form-group">
+          <label>Password:</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="input-field"
+          />
         </div>
-        <div>
-          <label>
-            Phone:
-            <input
-              type="number"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-            />
-          </label>
+        <div className="form-group">
+          <label>Phone:</label>
+          <input
+            type="number"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            required
+            className="input-field"
+          />
         </div>
-        <div>
-          <label>
-            Role:
-            <select name="role" value={formData.role} onChange={handleChange}>
-              <option value="USER">User</option>
-              <option value="ADMIN">Admin</option>
-            </select>
-          </label>
+        <div className="form-group">
+          <label>Role:</label>
+          <select
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            className="input-field"
+          >
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
+          </select>
         </div>
-        <div>
+        <div className="form-actions">
           <button type="submit" disabled={isLoading}>
             {isLoading ? "Adding..." : "Add User"}
           </button>

@@ -1,3 +1,4 @@
+/* Overall container styling */
 .settings-container {
     max-width: 70%;
     margin: auto;
@@ -39,80 +40,52 @@
     /* Adds space between icon and text */
 }
 
-.setting-item.button-item {
+.button-item {
     justify-content: center;
     flex-direction: column;
     align-items: center;
 }
 
-.setting-item button {
+.button-item button {
     display: flex;
     align-items: center;
     padding: 10px 15px;
-    background-color: #007bff;
-    color: white;
-    border: none;
+    background-color: transparent;
+    color: #007bff;
+    border: 2px solid #007bff;
     border-radius: 5px;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.3s ease, color 0.3s ease;
     cursor: pointer;
     font-size: 16px;
     animation: zoomIn 1s ease-in-out;
-    margin-bottom: 10px;
+    margin: auto;
+    margin-bottom: 15px;
 }
 
-.setting-item button:last-child {
+.button-item button:last-child {
     margin-bottom: 0;
 }
 
-.setting-item button i {
+.button-item button i {
     margin-right: 10px;
 }
 
-.setting-item button:hover {
-    background-color: #0056b3;
+.button-item button:hover {
+    background-color: #007bff;
+    color: white;
     transform: scale(1.05);
 }
 
-.success-message {
-    color: #28a745;
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-body.dark-mode {
-    background-color: #121212;
-    color: #e0e0e0;
-}
-
-.dark-mode .settings-container {
-    background-color: #223;
-    color: #fff;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-}
-
-.dark-mode .settings-container h1 {
-    color: #fff;
-}
-
-.dark-mode .setting-item {
-    background-color: #333;
-}
-
-.dark-mode .setting-item button {
-    background-color: #4c69a5;
-}
-
-.dark-mode .setting-item button:hover {
-    background-color: #3b5998;
-}
-
 /* Log Out button */
-.setting-item button.logout-btn {
-    background-color: red;
+.button-item .logout-btn {
+    background-color: transparent;
+    color: red;
+    border: 2px solid red;
 }
 
-.setting-item button.logout-btn:hover {
-    background-color: darkred;
+.button-item .logout-btn:hover {
+    background-color: red;
+    color: white;
 }
 
 /* Responsive styles */
@@ -139,11 +112,11 @@ body.dark-mode {
         align-self: flex-end;
     }
 
-    .setting-item.button-item {
+    .button-item {
         flex-direction: column;
     }
 
-    .setting-item.button-item button {
+    .button-item button {
         width: 100%;
         text-align: center;
     }
@@ -267,4 +240,40 @@ input:checked+.slider .bell-off-icon {
 
 .dark-mode input:checked+.slider {
     background-color: #3b5998;
+}
+
+.success-message {
+    color: #28a745;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+body.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+.dark-mode .settings-container {
+    background-color: #223;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .settings-container h1 {
+    color: #fff;
+}
+
+.dark-mode .setting-item {
+    background-color: #333;
+}
+
+.dark-mode .button-item button {
+    background-color: transparent;
+    color: #4c69a5;
+    border: 2px solid #4c69a5;
+}
+
+.dark-mode .button-item button:hover {
+    background-color: #4c69a5;
+    color: white;
 }

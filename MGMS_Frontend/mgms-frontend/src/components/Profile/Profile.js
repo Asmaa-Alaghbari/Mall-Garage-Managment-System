@@ -121,6 +121,9 @@ export default function Profile() {
     <div className="profile-form-container">
       <h1>Profile</h1>
       <form onSubmit={handleSubmit}>
+        <label>Update your profile information:</label>
+        <br />
+        <label className="form-label">First Name:</label>
         <input
           type="text"
           name="firstName"
@@ -128,6 +131,7 @@ export default function Profile() {
           value={userInfo.firstName || ""}
           onChange={handleUserInfoChange}
         />
+        <label className="form-label">Last Name:</label>
         <input
           type="text"
           name="lastName"
@@ -135,6 +139,7 @@ export default function Profile() {
           value={userInfo.lastName || ""}
           onChange={handleUserInfoChange}
         />
+        <label className="form-label">Username:</label>
         <input
           type="text"
           name="username"
@@ -142,6 +147,7 @@ export default function Profile() {
           value={userInfo.username || ""}
           disabled
         />
+        <label className="form-label">Email:</label>
         <input
           type="email"
           name="email"
@@ -149,6 +155,7 @@ export default function Profile() {
           value={userInfo.email || ""}
           onChange={handleUserInfoChange}
         />
+        <label className="form-label">Phone:</label>
         <input
           type="tel"
           name="phone"
@@ -156,6 +163,7 @@ export default function Profile() {
           value={userInfo.phone || ""}
           onChange={handleUserInfoChange}
         />
+        <label className="form-label">Address</label>
         <input
           type="text"
           name="address"
@@ -163,6 +171,7 @@ export default function Profile() {
           value={profileInfo.address || ""}
           onChange={handleProfileInfoChange}
         />
+        <label className="form-label">City</label>
         <input
           type="text"
           name="city"
@@ -170,6 +179,7 @@ export default function Profile() {
           value={profileInfo.city || ""}
           onChange={handleProfileInfoChange}
         />
+        <label className="form-label">State</label>
         <input
           type="text"
           name="state"
@@ -177,6 +187,7 @@ export default function Profile() {
           value={profileInfo.state || ""}
           onChange={handleProfileInfoChange}
         />
+        <label className="form-label">Zip Code</label>
         <input
           type="text"
           name="zipCode"
@@ -184,6 +195,7 @@ export default function Profile() {
           value={profileInfo.zipCode || ""}
           onChange={handleProfileInfoChange}
         />
+        <label className="form-label">Country</label>
         <input
           type="text"
           name="country"
@@ -191,6 +203,7 @@ export default function Profile() {
           value={profileInfo.country || ""}
           onChange={handleProfileInfoChange}
         />
+        <label className="form-label">Profile Picture URL</label>
         <input
           type="text"
           name="profilePictureUrl"
@@ -198,13 +211,17 @@ export default function Profile() {
           value={profileInfo.profilePictureUrl || ""}
           onChange={handleProfileInfoChange}
         />
+        <label className="form-label">
+          Enter your password to save changes:
+        </label>
         <input
           type="password"
           name="password"
-          placeholder="Input password to save changes..."
+          placeholder="Your Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
         <div className="button-container">
           <button type="submit" onClick={handleSubmit} disabled={isLoading}>
             {isLoading ? "Updating..." : "Update Profile"}

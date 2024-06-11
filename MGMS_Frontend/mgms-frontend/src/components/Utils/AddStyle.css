@@ -1,0 +1,209 @@
+/* Container styling */
+.general-container {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.5s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Header styling */
+.general-container h2 {
+    color: #333333;
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+    animation: slideDown 0.5s ease-in-out;
+}
+
+/* Form container styling */
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+/* Form group styling */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #555555;
+    text-align: center;
+}
+
+/* Common input, select, and textarea styling */
+.form-group .input-field,
+.form-group input[type="number"],
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="datetime-local"],
+.form-group select,
+.form-group textarea {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #dddddd;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+    outline: none;
+    width: 80%;
+    margin: auto;
+}
+
+.form-group .input-field:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="datetime-local"]:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+}
+
+/* Multi-select styling */
+.multi-select {
+    width: 80%;
+    margin: auto;
+}
+
+/* Custom checkbox styling */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-container .checkbox-group {
+    display: inline-flex;
+    align-items: center;
+}
+
+.checkbox-container .checkbox-custom {
+    width: 20px;
+    height: 20px;
+    background-color: #ffffff;
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.checkbox-container input[type="checkbox"]:checked+.checkbox-custom {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.checkbox-container input[type="checkbox"]:checked+.checkbox-custom::after {
+    content: '\2714';
+    /* Unicode checkmark */
+    color: #ffffff;
+    font-size: 16px;
+}
+
+/* Form actions styling */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.form-actions button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    animation: zoomIn 0.5s ease-in-out;
+    flex: 1;
+    margin: 0 5px;
+}
+
+.form-actions button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.form-actions button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+}
+
+/* Star rating styling */
+.rating-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.star-icon {
+    color: #ffcc00;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.star-icon:hover {
+    color: #ff9900;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

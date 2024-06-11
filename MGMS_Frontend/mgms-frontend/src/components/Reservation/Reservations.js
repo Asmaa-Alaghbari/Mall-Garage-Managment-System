@@ -321,6 +321,7 @@ export default function Reservations() {
                           Update
                         </button>
                         <button
+                          className="delete-button"
                           onClick={() =>
                             handleDelete(reservation.reservationId)
                           }

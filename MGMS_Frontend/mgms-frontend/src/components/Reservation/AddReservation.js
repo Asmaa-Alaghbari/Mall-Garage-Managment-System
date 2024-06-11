@@ -9,6 +9,7 @@ import {
   sendNotificationToRole,
 } from "../Utils/Utils";
 import Select from "react-select";
+import "../Utils/AddStyle.css";
 
 export default function AddReservation({
   onAddSuccess, // Callback function to handle successful reservation addition
@@ -211,9 +212,9 @@ export default function AddReservation({
   };
 
   return (
-    <div className="container">
+    <div className="general-container">
       <h2>{isUpdate ? "Update Reservation" : "Add Reservation"}</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="form-container">
         <input
           type="text"
           name="userId"
@@ -222,46 +223,50 @@ export default function AddReservation({
           required
           readOnly // User ID is read-only since it's automatically set
           hidden // Hide the user ID field from the form
+          className="input-field"
         />
-        <label>
-          Parking Spot Number:
+        <div className="form-group">
+          <label>Parking Spot Number:</label>
           <input
             type="number"
             name="parkingSpotNumber"
             value={reservation.parkingSpotNumber}
             onChange={handleChange}
             required
+            className="input-field"
           />
-        </label>
-        <label>
-          Start Time:
+        </div>
+        <div className="form-group">
+          <label>Start Time:</label>
           <input
             type="datetime-local"
             name="startTime"
             value={reservation.startTime}
             onChange={handleChange}
             required
+            className="input-field"
           />
-        </label>
-        <label>
-          End Time:
+        </div>
+        <div className="form-group">
+          <label>End Time:</label>
           <input
             type="datetime-local"
             name="endTime"
             value={reservation.endTime}
             onChange={handleChange}
             required
+            className="input-field"
           />
-        </label>
+        </div>
         {userRole === "ADMIN" && (
-          <label>
-            Status:
+          <div className="form-group">
+            <label>Status:</label>
             <select
-              type="text"
               name="status"
               value={reservation.status}
               onChange={handleChange}
               required
+              className="input-field"
             >
               <option value="Active">Active</option>
               <option value="Pending">Pending</option>
@@ -269,10 +274,10 @@ export default function AddReservation({
               <option value="Rejected">Rejected</option>
               <option value="Cancelled">Cancelled</option>
             </select>
-          </label>
+          </div>
         )}
-        <label>
-          Select desired services:
+        <div className="form-group">
+          <label>Select desired services:</label>
           <div className="multi-select">
             <Select
               options={availableServiceOptions}
@@ -281,11 +286,13 @@ export default function AddReservation({
               onChange={handleServiceSelectChange}
             />
           </div>
-        </label>
-        <div className="button-container">
+        </div>
+        <div className="form-actions">
           <button type="submit" disabled={isLoading}>
             {isLoading
-              ? "Updating..."
+              ? isUpdate
+                ? "Updating..."
+                : "Adding..."
               : isUpdate
               ? "Update Reservation"
               : "Add Reservation"}

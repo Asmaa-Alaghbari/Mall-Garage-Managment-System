@@ -6,7 +6,9 @@ import {
   FaSearchPlus,
   FaSearchMinus,
   FaUndoAlt,
+  FaInfoCircle,
 } from "react-icons/fa";
+import { Tooltip as ReactTooltip } from "react-tooltip"; // Use named import
 import AddParkingSpot from "./AddParkingSpot";
 import ParkingSpotMap from "../Data/ParkingSpotMap.svg";
 import {
@@ -308,6 +310,7 @@ export default function ParkingSpots() {
                             Update
                           </button>
                           <button
+                            className="delete-button"
                             onClick={() => handleDelete(spot.parkingSpotId)}
                           >
                             Delete
@@ -333,89 +336,89 @@ export default function ParkingSpots() {
         </div>
       )}
 
-      {/* View toggle buttons for table and map views */}
-      <div className="view-toggle-buttons">
-        <button onClick={() => setCurrentView("table")}>Table View</button>
-        <button onClick={() => setCurrentView("map")}>Map View</button>
-      </div>
+      {/* View toggle button */}
+      {!showAddForm && !showUpdateForm && (
+        <div className="view-toggle-button">
+          <button
+            style={{ backgroundColor: "#4CAF50", color: "white" }}
+            onClick={() =>
+              setCurrentView(currentView === "table" ? "map" : "table")
+            }
+          >
+            {currentView === "table" ? "Map View" : "Table View"}
+          </button>
+        </div>
+      )}
 
       {/* Display the map view when the current view is "map" */}
-      {currentView === "map" && (
+      {currentView === "map" && !showAddForm && !showUpdateForm && (
         <div className="map-view">
           <div className="map-container" ref={mapContainerRef}>
             <TransformWrapper>
               {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
                 <>
                   <div className="tools">
-                    <button onClick={handleFullscreen} title="Fullscreen">
+                    <button
+                      onClick={handleFullscreen}
+                      title="Fullscreen"
+                      style={{ backgroundColor: "#4CAF50", color: "white" }}
+                    >
                       <FaExpand size={15} />
                     </button>
-                    <button onClick={() => zoomIn()} title="Zoom In">
+                    <button
+                      onClick={() => zoomIn()}
+                      title="Zoom In"
+                      style={{ backgroundColor: "#4CAF50", color: "white" }}
+                    >
                       <FaSearchPlus size={15} />
                     </button>
-                    <button onClick={() => zoomOut()} title="Zoom Out">
+                    <button
+                      onClick={() => zoomOut()}
+                      title="Zoom Out"
+                      style={{ backgroundColor: "#4CAF50", color: "white" }}
+                    >
                       <FaSearchMinus size={15} />
                     </button>
-                    <button onClick={() => resetTransform()} title="Reset">
+                    <button
+                      onClick={() => resetTransform()}
+                      title="Reset"
+                      style={{ backgroundColor: "#4CAF50", color: "white" }}
+                    >
                       <FaUndoAlt size={15} />
                     </button>
+                    <button
+                      data-tooltip-id="mapDetailsTooltip"
+                      title="Map Details"
+                      style={{ backgroundColor: "#4CAF50", color: "white" }}
+                    >
+                      <FaInfoCircle size={15} />
+                    </button>
+                    <ReactTooltip
+                      id="mapDetailsTooltip"
+                      place="right"
+                      effect="solid"
+                    >
+                      <div>
+                        <p>C: Compact Cars (400x600cm) - Small</p>
+                        <p>M: Motorcycles (400x600cm) - Small</p>
+                        <p>S: Standard Cars (600x1000cm) - Medium</p>
+                        <p>D: Disabled Parking (800x1200cm) - Large</p>
+                        <p>L: Large Vehicles (800x1200cm) - Large</p>
+                      </div>
+                    </ReactTooltip>
                   </div>
+
+                  {/* Display the map image */}
                   <TransformComponent>
                     <img
                       src={ParkingSpotMap}
                       alt="Parking Spot Map"
-                      style={{ width: "95%", height: "auto" }}
+                      style={{ width: "100%", height: "auto" }}
                     />
                   </TransformComponent>
                 </>
               )}
             </TransformWrapper>
-          </div>
-
-          {/* Map Details Table  */}
-          <div className="map-details">
-            <table className="map-details-table">
-              <thead>
-                <tr>
-                  <th>Label</th>
-                  <th>Type</th>
-                  <th>Dimensions (cm)</th>
-                  <th>Size</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style={{ backgroundColor: "#534145" }}>
-                  <td>C</td>
-                  <td>Compact Cars</td>
-                  <td>400x600</td>
-                  <td>Small</td>
-                </tr>
-                <tr style={{ backgroundColor: "#9E6752" }}>
-                  <td>M</td>
-                  <td>Motorcycles</td>
-                  <td>400x600</td>
-                  <td>Small</td>
-                </tr>
-                <tr style={{ backgroundColor: "#FED7A5" }}>
-                  <td>S</td>
-                  <td>Standard Cars</td>
-                  <td>600x1000</td>
-                  <td>Medium</td>
-                </tr>
-                <tr style={{ backgroundColor: "#73766A" }}>
-                  <td>D</td>
-                  <td>Disabled Parking</td>
-                  <td>800x1200</td>
-                  <td>Large</td>
-                </tr>
-                <tr style={{ backgroundColor: "#2D4354" }}>
-                  <td>L</td>
-                  <td>Large Vehicles</td>
-                  <td>800x1200</td>
-                  <td>Large</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </div>
       )}

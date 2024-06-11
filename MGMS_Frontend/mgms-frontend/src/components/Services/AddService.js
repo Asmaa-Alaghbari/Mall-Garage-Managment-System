@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { notifyError, notifySuccess, sendFetchRequest } from "../Utils/Utils";
+import "../Utils/AddStyle.css";
 
 // Add new service or update existing service
 export default function AddService({ onAddSuccess, onClose, serviceData }) {
@@ -57,45 +58,42 @@ export default function AddService({ onAddSuccess, onClose, serviceData }) {
   };
 
   return (
-    <div className="container">
+    <div className="general-container">
       <h2>{serviceData ? "Update Service" : "Add Service"}</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>
-            Name:
-            <input
-              type="text"
-              name="name"
-              value={service.name}
-              onChange={handleChange}
-              required
-            />
-          </label>
+      <form onSubmit={handleSubmit} className="form-container">
+        <div className="form-group">
+          <label>Name:</label>
+          <input
+            type="text"
+            name="name"
+            value={service.name}
+            onChange={handleChange}
+            required
+            className="input-field"
+          />
         </div>
-        <div>
-          <label className="msg-container">
-            Description:
-            <textarea
-              name="description"
-              value={service.description}
-              onChange={handleChange}
-              required
-            />
-          </label>
+        <div className="form-group">
+          <label>Description:</label>
+          <textarea
+            name="description"
+            value={service.description}
+            onChange={handleChange}
+            required
+            className="input-field"
+          />
         </div>
-        <div>
-          <label>
-            Price:
-            <input
-              type="number"
-              name="price"
-              value={service.price}
-              onChange={handleChange}
-              required
-            />
-          </label>
+        <div className="form-group">
+          <label>Price:</label>
+          <input
+            type="number"
+            name="price"
+            value={service.price}
+            onChange={handleChange}
+            required
+            className="input-field"
+          />
         </div>
-        <div>
+        <div className="form-actions">
           <button type="submit" disabled={isLoading}>
             {serviceData ? "Update" : "Add"}
           </button>

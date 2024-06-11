@@ -236,7 +236,10 @@ export default function Service() {
                         >
                           Update
                         </button>
-                        <button onClick={() => handleDelete(service.serviceId)}>
+                        <button
+                          className="delete-button"
+                          onClick={() => handleDelete(service.serviceId)}
+                        >
                           Delete
                         </button>
                       </td>

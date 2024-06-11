@@ -148,7 +148,7 @@ export default function Settings({ setIsLoggedIn }) {
       </div>
 
       {/* Save and Log Out Buttons */}
-      <div className="setting-item button-item">
+      <div className="button-item">
         <button onClick={handleSaveSettings} disabled={isLoading}>
           <i className="fas fa-save"></i>
           {isLoading ? " Saving..." : " Save Settings"}

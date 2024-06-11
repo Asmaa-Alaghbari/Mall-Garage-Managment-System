@@ -5,6 +5,7 @@ import {
   notifyError,
   notifySuccess,
 } from "../Utils/Utils";
+import "../Utils/AddStyle.css";
 
 // Add new payment or update existing payment
 export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
@@ -43,21 +44,6 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // if (payment && !payment.userId || !payment.reservationId) {
-    // 	notifyError("userId or reservationId is missing!");
-    // 	return;
-    // }
-
-    // Prepare the payment data to be sent to the backend
-    // const paymentData = {
-    // 	paymentId: payment.paymentId, // Keep as string
-    // 	reservationId: parseInt(payment.reservationId, 10), // Convert to number, base 10
-    // 	userId: parseInt(payment.userId, 10), // Convert to number, base 10
-    // 	amount: parseFloat(payment.amount), // Convert to float
-    // 	paymentMethod: payment.paymentMethod, // Keep as string
-    // 	dateTime: new Date().toISOString(), // Add current date and time
-    // };
-
     payment.userId = user.userId;
 
     const apiEndpoint = paymentData
@@ -80,19 +66,20 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
   };
 
   return (
-    <div className="container">
+    <div className="general-container">
       <h2>{paymentData ? "Update Payment" : "Add Payment"}</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Reservation ID:
+      <form onSubmit={handleSubmit} className="form-container">
+        <div className="form-group">
+          <label>Reservation ID:</label>
           <input
             type="text"
             name="reservationId"
             value={payment.reservationId}
             onChange={handleChange}
             required
+            className="input-field"
           />
-        </label>
+        </div>
         <input
           type="text"
           name="userId"
@@ -101,9 +88,10 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
           required
           readOnly
           hidden
+          className="input-field"
         />
-        <label>
-          Amount:
+        <div className="form-group">
+          <label>Amount:</label>
           <input
             type="number"
             name="amount"
@@ -111,15 +99,17 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
             value={payment.amount}
             onChange={handleChange}
             required
+            className="input-field"
           />
-        </label>
-        <label>
-          Payment Method:
+        </div>
+        <div className="form-group">
+          <label>Payment Method:</label>
           <select
             name="paymentMethod"
             value={payment.paymentMethod}
             onChange={handleChange}
             required
+            className="input-field"
           >
             <option value="">Select a payment method</option>
             <option value="credit card">Credit Card</option>
@@ -127,8 +117,8 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
             <option value="paypal">Paypal</option>
             <option value="cash">Cash</option>
           </select>
-        </label>
-        <div className="button-container">
+        </div>
+        <div className="form-actions">
           <button type="submit" disabled={isLoading}>
             {isLoading
               ? paymentData

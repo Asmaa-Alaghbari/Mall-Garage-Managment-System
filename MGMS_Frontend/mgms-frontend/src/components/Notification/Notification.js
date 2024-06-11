@@ -78,7 +78,7 @@ export default function Notification() {
     );
 
     if (response) {
-      notifySuccess(response.message); 
+      notifySuccess(response.message);
     }
 
     fetchNotifications();
@@ -241,7 +241,7 @@ export default function Notification() {
                       )}
                     </td>
                   )}
-                  
+
                   <td>
                     {highlightText(
                       formatDateTime(notification.dateTime),
@@ -305,6 +305,7 @@ export default function Notification() {
                     )}
                     {user && user.role === "ADMIN" && (
                       <button
+                        className="delete-button"
                         onClick={() =>
                           handleDelete(notification.notificationId)
                         }

@@ -258,6 +258,7 @@ export default function UsersList() {
                           : "Promote to Admin"}
                       </button>
                       <button
+                        className="delete-button"
                         onClick={() => handleDelete(user.userId)}
                         disabled={
                           user.userId ===

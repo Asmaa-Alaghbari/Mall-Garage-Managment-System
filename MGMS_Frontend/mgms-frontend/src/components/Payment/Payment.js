@@ -271,7 +271,10 @@ export default function Payment() {
                         Update
                       </button>
 
-                      <button onClick={() => handleDelete(payment.paymentId)}>
+                      <button
+                        className="delete-button"
+                        onClick={() => handleDelete(payment.paymentId)}
+                      >
                         Delete
                       </button>
                     </td>

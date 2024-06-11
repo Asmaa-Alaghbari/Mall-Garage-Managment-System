@@ -5,6 +5,7 @@ import {
   notifySuccess,
   sendFetchRequest,
 } from "../Utils/Utils";
+import "../Utils/AddStyle.css";
 
 export default function AddFeedback({ onAddSuccess, onClose }) {
   const [feedback, setFeedback] = useState({
@@ -71,97 +72,111 @@ export default function AddFeedback({ onAddSuccess, onClose }) {
   };
 
   return (
-    <div className="container">
+    <div className="general-container">
       <h2>Add Feedback</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <input
-            type="number"
-            name="userId"
-            value={feedback.userId}
-            onChange={handleChange}
-            required
-            readOnly
-            hidden
-          />
-        </div>
-        <div className="rating-cosntainer">
+      <form onSubmit={handleSubmit} className="form-container">
+        <input
+          type="number"
+          name="userId"
+          value={feedback.userId}
+          onChange={handleChange}
+          required
+          readOnly
+          hidden
+          className="input-field"
+        />
+        <div className="form-group">
           <label>
             Rating:
-            {[...Array(5)].map((star, i) => {
-              const ratingValue = i + 1;
-              return (
-                <label key={i}>
-                  <input
-                    type="radio"
-                    name="rating"
-                    value={ratingValue}
-                    checked={ratingValue === feedback.rating}
-                    onChange={() => handleRatingChange(ratingValue)}
-                    style={{ display: "none" }}
-                  />
-                  <i
-                    className={`star-icon ${
-                      ratingValue <= feedback.rating
-                        ? "fas fa-star"
-                        : "far fa-star"
-                    }`}
-                  ></i>
-                </label>
-              );
-            })}
+            <div className="rating-container">
+              {[...Array(5)].map((star, i) => {
+                const ratingValue = i + 1;
+                return (
+                  <label key={i}>
+                    <input
+                      type="radio"
+                      name="rating"
+                      value={ratingValue}
+                      checked={ratingValue === feedback.rating}
+                      onChange={() => handleRatingChange(ratingValue)}
+                      style={{ display: "none" }}
+                    />
+                    <i
+                      className={`star-icon ${
+                        ratingValue <= feedback.rating
+                          ? "fas fa-star"
+                          : "far fa-star"
+                      }`}
+                    ></i>
+                  </label>
+                );
+              })}
+            </div>
           </label>
         </div>
-        <div className="feedback-radio-container">
+        <div className="form-group">
           <label>
             Feedback Type:
-            <span className="radio-container">
-              General
-              <input
-                type="radio"
-                name="feedbackType"
-                value="General"
-                onChange={handleChange}
-                checked={feedback.feedbackType === "General"}
-              />
-              Bug Report
-              <input
-                type="radio"
-                name="feedbackType"
-                value="Bug Report"
-                onChange={handleChange}
-                checked={feedback.feedbackType === "Bug Report"}
-              />
-              Feature Request
-              <input
-                type="radio"
-                name="feedbackType"
-                value="Feature Request"
-                onChange={handleChange}
-                checked={feedback.feedbackType === "Feature Request"}
-              />
-            </span>
+            <div className="radio-group">
+              <label>
+                <input
+                  type="radio"
+                  name="feedbackType"
+                  value="General"
+                  onChange={handleChange}
+                  checked={feedback.feedbackType === "General"}
+                />
+                General
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="feedbackType"
+                  value="Bug Report"
+                  onChange={handleChange}
+                  checked={feedback.feedbackType === "Bug Report"}
+                />
+                Bug Report
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="feedbackType"
+                  value="Feature Request"
+                  onChange={handleChange}
+                  checked={feedback.feedbackType === "Feature Request"}
+                />
+                Feature Request
+              </label>
+            </div>
           </label>
         </div>
-        <div className="msg-container">
+        <div className="form-group">
           <label className="msg-textarea">Message:</label>
           <textarea
             name="feedbackMessage"
             value={feedback.feedbackMessage}
             onChange={handleChange}
+            className="input-field"
           />
         </div>
-        <div className="checkbox-container">
-          <input
-            type="checkbox"
-            name="isAnonymous"
-            id="isAnonymous"
-            checked={feedback.isAnonymous}
-            onChange={handleChange}
-          />
-          <label htmlFor="isAnonymous">anonymous sender</label>
+
+        {/* Anonymous Sender Checkbox */}
+        <div className="form-group checkbox-container">
+          <label className="checkbox-group">
+            <input
+              type="checkbox"
+              name="isAnonymous"
+              id="isAnonymous"
+              checked={feedback.isAnonymous}
+              onChange={handleChange}
+            />
+            <span className="checkbox-custom"></span>
+            <span>Anonymous Sender</span>
+          </label>
         </div>
-        <div>
+
+        <div className="form-actions">
           <button type="submit" disabled={isLoading}>
             {isLoading ? "Adding..." : "Add"}
           </button>
