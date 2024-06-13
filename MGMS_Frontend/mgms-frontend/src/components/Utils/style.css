@@ -11,7 +11,7 @@
 
 /* Page title */
 .container h1 {
-    color: #333;
+    color: #2D4354;
     text-align: center;
     font-size: 32px;
     margin-bottom: 20px;
@@ -25,7 +25,7 @@
 }
 
 .container li {
-    background-color: #f4f4f4;
+    background-color: #F5F5F5;
     margin-bottom: 10px;
     padding: 10px;
     border-radius: 5px;
@@ -41,7 +41,7 @@
     justify-content: space-between;
     gap: 10px;
     margin-bottom: 20px;
-    background-color: #f9f9f9;
+    background-color: #F5F5F5;
     padding: 15px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -62,8 +62,8 @@
 
 .search-filter input:focus,
 .search-filter select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+    border-color: #FE5D7A50;
+    box-shadow: 0 0 8px rgba(254, 93, 122, 0.2);
 }
 
 .search-filter input[type="text"] {
@@ -79,7 +79,7 @@
     padding: 10px 20px;
     border-radius: 20px;
     border: none;
-    background-color: #007bff;
+    background-color: #2D4354;
     color: white;
     font-size: 16px;
     cursor: pointer;
@@ -89,7 +89,7 @@
 }
 
 .search-filter button:hover {
-    background-color: #0056b3;
+    background-color: #1B2A36;
 }
 
 /* Table styling */
@@ -108,11 +108,11 @@
 }
 
 .report-table th {
-    background-color: #f4f4f4;
+    background-color: #F5F5F5;
 }
 
 .report-table tr:hover {
-    background-color: #f1f1f1;
+    background-color: #F1F1F1;
 }
 
 /* Buttons */
@@ -120,8 +120,8 @@
     align-items: center;
     padding: 10px 15px;
     background-color: transparent;
-    color: #007bff;
-    border: 2px solid #007bff;
+    color: #2D4354;
+    border: 2px solid #2D4354;
     border-radius: 5px;
     transition: background-color 0.3s ease, transform 0.3s ease, color 0.3s ease;
     cursor: pointer;
@@ -131,7 +131,7 @@
 }
 
 .container button:hover {
-    background-color: #007bff;
+    background-color: #2D4354;
     color: white;
     transform: scale(1.05);
 }
@@ -214,7 +214,7 @@
 }
 
 .pagination button:hover {
-    background-color: #0056b3;
+    background-color: #1B2A36;
 }
 
 .pagination button.active {
@@ -242,7 +242,6 @@
     text-align: left;
     margin: 0 auto;
     display: block;
-
 }
 
 .msg-container textarea {

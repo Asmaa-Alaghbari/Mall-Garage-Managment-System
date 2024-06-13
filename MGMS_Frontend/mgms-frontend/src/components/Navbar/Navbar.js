@@ -1,152 +1,155 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { fetchCurrentUser, confirmLogout } from "../Utils/Utils";
-import "./Navbar.css";
 import {
-  FaBars, // Hamburger icon
-  FaBell, // Bell icon
-  FaCalendarAlt, // Calendar icon
-  FaCog, // Setting icon
-  FaComments, // Comments icon
-  FaDollarSign, // Dollar icon
-  FaHome, // Home icon
-  FaParking, // Parking icon
-  FaSignOutAlt, // Sign out icon
-  FaUser, // User icon
-  FaUsersCog, // Users icon
-  FaWrench, // Wrench icon
-} from "react-icons/fa"; // Importing icons
+  AppBar,
+  Toolbar,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+} from "@mui/material";
+import {
+  Menu as MenuIcon,
+  Home as HomeIcon,
+  DirectionsCar as ParkingIcon,
+  CalendarToday as CalendarIcon,
+  Build as BuildIcon,
+  AttachMoney as MoneyIcon,
+  Notifications as NotificationsIcon,
+  Person as PersonIcon,
+  Feedback as FeedbackIcon,
+  People as PeopleIcon,
+  Settings as SettingsIcon,
+  ExitToApp as ExitToAppIcon,
+  Info as InfoIcon,
+} from "@mui/icons-material";
+import { styled } from "@mui/system";
 
-// Navigation bar component
+const useStyles = {
+  appBar: {
+    backgroundColor: "#2D4354",
+  },
+  drawer: {
+    width: 240,
+    flexShrink: 0,
+    "& .MuiDrawer-paper": {
+      width: 240,
+      backgroundColor: "#1B2A36",
+      color: "#ecf0f1",
+    },
+  },
+  menuItem: {
+    color: "#ecf0f1",
+    "&:hover": {
+      backgroundColor: "#534145",
+    },
+  },
+  logo: {
+    flexGrow: 1,
+    cursor: "pointer",
+    color: "#FE5D7A5",
+    fontWeight: "bold",
+  },
+  icon: {
+    color: "#ecf0f1",
+  },
+};
+
+const AppBarStyled = styled(AppBar)(useStyles.appBar);
+const DrawerStyled = styled(Drawer)(useStyles.drawer);
+const MenuItemStyled = styled(ListItem)(useStyles.menuItem);
+const IconStyled = styled(IconButton)(useStyles.icon);
+
 export default function Navbar({ setIsLoggedIn }) {
-  const [isOpen, setIsOpen] = useState(false); // Manage the mobile menu
-  const [userRole, setUserRole] = useState(""); // Store the user role
-  const navbarRef = useRef(null); // Reference to the navbar element
-  const [, setIsLoading] = useState(false);
-  const [, setError] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [userRole, setUserRole] = useState("");
   const navigate = useNavigate();
 
-  // Handle the click outside the navbar to close the mobile menu
-  const handleClickOutside = (event) => {
-    if (navbarRef.current && !navbarRef.current.contains(event.target)) {
-      setIsOpen(false);
-    }
+  const handleDrawerToggle = () => {
+    setIsOpen(!isOpen);
   };
 
-  // Handle click on the MGMS text
-  const handleHomeClick = () => {
-    navigate("/home"); // Navigate to the home page
-    setIsOpen(false); // Close the navbar
+  const handleLogout = () => {
+    confirmLogout({ setIsLoggedIn, navigate });
   };
 
-  // Fetch the current user data from the backend and set the user role
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    fetchCurrentUser(setUserRole, setIsLoading, setError, setUserRole);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    fetchCurrentUser(
+      setUserRole,
+      () => {},
+      () => {},
+      setUserRole
+    );
   }, []);
 
-  return (
-    <nav className="navbar" ref={navbarRef}>
-      <div className="navbar-container">
-        <Link to="/" className="navbar-logo" onClick={handleHomeClick}>
-          MGMS
-        </Link>
-        <FaBars className="burger-icon" onClick={() => setIsOpen(!isOpen)} />
+  const navItems = [
+    { label: "Home", icon: <HomeIcon />, path: "/home" },
+    { label: "Parking Spots", icon: <ParkingIcon />, path: "/parking-spots" },
+    { label: "Reservations", icon: <CalendarIcon />, path: "/reservations" },
+    { label: "Services", icon: <BuildIcon />, path: "/services" },
+    { label: "Payments", icon: <MoneyIcon />, path: "/payments" },
+    {
+      label: "Notifications",
+      icon: <NotificationsIcon />,
+      path: "/notifications",
+    },
+    { label: "Profile", icon: <PersonIcon />, path: "/profile" },
+    { label: "Feedback", icon: <FeedbackIcon />, path: "/feedbacks" },
+    { label: "Settings", icon: <SettingsIcon />, path: "/settings" },
+    { label: "Info", icon: <InfoIcon />, path: "/info" },
+  ];
 
-        <ul className={isOpen ? "nav-menu active" : "nav-menu"}>
-          <NavItem
-            to="/home"
-            label="Home"
-            icon={<FaHome className="nav-icon" />}
-            closeNavbar={() => setIsOpen(false)}
-          />
-          <NavItem
-            to="/parking-spots"
-            label="Parking Spots"
-            icon={<FaParking className="nav-icon" />}
-            closeNavbar={() => setIsOpen(false)}
-          />
-          <NavItem
-            to="/reservations"
-            label="Reservations"
-            icon={<FaCalendarAlt className="nav-icon" />}
-            closeNavbar={() => setIsOpen(false)}
-          />
-          <NavItem
-            to="/services"
-            label="Services"
-            icon={<FaWrench className="nav-icon" />}
-            closeNavbar={() => setIsOpen(false)}
-          />
-          <NavItem
-            to="/payments"
-            label="Payments"
-            icon={<FaDollarSign className="nav-icon" />}
-            closeNavbar={() => setIsOpen(false)}
-          />
-          <NavItem
-            to="/notifications"
-            label="Notifications"
-            icon={<FaBell className="nav-icon" />}
-            closeNavbar={() => setIsOpen(false)}
-          />
-          <NavItem
-            to="/profile"
-            label="Profile"
-            icon={<FaUser className="nav-icon" />}
-            closeNavbar={() => setIsOpen(false)}
-          />
-          <NavItem
-            to="/feedbacks"
-            label="Feedback"
-            icon={<FaComments className="nav-icon" />}
-            closeNavbar={() => setIsOpen(false)}
-          />
-          {userRole === "ADMIN" && (
-            <NavItem
-              to="/users"
-              label="Users"
-              icon={<FaUsersCog className="nav-icon" />}
-              closeNavbar={() => setIsOpen(false)}
-            />
-          )}
-          <NavItem
-            to="/settings"
-            label="Settings"
-            icon={<FaCog className="nav-icon" />}
-            closeNavbar={() => setIsOpen(false)}
-          />
-          <li
-            className="nav-item"
-            onClick={() => confirmLogout({ setIsLoggedIn, navigate })}
-          >
-            <FaSignOutAlt className="logout-nav-icon" />
-            <span className="nav-text">Logout</span>
-          </li>
-        </ul>
-      </div>
-    </nav>
+  if (userRole === "ADMIN") {
+    navItems.push({ label: "Users", icon: <PeopleIcon />, path: "/users" });
+  }
+
+  return (
+    <AppBarStyled position="static">
+      <Toolbar>
+        <Typography
+          variant="h6"
+          component="div"
+          sx={{ flexGrow: 1 }}
+          style={useStyles.logo}
+          onClick={() => navigate("/home")}
+        >
+          MGMS
+        </Typography>
+        <IconStyled
+          edge="start"
+          color="inherit"
+          aria-label="menu"
+          onClick={handleDrawerToggle}
+        >
+          <MenuIcon />
+        </IconStyled>
+        <DrawerStyled anchor="left" open={isOpen} onClose={handleDrawerToggle}>
+          <List>
+            {navItems.map((item, index) => (
+              <MenuItemStyled
+                button
+                key={index}
+                component={Link}
+                to={item.path}
+                onClick={handleDrawerToggle}
+              >
+                <ListItemIcon style={useStyles.icon}>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.label} />
+              </MenuItemStyled>
+            ))}
+            <MenuItemStyled button onClick={handleLogout}>
+              <ListItemIcon style={useStyles.icon}>
+                <ExitToAppIcon />
+              </ListItemIcon>
+              <ListItemText primary="Logout" />
+            </MenuItemStyled>
+          </List>
+        </DrawerStyled>
+      </Toolbar>
+    </AppBarStyled>
   );
 }
-
-// Navigation item component for the navigation bar menu
-const NavItem = ({ to, label, icon, closeNavbar }) => {
-  const handleClick = () => {
-    closeNavbar(); // Close the navbar
-  };
-
-  return (
-    <li className="nav-item" onClick={handleClick}>
-      <Link to={to} className="nav-links">
-        <span className="nav-icon-wrapper">
-          {icon}
-          <span className="nav-text">{label}</span>
-        </span>
-      </Link>
-    </li>
-  );
-};

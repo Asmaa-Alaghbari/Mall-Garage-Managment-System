@@ -25,6 +25,7 @@ import UsersList from "./components/Auth/UserList";
 import AddUser from "./components/Auth/AddUser";
 import Service from "./components/Services/Service";
 import Notification from "./components/Notification/Notification";
+import Info from "./components/Info/Info";
 import "./App.css";
 
 export default function App() {
@@ -144,6 +145,7 @@ export default function App() {
             path="/notifications"
             element={isLoggedIn ? <Notification /> : <Navigate to="/login" />}
           />
+          <Route path="/info" element={<Info />} />
           <Route path="*" element={<h1>Not Found</h1>} />
         </Routes>
       </Router>

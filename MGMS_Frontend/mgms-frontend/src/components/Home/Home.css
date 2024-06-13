@@ -6,48 +6,63 @@
 }
 
 .header {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+  /* Reduced margin */
   text-align: center;
 }
 
 .header h1 {
-  font-size: 2.5em;
-  color: #4c69a5;
+  font-size: 2em;
+  /* Reduced font size */
+  color: #2D4354;
 }
 
 .header p {
-  font-size: 1.2em;
+  font-size: 1em;
+  /* Reduced font size */
   color: #666;
 }
 
 .main-content {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  /* Reduced min width */
+  gap: 15px;
+  /* Reduced gap */
 }
 
 /* Card styling */
 .card {
   border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  /* Reduced border radius */
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.1);
+  /* Reduced shadow */
   overflow: hidden;
   background-color: #fff;
   transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  /* Reduced translate */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  /* Reduced shadow */
 }
 
 .card-header {
   margin: 0;
-  background-color: #4c69a5;
+  background-color: #2D4354;
   color: white;
-  padding: 20px;
-  font-size: 1.5em;
+  padding: 15px;
+  /* Reduced padding */
+  font-size: 1.2em;
+  /* Reduced font size */
   text-align: center;
+  border-top-left-radius: 10px;
+  /* Reduced border radius */
+  border-top-right-radius: 10px;
+  /* Reduced border radius */
 }
 
 .card-body {
@@ -57,22 +72,32 @@
 }
 
 .card-body li {
-  padding: 15px;
+  padding: 10px;
+  /* Reduced padding */
   border-bottom: 1px solid #eee;
 }
+
 .nav-link {
   display: inline-block;
-  padding: 10px 20px;
-  margin: 10px 0;
-  border-radius: 25px;
-  background-color: #4c69a5;
+  padding: 8px 15px;
+  /* Reduced padding */
+  margin: 5px 0;
+  /* Reduced margin */
+  border-radius: 20px;
+  /* Reduced border radius */
+  background-color: #2D4354;
   color: white;
   text-decoration: none;
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
+.nav-link i {
+  margin-right: 8px;
+  /* Reduced margin */
+}
+
 .nav-link:hover {
-  background-color: #3b5998;
+  background-color: #1B2A36;
   transform: scale(1.05);
 }
 
@@ -80,7 +105,8 @@
   position: relative;
   width: 90%;
   max-width: 90%;
-  margin: 0 auto 30px;
+  margin: 0 auto 20px;
+  /* Reduced margin */
 }
 
 .search-input {
@@ -90,22 +116,28 @@
 
 .search-input input[type="text"] {
   width: 100%;
-  padding: 15px 20px 15px 40px;
+  padding: 12px 15px 12px 35px;
+  /* Reduced padding */
   border: none;
-  border-radius: 25px;
+  border-radius: 20px;
+  /* Reduced border radius */
   background-color: #e0e0e0;
-  font-size: 16px;
-  transition: background-color 0.3s;
+  font-size: 14px;
+  /* Reduced font size */
+  transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 .search-input input[type="text"]:focus {
   outline: none;
   background-color: #d0d0d0;
+  box-shadow: 0 0 8px rgba(254, 93, 122, 0.2);
+  /* Reduced shadow */
 }
 
 .search-icon {
   position: absolute;
-  left: 15px;
+  left: 12px;
+  /* Adjusted position */
   top: 50%;
   transform: translateY(-50%);
   color: #aaa;
@@ -114,11 +146,13 @@
 .search-results {
   position: absolute;
   width: 100%;
-  max-height: 300px;
+  max-height: 250px;
+  /* Reduced max height */
   overflow-y: auto;
   border-radius: 0 0 10px 10px;
   background-color: #fff;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.1);
+  /* Reduced shadow */
   z-index: 10;
   transition: opacity 0.3s ease;
   -ms-overflow-style: none;
@@ -129,7 +163,8 @@
 }
 
 .result-item {
-  padding: 10px 20px;
+  padding: 8px 15px;
+  /* Reduced padding */
   cursor: pointer;
   transition: background-color 0.3s, transform 0.3s;
   display: flex;
@@ -144,11 +179,13 @@
 }
 
 .footer {
-  background-color: #4c69a5;
+  background-color: #2D4354;
   color: #fff;
   text-align: center;
-  padding: 10px 0;
-  margin-top: 30px;
+  padding: 8px 0;
+  /* Reduced padding */
+  margin-top: 20px;
+  /* Reduced margin */
   position: relative;
   bottom: 0;
   left: 0;
@@ -169,36 +206,47 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
-  margin-top: 20px;
+  margin-bottom: 15px;
+  /* Reduced margin */
+  margin-top: 15px;
+  /* Reduced margin */
 }
 
 .quote {
   background-color: rgba(255, 255, 255, 0.8);
   color: #333;
-  padding: 20px;
-  border-radius: 20px;
+  padding: 15px;
+  /* Reduced padding */
+  border-radius: 15px;
+  /* Reduced border radius */
   text-align: center;
   position: relative;
-  max-width: 600px;
+  max-width: 500px;
+  /* Reduced max width */
   margin: 0 auto;
   animation: bubbleIn 1s ease-in-out;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  border: 5px solid transparent;
-  border-image: linear-gradient(to right, #4c69a5, #42a5f5, #ab47bc);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  /* Reduced shadow */
+  border: 4px solid transparent;
+  /* Reduced border */
+  border-image: linear-gradient(to right, #2D4354, #42a5f5, #ab47bc);
   border-image-slice: 1;
-  border-radius: 50px;
+  border-radius: 40px;
+  /* Reduced border radius */
   position: relative;
 }
 
 .quote h3 {
-  margin: 0 0 10px;
-  font-size: 1.5em;
-  color: #4c69a5;
+  margin: 0 0 8px;
+  /* Reduced margin */
+  font-size: 1.2em;
+  /* Reduced font size */
+  color: #2D4354;
 }
 
 .quote-text {
-  font-size: 1.2em;
+  font-size: 1em;
+  /* Reduced font size */
   font-style: italic;
   margin: 0;
 }
@@ -206,39 +254,33 @@
 .quote::before {
   content: '';
   position: absolute;
-  top: -10px;
-  left: -10px;
-  right: -10px;
-  bottom: -10px;
-  border-radius: 50px;
-  border: 10px solid transparent;
-  border-image: linear-gradient(to right, #4c69a5, #42a5f5, #ab47bc);
+  top: -8px;
+  /* Adjusted position */
+  left: -8px;
+  /* Adjusted position */
+  right: -8px;
+  /* Adjusted position */
+  bottom: -8px;
+  /* Adjusted position */
+  border-radius: 40px;
+  /* Reduced border radius */
+  border: 8px solid transparent;
+  /* Adjusted border */
+  border-image: linear-gradient(to right, #2D4354, #42a5f5, #ab47bc);
   border-image-slice: 1;
   animation: cloudBorder 5s linear infinite;
-}
-
-@keyframes cloudBorder {
-  0% {
-    transform: translateX(0);
-  }
-
-  50% {
-    transform: translateX(-10px);
-  }
-
-  100% {
-    transform: translateX(0);
-  }
 }
 
 /* Bubble arrow */
 .quote::after {
   content: "";
   position: absolute;
-  bottom: -20px;
+  bottom: -15px;
+  /* Adjusted position */
   left: 50%;
   transform: translateX(-50%);
-  border-width: 20px;
+  border-width: 15px;
+  /* Reduced border width */
   border-style: solid;
   border-color: rgba(255, 255, 255, 0.8) transparent transparent transparent;
 }
@@ -281,7 +323,8 @@
 
 .dark-mode .card {
   background-color: #1f1f1f;
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 3px 9px rgba(255, 255, 255, 0.1);
+  /* Reduced shadow */
 }
 
 .dark-mode .card-header {
@@ -330,10 +373,54 @@
   border-color: rgba(51, 51, 51, 0.8) transparent transparent transparent;
 }
 
-.dark-mode .quote h3 {
+.dark-mode .quote h3,
+.dark-mode .quote-text {
   color: #ccc;
 }
 
 .dark-mode .footer {
   background-color: #1f1f1f;
+}
+
+/* Quick Access styling */
+.quick-access {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.quick-access-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  /* Reduced width */
+  height: 100px;
+  /* Reduced height */
+  margin: 8px;
+  /* Reduced margin */
+  border-radius: 10px;
+  /* Reduced border radius */
+  background-color: white;
+  color: #2D4354;
+  text-decoration: none;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  text-align: center;
+}
+
+.quick-access-link i {
+  font-size: 1.8em;
+  /* Reduced font size */
+  margin-bottom: 8px;
+  /* Reduced margin */
+}
+
+.quick-access-link span {
+  font-size: 0.9em;
+  /* Reduced font size */
+}
+
+.quick-access-link:hover {
+  transform: scale(1.05);
 }

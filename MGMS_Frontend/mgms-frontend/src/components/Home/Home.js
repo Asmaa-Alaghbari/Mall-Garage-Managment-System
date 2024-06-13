@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
-import { Bar, Pie } from "react-chartjs-2";
+import { Link } from "react-router-dom";
+import { Bar, Pie, Doughnut, Line } from "react-chartjs-2";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import {
+  FaExpand,
+  FaSearchPlus,
+  FaSearchMinus,
+  FaUndoAlt,
+  FaInfoCircle,
+} from "react-icons/fa";
+import { Tooltip as ReactTooltip } from "react-tooltip";
+import ParkingSpotMap from "../Data/ParkingSpotMap.svg";
 import {
   fetchCurrentUser,
   notifyError,
   sendFetchRequest,
 } from "../Utils/Utils";
-import "./Home.css";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,7 +26,10 @@ import {
   Tooltip,
   Legend,
   ArcElement,
+  LineElement,
+  PointElement,
 } from "chart.js";
+import "./Home.css";
 
 ChartJS.register(
   CategoryScale,
@@ -26,7 +38,9 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement
+  ArcElement,
+  LineElement,
+  PointElement
 );
 
 export default function Home() {
@@ -37,10 +51,6 @@ export default function Home() {
     totalNegativeFeedbacks: 0,
     totalAnonymousFeedbacks: 0,
     averageRating: 0,
-  });
-  const [notificationsStatistics, setNotificationsStatistics] = useState({
-    total: 0,
-    unread: 0,
   });
   const [parkingSpotSummary, setParkingSpotSummary] = useState({
     available: 0,
@@ -54,9 +64,6 @@ export default function Home() {
     totalCompletedReservations: 0,
     totalCancelledReservations: 0,
     totalPendingReservations: 0,
-  });
-  const [servicesStatistics, setServicesStatistics] = useState({
-    total: 0,
   });
   const [userStatistics, setUserStatistics] = useState({
     totalUsersRole: 0,
@@ -106,17 +113,6 @@ export default function Home() {
         );
       }
 
-      // Fetch notifications statistics
-      sendFetchRequest(
-        `notifications/GetNotificationsStatistics?userId=${
-          user?.role === "ADMIN" ? 0 : user?.userId || 0
-        }`,
-        "GET",
-        setIsLoading,
-        setError,
-        setNotificationsStatistics
-      );
-
       // Fetch parking spot summary
       sendFetchRequest(
         "parkingspots/GetParkingSpotSummary",
@@ -133,15 +129,6 @@ export default function Home() {
         setIsLoading,
         setError,
         setReservationStatistics
-      );
-
-      // Fetch services statistics
-      sendFetchRequest(
-        "services/GetServicesStatistics",
-        "GET",
-        setIsLoading,
-        setError,
-        setServicesStatistics
       );
     }
   }, [user]);
@@ -293,7 +280,6 @@ export default function Home() {
             <i className="fa fa-search search-icon"></i>
           </div>
 
-          {/* Display search results if search is open */}
           {isSearchOpen && (
             <section className="search-results">
               <ul className="card-body">
@@ -315,42 +301,52 @@ export default function Home() {
           )}
         </div>
 
-        <h1>
+        <h1 className="welcome-title">
           Hello,{" "}
           {user &&
             user.username &&
             user.username.charAt(0).toUpperCase() + user.username.slice(1)}
-          ! Welcome to Your Ultimate Parking Command Center!
+          !
         </h1>
-        <p>
-          Step into the hub of seamless parking management! At MGMS, we're not
-          just about spaces and spots; we're about ensuring your experience is
-          smooth and worry-free. Dive into your dashboard, where efficiency
-          meets convenience, and let us take care of the rest. Enjoy the ease of
-          managing your parking needs with just a few clicks!
+        <p className="welcome-paragraph">
+          Welcome to Your Ultimate Parking Command Center! Step into the hub of
+          seamless parking management. At MGMS, we're not just about spaces and
+          spots; we're about ensuring your experience is smooth and worry-free.
+          Dive into your dashboard, where efficiency meets convenience, and let
+          us take care of the rest. Enjoy the ease of managing your parking
+          needs with just a few clicks!
         </p>
       </header>
 
       <main className="main-content">
         <section className="card">
-          <h2 className="card-header">My Account</h2>
-          <ul className="card-body">
-            <li>
-              <Link to="/profile" className="nav-link">
-                View Profile
-              </Link>
-            </li>
-            <li>
-              <Link to="/settings" className="nav-link">
-                Manage Settings
-              </Link>
-            </li>
-            <li>
-              <Link to="/feedbacks" className="nav-link">
-                Provide Feedback
-              </Link>
-            </li>
-          </ul>
+          <h2 className="card-header">Quick Access</h2>
+          <div className="card-body quick-access">
+            <Link to="/profile" className="quick-access-link">
+              <i className="fa fa-user"></i>
+              <span>Profile</span>
+            </Link>
+            <Link to="/settings" className="quick-access-link">
+              <i className="fa fa-cog"></i>
+              <span>Settings</span>
+            </Link>
+            <Link to="/parking-spots" className="quick-access-link">
+              <i className="fa fa-car"></i>
+              <span>Parking Spots</span>
+            </Link>
+            <Link to="/services" className="quick-access-link">
+              <i className="fa fa-wrench"></i>
+              <span>Services</span>
+            </Link>
+            <Link to="/reservations" className="quick-access-link">
+              <i className="fa fa-calendar"></i>
+              <span>Reservations</span>
+            </Link>
+            <Link to="/feedbacks" className="quick-access-link">
+              <i className="fa fa-comments"></i>
+              <span>Feedback</span>
+            </Link>
+          </div>
         </section>
 
         <section className="card">
@@ -397,29 +393,91 @@ export default function Home() {
           </section>
         )}
 
+        {/* Map view of the parking spots */}
         <section className="card">
-          <h2 className="card-header">Services Statistics</h2>
-          <ul className="card-body">
-            <li>Total Services: {servicesStatistics.total}</li>
-            <li>
-              <Link to="/services" className="nav-link">
-                View All Services
-              </Link>
-            </li>
-          </ul>
-        </section>
+          <h2 className="card-header">Parking Spot Map</h2>
+          <div className="card-body">
+            <div className="map-view">
+              <div className="map-container">
+                <TransformWrapper>
+                  {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+                    <>
+                      <div className="tools">
+                        <button
+                          onClick={() => {
+                            const elem =
+                              document.querySelector(".map-container");
+                            if (elem.requestFullscreen) {
+                              elem.requestFullscreen();
+                            } else if (elem.mozRequestFullScreen) {
+                              elem.mozRequestFullScreen();
+                            } else if (elem.webkitRequestFullscreen) {
+                              elem.webkitRequestFullscreen();
+                            } else if (elem.msRequestFullscreen) {
+                              elem.msRequestFullscreen();
+                            }
+                          }}
+                          title="Fullscreen"
+                          style={{ backgroundColor: "#4CAF50", color: "white" }}
+                        >
+                          <FaExpand size={15} />
+                        </button>
+                        <button
+                          onClick={() => zoomIn()}
+                          title="Zoom In"
+                          style={{ backgroundColor: "#4CAF50", color: "white" }}
+                        >
+                          <FaSearchPlus size={15} />
+                        </button>
+                        <button
+                          onClick={() => zoomOut()}
+                          title="Zoom Out"
+                          style={{ backgroundColor: "#4CAF50", color: "white" }}
+                        >
+                          <FaSearchMinus size={15} />
+                        </button>
+                        <button
+                          onClick={() => resetTransform()}
+                          title="Reset"
+                          style={{ backgroundColor: "#4CAF50", color: "white" }}
+                        >
+                          <FaUndoAlt size={15} />
+                        </button>
+                        <button
+                          data-tooltip-id="mapDetailsTooltip"
+                          title="Map Details"
+                          style={{ backgroundColor: "#4CAF50", color: "white" }}
+                        >
+                          <FaInfoCircle size={15} />
+                        </button>
+                        <ReactTooltip
+                          id="mapDetailsTooltip"
+                          place="right"
+                          effect="solid"
+                        >
+                          <div>
+                            <p>C: Compact Cars (400x600cm) - Small</p>
+                            <p>M: Motorcycles (400x600cm) - Small</p>
+                            <p>S: Standard Cars (600x1000cm) - Medium</p>
+                            <p>D: Disabled Parking (800x1200cm) - Large</p>
+                            <p>L: Large Vehicles (800x1200cm) - Large</p>
+                          </div>
+                        </ReactTooltip>
+                      </div>
 
-        <section className="card">
-          <h2 className="card-header">Notifications Statistics</h2>
-          <ul className="card-body">
-            <li>Total Notifications: {notificationsStatistics.total}</li>
-            <li>Unread Notifications: {notificationsStatistics.unread}</li>
-            <li>
-              <Link to="/notifications" className="nav-link">
-                View All Notifications
-              </Link>
-            </li>
-          </ul>
+                      <TransformComponent>
+                        <img
+                          src={ParkingSpotMap}
+                          alt="Parking Spot Map"
+                          style={{ width: "100%", height: "auto" }}
+                        />
+                      </TransformComponent>
+                    </>
+                  )}
+                </TransformWrapper>
+              </div>
+            </div>
+          </div>
         </section>
 
         {user?.role === "ADMIN" && (
@@ -427,7 +485,7 @@ export default function Home() {
             <section className="card">
               <h2 className="card-header">User Statistics</h2>
               <div className="card-body">
-                <Pie data={userData} />
+                <Doughnut data={userData} />
                 <li>
                   <Link to="/users" className="nav-link">
                     View All Users
@@ -439,7 +497,7 @@ export default function Home() {
             <section className="card">
               <h2 className="card-header">Feedback Statistics</h2>
               <div className="card-body">
-                <Pie data={feedbackData} />
+                <Line data={feedbackData} />
                 <li>
                   <Link to="/feedbacks" className="nav-link">
                     View All Feedbacks
