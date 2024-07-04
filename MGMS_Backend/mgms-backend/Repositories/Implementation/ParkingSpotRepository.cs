@@ -1,5 +1,6 @@
 ﻿using mgms_backend.Data;
 using mgms_backend.Entities.ParkingSpots;
+using mgms_backend.Exceptions;
 using mgms_backend.Extensions;
 using mgms_backend.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,20 @@ namespace mgms_backend.Repositories.Implementation
         public async Task<IEnumerable<ParkingSpot>> GetAllParkingSpotsAsync()
         {
             return await _context.ParkingSpots.ToListAsync();
+        }
+
+        // Get the price of a parking spot by number
+        public async Task<decimal> GetParkingSpotPriceByNumberAsync(int parkingSpotNumber)
+        {
+            var parkingSpot = await _context.ParkingSpots
+                .FirstOrDefaultAsync(ps => ps.ParkingSpotNumber == parkingSpotNumber);
+
+            if (parkingSpot == null)
+            {
+                throw new EntityNotFoundException($"Parking spot with number {parkingSpotNumber} not found.");
+            }
+
+            return parkingSpot.Price;
         }
 
         // Search for parking spots based on search criteria

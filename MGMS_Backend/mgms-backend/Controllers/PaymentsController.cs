@@ -53,7 +53,9 @@ namespace mgms_backend.Controllers
             {
                 throw new EntityNotFoundException("Payment not found!");
             }
-            return Ok(payment);
+
+            var paymentDto = _paymentMapper.ToDto(payment);
+            return Ok(paymentDto);
         }
 
         // POST: api/Payments/AddPayment: Add a new payment

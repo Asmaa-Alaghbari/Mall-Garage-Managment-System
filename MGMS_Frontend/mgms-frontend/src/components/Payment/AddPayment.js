@@ -16,6 +16,7 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
       userId: 0,
       amount: 0,
       paymentMethod: "",
+      paymentStatus: "Unpaid",
     }
   );
   const [isLoading, setIsLoading] = useState(false);
@@ -29,20 +30,63 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
 
   // Update the payment state with the payment data
   useEffect(() => {
-    if (error && error !== null) {
+    if (paymentData) {
+      setPayment(paymentData);
+    }
+  }, [paymentData]);
+
+  // Display error notification when error state changes
+  useEffect(() => {
+    if (error) {
       notifyError(error);
     }
   }, [error]);
+
+  // Fetch reservation details based on reservation ID
+  const fetchReservationDetails = async (reservationId) => {
+    if (!reservationId) return;
+
+    try {
+      const response = await sendFetchRequest(
+        `reservations/GetReservationById?reservationId=${reservationId}`,
+        "GET",
+        setIsLoading,
+        setError
+      );
+
+      if (response) {
+        setPayment((prev) => ({
+          ...prev,
+          userId: response.userId,
+          amount: response.totalAmount,
+        }));
+      } else {
+        setError("Reservation ID not found");
+      }
+    } catch (err) {
+      console.error("Failed to fetch reservation details:", err);
+      setError(`Failed to fetch reservation details: ${err.message}`);
+    }
+  };
 
   // Update the payment state with the payment data
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPayment((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "reservationId" && value) {
+      fetchReservationDetails(value);
+    }
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!user) {
+      setError("Failed to fetch user details. Please try again.");
+      return;
+    }
 
     payment.userId = user.userId;
 
@@ -50,18 +94,23 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
       ? `Payments/UpdatePayment?paymentId=${paymentData.paymentId}`
       : "Payments/AddPayment";
 
-    const response = await sendFetchRequest(
-      apiEndpoint,
-      paymentData ? "PUT" : "POST",
-      setIsLoading,
-      setError,
-      undefined,
-      payment
-    );
+    try {
+      const response = await sendFetchRequest(
+        apiEndpoint,
+        payment.paymentId ? "PUT" : "POST",
+        setIsLoading,
+        setError,
+        undefined,
+        payment
+      );
 
-    if (response && response.message) {
-      onAddSuccess();
-      notifySuccess(response.message);
+      if (response && response.message) {
+        onAddSuccess();
+        notifySuccess(response.message);
+      }
+    } catch (err) {
+      console.error("Failed to save payment:", err);
+      setError(`Failed to save payment: ${err.message}`);
     }
   };
 
@@ -72,7 +121,7 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
         <div className="form-group">
           <label>Reservation ID:</label>
           <input
-            type="text"
+            type="number"
             name="reservationId"
             value={payment.reservationId}
             onChange={handleChange}
@@ -81,13 +130,12 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
           />
         </div>
         <input
-          type="text"
+          type="hidden"
           name="userId"
           value={payment.userId}
           onChange={handleChange}
           required
           readOnly
-          hidden
           className="input-field"
         />
         <div className="form-group">
@@ -99,6 +147,7 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
             value={payment.amount}
             onChange={handleChange}
             required
+            readOnly
             className="input-field"
           />
         </div>
@@ -115,7 +164,6 @@ export default function AddPayment({ onAddSuccess, onClose, paymentData }) {
             <option value="credit card">Credit Card</option>
             <option value="debit card">Debit Card</option>
             <option value="paypal">Paypal</option>
-            <option value="cash">Cash</option>
           </select>
         </div>
         <div className="form-actions">

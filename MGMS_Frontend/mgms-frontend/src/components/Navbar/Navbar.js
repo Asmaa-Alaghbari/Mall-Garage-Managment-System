@@ -89,8 +89,8 @@ export default function Navbar({ setIsLoggedIn }) {
   const navItems = [
     { label: "Home", icon: <HomeIcon />, path: "/home" },
     { label: "Parking Spots", icon: <ParkingIcon />, path: "/parking-spots" },
-    { label: "Reservations", icon: <CalendarIcon />, path: "/reservations" },
     { label: "Services", icon: <BuildIcon />, path: "/services" },
+    { label: "Reservations", icon: <CalendarIcon />, path: "/reservations" },
     { label: "Payments", icon: <MoneyIcon />, path: "/payments" },
     {
       label: "Notifications",

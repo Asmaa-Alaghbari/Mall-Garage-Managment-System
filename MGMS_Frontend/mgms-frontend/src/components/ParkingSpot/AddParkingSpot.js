@@ -8,20 +8,32 @@ export default function AddParkingSpot({
   onClose,
   parkingSpotData,
 }) {
-  const [parkingSpot, setParkingSpot] = useState(
-    parkingSpotData || {
-      number: 0,
-      section: "",
-      isOccupied: false, // Default value is not occupied
-      size: "", // Small, Medium, Large
-    }
-  );
+  const [parkingSpot, setParkingSpot] = useState({
+    parkingSpotNumber: 0,
+    section: "",
+    isOccupied: false,
+    size: "", // Small, Medium, Large
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(undefined);
 
+  // Log parkingSpotData to debug
+  useEffect(() => {
+    console.log("Received parkingSpotData:", parkingSpotData);
+    if (parkingSpotData) {
+      setParkingSpot({
+        parkingSpotNumber: parkingSpotData.parkingSpotNumber,
+        section: parkingSpotData.section,
+        isOccupied: parkingSpotData.isOccupied,
+        size: parkingSpotData.size,
+      });
+    }
+  }, [parkingSpotData]);
+
   // Display error message if API request fails
   useEffect(() => {
-    if (apiError && apiError !== null) {
+    if (apiError) {
       notifyError(apiError);
     }
   }, [apiError]);
@@ -86,8 +98,8 @@ export default function AddParkingSpot({
           <label>Parking Spot Number:</label>
           <input
             type="number"
-            name="number"
-            value={parkingSpot.number}
+            name="parkingSpotNumber"
+            value={parkingSpot.parkingSpotNumber}
             onChange={handleChange}
             required
             className="input-field"

@@ -1,0 +1,184 @@
+## Login: 
+    # Username/Email/phone
+    # Password 
+    # Link to signup
+
+## Signup:
+    # First/last name
+    # Username
+    # Email
+    # Phone number
+    # Password & Re-write password
+
+## Home page:
+    # Tabels: 
+        ADMIN: 
+            - Users (Add, delete, edit and statistic)
+            - Feedbacks (Add, delete and statistic)
+            - Payments (Recipts, edit, and statistic)
+            - Parking Spots (Add, delete, edit and statistic)
+            - Reservations (Add, delete, edit and statistic)
+            - Current user profile & settings 
+        USER: 
+            - Profile & settings 
+            - Feddback (Provide a feedback)
+            - Payments (Add, delete and edit)
+            - Parking (See and reserve)
+            - Reservations (Add, delete and edit)
+    # Navbar & Logo: 
+        - Icons, when hover show page name
+        - For small devices
+    # Searching bar
+        - Navigate to the other pages
+    # Ads bar 
+        - New places
+        - Parking spot is empty now
+    # Warnings, notification, and time end for the reserved parking spot
+    # Footer, contact data & copyright
+
+## Reservations page:
+    # Search & highlight
+    # Filter
+    # Sort
+    # Tabel:
+        - Row number
+        - Data
+        - Edit & delete buttons
+        
+        ADMIN: 
+            - See all reservation of all users
+            - Set the status
+
+        USER: 
+            - See only his reservations
+        
+    # Pagination
+    # Add button
+
+## Parking Spot page:
+    # Search & highlight
+    # Filter
+    # Sort
+    # Tabel:
+        - Row number
+        - Data
+        - Details button to show a table with the available date/time for each spot
+        
+        ADMIN: 
+            - Add, delete, edit
+            - Set the status
+
+        USER: 
+            - Only navigate to see available spots
+        
+    # Pagination
+
+## Payments page:
+    # Search & highlight
+    # Filter
+    # Sort
+    # Tabel:
+        - Row number
+        - Data
+        - Details button to show the payment details
+        
+        ADMIN: 
+            - Edit, delete
+            - Set all payments
+
+        USER: 
+            - See only his payment 
+        
+    # Pagination
+    # Add button
+
+## Feedbacks page:
+    # Search & highlight
+    # Filter
+    # Sort
+    # Tabel:
+        - Row number
+        - Data
+        - Show message button to show the mesage content
+        
+        ADMIN: 
+            - See all feddbacks
+            - Delete
+
+        USER: 
+            - See only his feedback
+        
+    # Pagination
+    # Add button
+
+## Profile page:
+   # Data: many sections (Personal, location etc)
+   # Save (require password to save)
+   # close button and redirect to the home page
+
+## Settings page:
+    # Dark/light mode
+    # Enable/diable notification
+    # Save button
+    # Show profile
+    # Logout
+
+To add: 
+## Notifications Page
+    # When the Admin change the users' role
+    # When the user makes a reservation 
+    # When the user pays successfully
+
+## Servives page:
+    Admin: 
+        - Add/delete services
+    User: 
+        - See the services and adds them with the reservation
+
+## Info Page:
+    # About the page
+    # FAQ
+    # contact
+
+
+serach home
+font UI
+align label in the same line
+logout conform UI
+Clear search btn
+mark all as read
+time 24H
+darkmode login
+notification only user
+make them automatically reserved
+airport application
+QR
+FAQ
+Spell checker
+site maps
+meniu
+NEW!
+signup delay
+parking spor section sort not alphbet
+navbar in prim plan constant
+make map big on the phone
+
+reservation pending
+payment amount automat 
+notification user
+
+
+colors:
+#2D4354
+#73766A
+#FESD7A5
+#9E6752 
+#534145
+#30212B
+
+#0D1F23
+#132E35
+#2D4A53
+#69818D
+#AFB3B7
+#5A636A

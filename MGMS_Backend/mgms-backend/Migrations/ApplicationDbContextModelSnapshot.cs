@@ -104,8 +104,11 @@ namespace mgms_backend.Migrations
                     b.Property<bool>("IsOccupied")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("Number")
+                    b.Property<int>("ParkingSpotNumber")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Section")
                         .IsRequired()
@@ -138,6 +141,10 @@ namespace mgms_backend.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("ReservationId")
                         .HasColumnType("integer");
@@ -177,6 +184,9 @@ namespace mgms_backend.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");

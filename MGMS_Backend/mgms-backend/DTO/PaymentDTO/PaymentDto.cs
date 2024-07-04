@@ -14,6 +14,7 @@ namespace mgms_backend.DTO.PaymentDTO
         [MaxLength(50)]
         [Required]
         public string PaymentMethod { get; set; }
+        public string PaymentStatus { get; set; }
         public DateTime DateTime { get; set; }
     }
 }

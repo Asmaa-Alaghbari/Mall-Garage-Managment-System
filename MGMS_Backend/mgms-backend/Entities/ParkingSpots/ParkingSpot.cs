@@ -8,6 +8,7 @@ namespace mgms_backend.Entities.ParkingSpots
         [Key]  // Data annotation for the primary key
         public int ParkingSpotId { get; set; }
         public int ParkingSpotNumber { get; set; }
+        public decimal Price { get; set; }
         public string Section { get; set; }
         public string Size { get; set; }
         public bool IsOccupied { get; set; } = false; // Default value

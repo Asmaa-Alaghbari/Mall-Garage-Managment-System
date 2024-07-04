@@ -12,7 +12,7 @@ import {
 } from "../Utils/Utils";
 import "../Utils/style.css";
 
-export default function Payment() {
+export default function Payment({ newReservation }) {
   const [payments, setPayments] = useState([]);
   const [paginatedData, setPaginatedData] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -48,6 +48,21 @@ export default function Payment() {
       setTotalPages(paginatedData.totalPages);
     }
   }, [error, paginatedData]);
+
+  useEffect(() => {
+    if (newReservation) {
+      const { reservationId, totalAmount } = newReservation;
+      setPayments((prevPayments) => [
+        ...prevPayments,
+        {
+          paymentId: prevPayments.length + 1,
+          reservationId,
+          amount: totalAmount,
+          paymentStatus: "Unpaid",
+        },
+      ]);
+    }
+  }, [newReservation]);
 
   // Fetch payments from the API and update the state
   const fetchPayments = async () => {
@@ -116,6 +131,12 @@ export default function Payment() {
     }
   };
 
+  // Handle unpaid button click
+  const handleUnpaidButtonClick = (reservationId, amount) => {
+    setSelectedPayment({ reservationId, amount, paymentStatus: "Unpaid" });
+    setShowAddForm(true);
+  };
+
   return (
     <div className="container">
       <h1>Payments</h1>
@@ -123,6 +144,7 @@ export default function Payment() {
         <AddPayment
           onAddSuccess={handleSuccess}
           onClose={() => setShowAddForm(false)}
+          paymentData={selectedPayment} // Pass the selected payment data
         />
       )}
 
@@ -154,7 +176,6 @@ export default function Payment() {
               onChange={handleSearchInputChange}
             >
               <option value="">All Methods</option>
-              <option value="cash">Cash</option>
               <option value="Credit card">Credit Card</option>
               <option value="debit card">Debit Card</option>
               <option value="paypal">Paypal</option>
@@ -182,6 +203,7 @@ export default function Payment() {
               <option value="Amount">Amount</option>
               <option value="PaymentMethod">Payment Method</option>
               <option value="DateTime">Date</option>
+              <option value="PaymentStatus">Payment Status</option>
             </select>
           </div>
 
@@ -192,16 +214,17 @@ export default function Payment() {
                 <th>No.</th>
                 {user && user.role === "ADMIN" && <th>Payment ID</th>}
                 <th>Reservation ID</th>
-                <th>Amount</th>
+                <th>Total Amount</th>
                 <th>Payment Method</th>
                 <th>Date</th>
+                <th>Payment Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading && (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: "center" }}>
+                  <td colSpan="9" style={{ textAlign: "center" }}>
                     <div
                       style={{
                         display: "inline-block",
@@ -264,6 +287,25 @@ export default function Payment() {
                       {highlightText(
                         formatDateTime(payment.dateTime) || "N/A",
                         searchFormData.text
+                      )}
+                    </td>
+                    <td>
+                      {payment.paymentStatus === "Paid" ? (
+                        <button className="paid-button" disabled>
+                          Paid
+                        </button>
+                      ) : (
+                        <button
+                          className="unpaid-button"
+                          onClick={() =>
+                            handleUnpaidButtonClick(
+                              payment.reservationId,
+                              payment.amount
+                            )
+                          }
+                        >
+                          Unpaid
+                        </button>
                       )}
                     </td>
                     <td>

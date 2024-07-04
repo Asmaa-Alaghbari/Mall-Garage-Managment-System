@@ -26,16 +26,28 @@ export default function AddReservation({
     endTime: "",
     status: "Pending", // Default status is "Pending" for new reservations
     serviceIds: [],
+    totalAmount: 0,
+    parkingSpotPrice: 0,
   });
   const [userRole, setUserRole] = useState(""); // State to hold user role
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [availableServiceOptions, setAvailableServiceOptions] = useState([]);
+  const [, setError] = useState(null);
 
   // Fetch the current user and available services on component mount
   useEffect(() => {
-    fetchCurrentUser(setReservation, setIsLoading, undefined, setUserRole);
+    fetchCurrentUser(setReservation, setIsLoading, setError, setUserRole);
     fetchAvailableServices();
+
+    if (reservationData) {
+      fetchParkingSpotPrice(
+        reservationData.parkingSpotNumber,
+        reservationData.startTime,
+        reservationData.endTime
+      ); // Fetch the price of the parking spot if updating
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update the reservation state with the reservation data and available service options
@@ -44,8 +56,17 @@ export default function AddReservation({
       updateReservation(reservationData);
     }
 
+    calculateTotalAmount(); // Calculate the total amount of the reservation
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isUpdate, reservationData, availableServiceOptions]);
+  }, [
+    isUpdate,
+    reservationData,
+    availableServiceOptions,
+    reservation.startTime,
+    reservation.endTime,
+    selectedOptions,
+  ]);
 
   // Fetch available services from the API
   const fetchAvailableServices = async () => {
@@ -59,16 +80,40 @@ export default function AddReservation({
       const options = response.map((item) => ({
         value: item.serviceId.toString(), // Convert id to string if needed
         label: `${item.name} - ${item.price}$`,
+        price: item.price, // Store the price in the option
       }));
 
       setAvailableServiceOptions(options);
     }
   };
 
+  // Fetch the price of a parking spot from the API
+  const fetchParkingSpotPrice = async (
+    parkingSpotNumber,
+    startTime,
+    endTime
+  ) => {
+    if (!parkingSpotNumber || !startTime || !endTime) return;
+
+    const response = await sendFetchRequest(
+      `reservations/GetParkingSpotPrice?parkingSpotNumber=${parkingSpotNumber}&startTime=${startTime}&endTime=${endTime}`,
+      "GET",
+      setIsLoading,
+      setError
+    );
+
+    if (response) {
+      setReservation((prev) => ({
+        ...prev,
+        parkingSpotPrice: response,
+      }));
+
+      calculateTotalAmount(selectedOptions, response); // Recalculate total amount with new parking spot price
+    }
+  };
+
   // Update the reservation state with the reservation data
   const updateReservation = (data) => {
-    console.log("reservation data:", new Date(data.startTime));
-
     const updatedReservation = {
       ...reservation,
       ...data,
@@ -90,6 +135,7 @@ export default function AddReservation({
         updatedSelectedOptions.push({
           value: service.value,
           label: service.label,
+          price: service.price,
         });
       }
     });
@@ -124,6 +170,20 @@ export default function AddReservation({
         ...prev,
         [name]: formattedDate, // Convert UTC date back to string
       }));
+
+      if (reservation.parkingSpotNumber) {
+        fetchParkingSpotPrice(
+          reservation.parkingSpotNumber,
+          reservation.startTime,
+          reservation.endTime
+        );
+      }
+    } else if (name === "parkingSpotNumber") {
+      setReservation((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+      fetchParkingSpotPrice(value, reservation.startTime, reservation.endTime); // Fetch the price when the parking spot number changes
     } else {
       // Update the reservation state with the new value
       setReservation((prev) => ({
@@ -190,6 +250,9 @@ export default function AddReservation({
           `(ADMINS ONLY) A new reservation for parking spot with number ${reservation.parkingSpotNumber} has been created.`,
           setIsLoading
         );
+
+        // Call the onAddSuccess callback function with the new reservation ID and total amount
+        onAddSuccess(response.data.reservationId, reservation.totalAmount);
       }
 
       // Send notification to user for updated reservation
@@ -209,6 +272,55 @@ export default function AddReservation({
   // Handle service select change
   const handleServiceSelectChange = (selected) => {
     setSelectedOptions(selected);
+    calculateTotalAmount(selected);
+  };
+
+  // Calculate the total amount of the reservation based on the selected services and parking spot price
+  const calculateTotalAmount = (services = selectedOptions) => {
+    const startTime = new Date(reservation.startTime);
+    const endTime = new Date(reservation.endTime);
+
+    const diffTime = Math.abs(endTime - startTime);
+    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+
+    let totalAmount = 0;
+
+    // Charge $5 per hour after the first 2 hours
+    if (diffHours > 2) {
+      totalAmount += (diffHours - 2) * 5;
+    }
+
+    // Add the price of the parking spot
+    services.forEach((service) => {
+      totalAmount += service.price;
+    });
+
+    setReservation((prev) => ({
+      ...prev,
+      totalAmount,
+    }));
+  };
+
+  // Handle reservation cancellation
+  const handleCancelReservation = async () => {
+    if (!reservationData || !reservationData.reservationId) {
+      notifyError("No reservation selected to cancel.");
+      return;
+    }
+
+    const response = await sendFetchRequest(
+      `reservations/DeleteReservation?reservationId=${reservationData.reservationId}`,
+      "DELETE",
+      setIsLoading,
+      undefined,
+      undefined,
+      reservation
+    );
+
+    if (response && response.message) {
+      notifySuccess(response.message);
+      onUpdateSuccess(); // Call the onUpdateSuccess callback function after cancellation
+    }
   };
 
   return (
@@ -286,6 +398,9 @@ export default function AddReservation({
               onChange={handleServiceSelectChange}
             />
           </div>
+          <div className="form-group">
+            <label>Total Amount: ${reservation.totalAmount.toFixed(2)}</label>
+          </div>
         </div>
         <div className="form-actions">
           <button type="submit" disabled={isLoading}>
@@ -300,6 +415,16 @@ export default function AddReservation({
           <button type="button" onClick={onClose}>
             Close
           </button>
+          {isUpdate && (
+            <button
+              type="button"
+              onClick={handleCancelReservation}
+              className="cancel-button"
+              disabled={isLoading}
+            >
+              Cancel Reservation
+            </button>
+          )}
         </div>
       </form>
     </div>

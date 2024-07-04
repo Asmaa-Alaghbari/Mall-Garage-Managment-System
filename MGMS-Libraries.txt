@@ -1,20 +1,14 @@
-Pentru a naviga între pagina de login și cea de sign up, vei avea nevoie de React Router
 npm install react-router-dom
 
-
-Vei avea nevoie de câteva pachete NuGet pentru a lucra cu PostgreSQL și pentru a implementa autentificarea JWT.
 dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
 dotnet add package Microsoft.EntityFrameworkCore.Design
 dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
 
-generezi migrările și să actualizezi baza de dat
 dotnet ef migrations add InitialMigration
 dotnet ef database update
 
-pentru a face cereri HTTP din frontendul React
 npm install axios
 
-comanda openssl pentru a genera o cheie secretă
 openssl rand -base64 32
 
 // HashedPassword
@@ -30,6 +24,7 @@ dotnet user-jwts create --role Admin
 
 References:
 - https://jwt.io/
-https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.controllerbase?view=aspnetcore-8.0
+- https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.controllerbase?view=aspnetcore-8.0
+- https://parcari3.ro:8443/parcari
 - https://www.youtube.com/watch?v=UwruwHl3BlU&ab_channel=PatrickGod
 - https://www.youtube.com/watch?v=6sMPvucWNRE&ab_channel=PatrickGod

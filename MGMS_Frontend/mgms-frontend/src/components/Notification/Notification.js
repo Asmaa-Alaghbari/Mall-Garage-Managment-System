@@ -190,11 +190,11 @@ export default function Notification() {
           <thead>
             <tr>
               <th>No.</th>
-              {user && user.role === "ADMIN" && <th>Notification ID</th>}
+              {/* {user && user.role === "ADMIN" && <th>Notification ID</th>} */}
               <th>Date</th>
               <th>Read Status</th>
               <th>Message</th>
-              {user && user.role === "ADMIN" && <th>User ID</th>}
+              {/* {user && user.role === "ADMIN" && <th>User ID</th>} */}
               <th>Actions</th>
             </tr>
           </thead>
@@ -233,14 +233,14 @@ export default function Notification() {
                     )}
                   </td>
 
-                  {user && user.role === "ADMIN" && (
+                  {/* {user && user.role === "ADMIN" && (
                     <td>
                       {highlightText(
                         notification.notificationId.toString(),
                         searchFormData.text
                       )}
                     </td>
-                  )}
+                  )} */}
 
                   <td>
                     {highlightText(
@@ -272,14 +272,14 @@ export default function Notification() {
                       </button>
                     )}
                   </td>
-                  {user && user.role === "ADMIN" && (
+                  {/* {user && user.role === "ADMIN" && (
                     <td>
                       {highlightText(
                         notification.userId.toString(),
                         searchFormData.text
                       )}
                     </td>
-                  )}
+                  )} */}
 
                   <td>
                     {notification.isRead ? (

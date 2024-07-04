@@ -10,6 +10,7 @@ namespace mgms_backend.Repositories.Interface
         Task<IEnumerable<ParkingSpot>> GetAllParkingSpotsAsync(); // Get all parking spots from the database
         Task<IEnumerable<ParkingSpot>> GetParkingSpotsAsync(int pageNumber, int pageSize); // Get parking spots with pagination
         Task<IEnumerable<ParkingSpot>> SearchAsync(ParkingSpotSearchCriteria? searchCriteria); // Search for parking spots based on search criteria
+        Task<decimal> GetParkingSpotPriceByNumberAsync(int parkingSpotNumber); // Get the price of a parking spot by number
         Task<int> GetAvailableParkingSpotsAsync(); // Get the count of available parking spots
         Task<int> GetOccupiedParkingSpotsAsync();  // Get the count of occupied parking spots
         Task UpdateParkingSpotAsync(ParkingSpot parkingSpot); // Update an existing parking spot in the database

@@ -151,7 +151,7 @@ export default function Service() {
             <thead>
               <tr>
                 <th>No.</th>
-                <th>Service ID</th>
+                {userRole === "ADMIN" && <th>Service ID</th>}
                 <th>Name</th>
                 <th>Price</th>
                 <th>Description</th>
@@ -182,16 +182,18 @@ export default function Service() {
                 services &&
                 services.map((service, index) => (
                   <tr key={service.serviceId}>
-                    <td>
-                      {highlightText(
-                        calculateIndex(
-                          index,
-                          currentPage,
-                          itemsPerPage
-                        ).toString(),
-                        searchFormData.text
-                      )}
-                    </td>
+                    {userRole === "ADMIN" && (
+                      <td>
+                        {highlightText(
+                          calculateIndex(
+                            index,
+                            currentPage,
+                            itemsPerPage
+                          ).toString(),
+                          searchFormData.text
+                        )}
+                      </td>
+                    )}
                     <td>
                       {highlightText(
                         (service.serviceId ?? "").toString(),

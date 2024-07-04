@@ -8,9 +8,9 @@ import {
   FaUndoAlt,
   FaInfoCircle,
 } from "react-icons/fa";
-import { Tooltip as ReactTooltip } from "react-tooltip"; // Use named import
+import { Tooltip as ReactTooltip } from "react-tooltip";
 import AddParkingSpot from "./AddParkingSpot";
-import ParkingSpotMap from "../Data/ParkingSpotMap.svg";
+import ParkingSpotMap from "./ParkingSpotMap.svg";
 import {
   calculateIndex,
   fetchCurrentUser,
@@ -425,3 +425,4 @@ export default function ParkingSpots() {
     </div>
   );
 }
+

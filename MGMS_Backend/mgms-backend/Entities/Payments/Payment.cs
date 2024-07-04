@@ -20,6 +20,7 @@ namespace mgms_backend.Entities.Payments
         [MaxLength(50)] // Data annotation for the maximum length of the string
         [Required]
         public string PaymentMethod { get; set; }
+        public string PaymentStatus { get; set; } // "Paid" or "Unpaid"
         public DateTime DateTime { get; set; }
 
         // Navigation properties for related entities

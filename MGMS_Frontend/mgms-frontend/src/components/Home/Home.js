@@ -11,7 +11,7 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import { Tooltip as ReactTooltip } from "react-tooltip";
-import ParkingSpotMap from "../Data/ParkingSpotMap.svg";
+import ParkingSpotMap from "../ParkingSpot/ParkingSpotMap.svg";
 import {
   fetchCurrentUser,
   notifyError,

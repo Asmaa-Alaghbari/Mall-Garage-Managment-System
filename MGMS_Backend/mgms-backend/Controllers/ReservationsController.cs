@@ -15,6 +15,7 @@ namespace mgms_backend.Controllers
     {
         private readonly IParkingSpotRepository _parkingSpotRepository;
         private readonly IReservationRepository _reservationRepository;
+        private readonly IServiceRepository _serviceRepository;
         private readonly IUserRepository _userRepository;
         private readonly IReservationMapper _reservationMapper;
         private readonly IUserHelper _userHelper;
@@ -22,12 +23,14 @@ namespace mgms_backend.Controllers
         public ReservationsController(
             IParkingSpotRepository parkingSpotRepository,
             IReservationRepository reservationRepository,
+            IServiceRepository serviceRepository,
             IUserRepository userRepository,
             IReservationMapper reservationMapper,
             IUserHelper userHelper)
         {
             _parkingSpotRepository = parkingSpotRepository;
             _reservationRepository = reservationRepository;
+            _serviceRepository = serviceRepository;
             _userRepository = userRepository;
             _reservationMapper = reservationMapper;
             _userHelper = userHelper;
@@ -38,23 +41,46 @@ namespace mgms_backend.Controllers
         [Authorize]
         public async Task<ActionResult> GetAllReservations()
         {
-            var reservations = await _reservationRepository.GetAllReservationsAsync();
-            return Ok(reservations);
+            try
+            {
+                var reservations = await _reservationRepository.GetAllReservationsAsync();
+                if (reservations == null || !reservations.Any())
+                {
+                    return NotFound(new { message = "No reservations found!" });
+                }
+
+                var reservationDtos = reservations.Select(r => _reservationMapper.ToDto(r)).ToList();
+                return Ok(reservationDtos);
+            }
+            catch (Exception ex)
+            {
+                // Return a generic error message
+                return StatusCode(500, new { message = "An error occurred while fetching reservations. Please try again later." });
+            }
         }
+
 
         // GET: api/GetReservationById: Get reservation by ID
         [HttpGet("GetReservationById")]
         [Authorize]
         public async Task<ActionResult> GetReservationById(int reservationId)
         {
-            var reservation = await _reservationRepository.GetReservationByIdAsync(reservationId);
-
-            // Check if the reservation exists
-            if (reservation == null)
+            try
             {
-                throw new EntityNotFoundException("Reservation not found!");
+                var reservation = await _reservationRepository.GetReservationByIdAsync(reservationId);
+                if (reservation == null)
+                {
+                    return NotFound(new { message = "Reservation not found!" });
+                }
+
+                var reservationDto = _reservationMapper.ToDto(reservation);
+                return Ok(reservationDto);
             }
-            return Ok(reservation);
+            catch (Exception ex)
+            {
+                // Return a generic error message
+                return StatusCode(500, new { message = "An error occurred while fetching the reservation. Please try again later." });
+            }
         }
 
         // GET: api/GetReservationsByParkingSpotId: Get reservations by parking spot ID
@@ -104,6 +130,22 @@ namespace mgms_backend.Controllers
             var reservations = await _reservationRepository.GetReservationsByUserId(userId);
 
             return Ok(_reservationMapper.ToCollectionDto(reservations));
+        }
+
+        // GET: api/GetParkingSpotPrice: Get the price of a parking spot
+        [HttpGet("GetParkingSpotPrice")]
+        [Authorize]
+        public async Task<ActionResult> GetParkingSpotPrice([FromQuery] int parkingSpotNumber)
+        {
+            var parkingSpot = await _parkingSpotRepository.GetParkingSpotByNumberAsync(parkingSpotNumber);
+
+            if (ReferenceEquals(null, parkingSpot))
+            {
+                throw new EntityNotFoundException($"Parking spot with number {parkingSpotNumber} was not found!");
+            }
+
+            var price = await _parkingSpotRepository.GetParkingSpotPriceByNumberAsync(parkingSpotNumber);
+            return Ok(price);
         }
 
         // GET: api/GetReservationStatistics: Get Reservation Statistics
@@ -180,6 +222,18 @@ namespace mgms_backend.Controllers
             {
                 throw new ServerValidationException("Parking spot is not available for the given time range.");
             }
+
+            // Calculate total amount
+            var totalAmount = 0m;
+            foreach (var serviceId in createReservationDto.ServiceIds)
+            {
+                var service = await _serviceRepository.GetByServiceIdAsync(serviceId);
+                if (service != null)
+                {
+                    totalAmount += service.Price;
+                }
+            }
+            createReservationDto.TotalAmount = totalAmount;
 
             await _reservationRepository.AddReservationAsync(newReservation);
             await _reservationRepository.SaveChangesAsync();

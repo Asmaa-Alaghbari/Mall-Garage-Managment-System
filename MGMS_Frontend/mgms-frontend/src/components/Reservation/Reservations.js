@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import BeatLoader from "react-spinners/BeatLoader";
+import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import AddReservation from "./AddReservation";
 import {
@@ -174,6 +175,7 @@ export default function Reservations() {
           reservationData={selectedReservation}
         />
       )}
+
       {!showAddForm && !showUpdateForm && (
         <>
           {/* Search */}
@@ -232,7 +234,8 @@ export default function Reservations() {
                 <th>Status</th>
                 <th>Duration</th>
                 <th>Time Details</th>
-                {user && user.role === "ADMIN" && <th>Actions</th>}
+                <th>Total Amount</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -309,27 +312,28 @@ export default function Reservations() {
                         </button>
                       )}
                     </td>
-
-                    {user && user.role === "ADMIN" && (
-                      <td>
-                        <button
-                          onClick={() => {
-                            setSelectedReservation(reservation);
-                            setShowUpdateForm(true);
-                          }}
-                        >
-                          Update
-                        </button>
-                        <button
-                          className="delete-button"
-                          onClick={() =>
-                            handleDelete(reservation.reservationId)
-                          }
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    )}
+                    <td>
+                      {highlightText(
+                        `$${reservation.totalAmount.toFixed(2)}`,
+                        searchFormData.text
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => {
+                          setSelectedReservation(reservation);
+                          setShowUpdateForm(true);
+                        }}
+                      >
+                        Update
+                      </button>
+                      <button
+                        className="delete-button"
+                        onClick={() => handleDelete(reservation.reservationId)}
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
             </tbody>
@@ -341,6 +345,11 @@ export default function Reservations() {
           </div>
 
           <button onClick={() => setShowAddForm(true)}>Add Reservation</button>
+
+          {/* Go to the Payment page */}
+          <Link to="/payments">
+            <button>Go to Payment</button>
+          </Link>
         </>
       )}
       {/* Modal to display feedback message */}
